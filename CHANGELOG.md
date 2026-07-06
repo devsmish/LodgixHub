@@ -13,6 +13,7 @@ The format follows a simple chronological structure. Versioning will be introduc
 - Added changelog file for future task tracking.
 - Added media/content scope for listing and room photo uploads.
 - Added contributing guide with protected-branch Git workflow.
+- Added initial Django app structure planning with a dedicated `content` app for media-related domain data.
 
 ### Changed
 

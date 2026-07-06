@@ -175,7 +175,7 @@ The backend is expected to be split into focused Django apps:
 - `core` - shared base models, utilities, exceptions, validators, logging helpers.
 - `users` - custom user model, authentication, permissions, groups, profiles.
 - `listings` - listings, rooms, photos, moderation, search filters.
-- `media` - listing and room photos, main photo selection, ordering, storage integration.
+- `content` - listing and room photos, main photo selection, ordering, storage integration.
 - `bookings` - booking lifecycle, cancellation reasons, confirmation, auto-cancellation.
 - `pricing` - dynamic price calculation, deposits, price history.
 - `reviews` - reviews, ratings, moderation.
