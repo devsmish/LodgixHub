@@ -42,6 +42,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # frameworks
     # local
+    'core',
+    'users',
+    'listings',
+    'content',
+    'bookings',
+    'pricing',
+    'reviews',
+    'analytics',
+    'notifications',
 ]
 
 MIDDLEWARE = [
