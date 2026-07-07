@@ -41,7 +41,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     blocked_reason = models.CharField(
         max_length=50,
-        choices=BlockedReason.choices,
+        choices=BlockedReason,
         null=True,
         blank=True,
         verbose_name="Reason for blocking",
