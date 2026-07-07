@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "apps.reviews",
     "apps.analytics",
     "apps.notifications",
+    "apps.security",
 ]
 
 MIDDLEWARE = [
@@ -110,6 +111,7 @@ else:
         }
     }
 
+AUTH_USER_MODEL = "users.User"
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
