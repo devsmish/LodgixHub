@@ -43,14 +43,14 @@ INSTALLED_APPS = [
     # frameworks
     # local
     'core',
-    'users',
-    'listings',
-    'content',
-    'bookings',
-    'pricing',
-    'reviews',
-    'analytics',
-    'notifications',
+    'apps.users',
+    'apps.listings',
+    'apps.content',
+    'apps.bookings',
+    'apps.pricing',
+    'apps.reviews',
+    'apps.analytics',
+    'apps.notifications',
 ]
 
 MIDDLEWARE = [
@@ -149,3 +149,6 @@ STATIC_URL = 'static/'
 # Media files
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Global Constants
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
