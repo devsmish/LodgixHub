@@ -162,6 +162,7 @@ venv.bak/
 .aiignore
 ROADMAP.md
 CONTRIBUTING.md
+tools/
 
 # Spyder project settings
 .spyderproject
