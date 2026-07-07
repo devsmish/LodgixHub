@@ -20,12 +20,12 @@ from django.urls import include, path
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/v1/analytics/", include("apps.analytics.urls")),
-    path("api/v1/bookings/", include("apps.bookings.urls")),
-    path("api/v1/content/", include("apps.content.urls")),
-    path("api/v1/listings/", include("apps.listings.urls")),
-    path("api/v1/notifications/", include("apps.notifications.urls")),
-    path("api/v1/pricing/", include("apps.pricing.urls")),
-    path("api/v1/reviews/", include("apps.reviews.urls")),
-    path("api/v1/users/", include("apps.users.urls")),
+    # path("api/v1/analytics/", include("apps.analytics.urls")),
+    # path("api/v1/bookings/", include("apps.bookings.urls")),
+    # path("api/v1/content/", include("apps.content.urls")),
+    # path("api/v1/listings/", include("apps.listings.urls")),
+    # path("api/v1/notifications/", include("apps.notifications.urls")),
+    # path("api/v1/pricing/", include("apps.pricing.urls")),
+    # path("api/v1/reviews/", include("apps.reviews.urls")),
+    # path("api/v1/users/", include("apps.users.urls")),
 ]
