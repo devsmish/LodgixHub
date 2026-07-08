@@ -4,38 +4,81 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from django.utils import timezone
 
-from apps.users.choices import BlockedReason
+from apps.users.choices import BlockedReason, GenderChoices
 from apps.users.managers import CustomUserManager
+from core.validators import (
+    name_validator,
+    nickname_validator,
+    phone_validator,
+    validate_custom_email,
+    validate_image,
+)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    email = models.EmailField(unique=True, verbose_name="Email address")
+    email = models.EmailField(
+        max_length=254,
+        unique=True,
+        validators=[validate_custom_email],
+        verbose_name="Email address",
+    )
 
     # Personal data
-    first_name = models.CharField(max_length=150, blank=True, verbose_name="Name")
-    last_name = models.CharField(max_length=150, blank=True, verbose_name="Surname")
+    first_name = models.CharField(
+        max_length=150, blank=True, validators=[name_validator], verbose_name="Name"
+    )
+    last_name = models.CharField(
+        max_length=150, blank=True, validators=[name_validator], verbose_name="Surname"
+    )
     nickname = models.CharField(
-        max_length=150, unique=True, null=True, blank=True, verbose_name="Username"
+        max_length=150,
+        unique=True,
+        null=True,
+        blank=True,
+        verbose_name="Username",
+        validators=[nickname_validator],
+    )
+    birth_date = models.DateField(null=True, blank=True, verbose_name="Birth date")
+    gender = models.CharField(
+        max_length=1,
+        choices=GenderChoices,
+        null=True,
+        blank=True,
+        verbose_name="Gender",
+        help_text="Optional field. M – Male, F – Female, X – Other.",
     )
     phone = models.CharField(
-        max_length=30, null=True, blank=True, verbose_name="Phone number"
+        max_length=30,
+        null=True,
+        blank=True,
+        verbose_name="Phone number",
+        validators=[phone_validator],
     )
     contact_phone = models.CharField(
-        max_length=30, null=True, blank=True, verbose_name="Contact phone"
+        max_length=30,
+        null=True,
+        blank=True,
+        verbose_name="Contact phone",
+        validators=[phone_validator],
     )
     avatar = models.ImageField(
-        upload_to="avatars/", null=True, blank=True, verbose_name="Avatar"
+        upload_to="avatars/",
+        null=True,
+        blank=True,
+        verbose_name="Avatar",
+        validators=[validate_image],
     )
 
     # System statuses and technical flags
     is_active = models.BooleanField(default=True, verbose_name="Active")
     is_staff = models.BooleanField(default=False, verbose_name="Employee status")
     is_superuser = models.BooleanField(default=False, verbose_name="Superuser status")
-    token_version = models.PositiveIntegerField(default=1, verbose_name="Token version")
+    token_version = models.PositiveIntegerField(default=0, verbose_name="Token version")
 
     # Lock Audit
+    is_blocked = models.BooleanField(default=False, verbose_name="Blocked status")
     blocked_at = models.DateTimeField(
         null=True, blank=True, verbose_name="Blocking date"
     )
@@ -82,19 +125,28 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name = "User"
         verbose_name_plural = "Users"
         ordering = ["-date_joined"]
+        base_manager_name = "all_objects"
 
     def __str__(self):
         return self.email
 
+    def clean(self):
+        super().clean()
+        if self.email:
+            self.email = self.email.lower()
+
+    def save(self, *args, **kwargs):
+        if self.email:
+            self.email = self.email.lower().strip()
+        super().save(*args, **kwargs)
+
     def delete(self, using=None, keep_parents=False):
-        self.is_active = False
         self.deleted_at = timezone.now()
-        self.save(using=using, update_fields=["is_active", "deleted_at", "updated_at"])
+        self.save(using=using, update_fields=["deleted_at", "updated_at"])
 
     def restore(self, using=None):
-        self.is_active = True
         self.deleted_at = None
-        self.save(using=using, update_fields=["is_active", "deleted_at", "updated_at"])
+        self.save(using=using, update_fields=["deleted_at", "updated_at"])
 
     @property
     def is_deleted(self):

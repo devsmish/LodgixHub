@@ -53,6 +53,10 @@ class BaseModel(models.Model):
     class Meta:
         abstract = True
 
+    @property
+    def is_deleted(self):
+        return self.deleted_at is not None
+
     def delete(self, using=None, keep_parents=False):
         """Single logical deletion of an object."""
         self.deleted_at = timezone.now()
@@ -98,3 +102,8 @@ class LogModel(models.Model):
         if not self._state.adding:
             raise ValidationError("Log entries are immutable and cannot be updated.")
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError(
+            "Log entries are protected against deletion and cannot be physically erased."
+        )
