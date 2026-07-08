@@ -1,7 +1,8 @@
 import time
+
 from django.http import HttpRequest, HttpResponse
-from rest_framework_simplejwt.tokens import TokenError, AccessToken, RefreshToken
 from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken, TokenError
 
 
 class JWTAuthMiddleware:
@@ -20,9 +21,7 @@ class JWTAuthMiddleware:
         "/api/v1/users/auth/logout/",
     }
 
-    excluded_path_prefixes = (
-        "/admin/",
-    )
+    excluded_path_prefixes = ("/admin/",)
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -65,11 +64,15 @@ class JWTAuthMiddleware:
         return response
 
     def _build_refresh_window_seconds(self) -> int:
-        access_lifetime_seconds = int(api_settings.ACCESS_TOKEN_LIFETIME.total_seconds())
+        access_lifetime_seconds = int(
+            api_settings.ACCESS_TOKEN_LIFETIME.total_seconds()
+        )
         return max(1, min(30, access_lifetime_seconds // 4))
 
     def _should_skip(self, request: HttpRequest) -> bool:
-        return request.path in self.excluded_paths or request.path.startswith(self.excluded_path_prefixes)
+        return request.path in self.excluded_paths or request.path.startswith(
+            self.excluded_path_prefixes
+        )
 
     def _get_access_token_from_header(self, request: HttpRequest) -> str | None:
         auth_header = request.META.get("HTTP_AUTHORIZATION", "")
@@ -80,7 +83,9 @@ class JWTAuthMiddleware:
                 return None
         return None
 
-    def _set_authorization_header(self, request: HttpRequest, access_token: str) -> None:
+    def _set_authorization_header(
+        self, request: HttpRequest, access_token: str
+    ) -> None:
         request.META["HTTP_AUTHORIZATION"] = f"Bearer {access_token}"
 
     def _is_refresh_token_valid(self, refresh_token: str) -> bool:

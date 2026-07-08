@@ -6,6 +6,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
 
-        token['token_version'] = user.token_version
+        token["token_version"] = user.token_version
 
         return token
