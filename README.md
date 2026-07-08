@@ -6,7 +6,7 @@ LodgixHub is a Django-based backend MVP for a short-term accommodation booking p
 
 The MVP target is to deliver a working backend by **July 22, 2026**. The system must provide authentication, role-based access, property listings, media upload, booking flows, dynamic price calculation, moderation, reviews, basic analytics, documentation, and deployment infrastructure.
 
-This repository contains the foundational backend setup and the initial Django app structure for the MVP (Version 0.1.0).
+This repository contains the foundational backend setup and the initial Django app structure for the MVP (Version 0.2.0).
 
 ## Development Agreement
 
@@ -158,7 +158,8 @@ The following items are intentionally postponed for post-defense self-developmen
 The backend is split into focused Django apps:
 - `config` - Django project configuration, settings, root URLs, ASGI, and WSGI entrypoints.
 - `core` - shared base models, utilities, exceptions, validators, logging helpers.
-- `apps/users` - custom user model, authentication, permissions, groups, profiles.
+- `apps/users` - custom user model, authentication, permissions, gender records, choices layout.
+- `apps/security` - token rotation middleware layer, authorization access rules, and custom DRF permission authenticators.
 - `apps/listings` - listings, rooms, photos, moderation, search filters.
 - `apps/content` - listing and room photos, main photo selection, ordering, storage integration.
 - `apps/bookings` - booking lifecycle, cancellation reasons, confirmation, auto-cancellation.
