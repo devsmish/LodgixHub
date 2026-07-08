@@ -27,13 +27,13 @@ class SoftDeleteQuerySet(models.QuerySet):
         return self.update(deleted_at=None)
 
 
-class SoftDeleteManager(models.Manager.from_queryset(SoftDeleteQuerySet)):
+class SoftDeleteManager(models.Manager):
     """
     A default manager that automatically hides logically deleted records.
     """
 
-    def get_queryset(self):
-        return super().get_queryset().alive()
+    def get_queryset(self) -> SoftDeleteQuerySet:
+        return SoftDeleteQuerySet(self.model, using=self._db).alive()
 
 
 class BaseModel(models.Model):
@@ -96,7 +96,5 @@ class LogModel(models.Model):
 
     def save(self, *args, **kwargs):
         if not self._state.adding:
-            raise ValidationError(
-                "Log entries are immutable and cannot be updated."
-            )
+            raise ValidationError("Log entries are immutable and cannot be updated.")
         super().save(*args, **kwargs)
