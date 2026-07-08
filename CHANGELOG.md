@@ -4,6 +4,20 @@ All notable changes to LodgixHub will be documented in this file.
 
 The format follows a simple chronological structure.
 
+## [0.2.0] - 2026-07-08
+
+### Added
+- **Code Quality Pipeline (Issue #8):** Integrated strict repository linting and formatting via `black`, `isort`, and `flake8`. Introduced custom rule matrices inside root `pyproject.toml` and `.flake8` configs to enforce consistent line lengths and ignore auto-generated database migrations.
+- **Base Abstract Models (Issue #9):** Established foundational architecture in `core/models.py`. Implemented `BaseModel` using UUID4 primary keys, auto-updating entity lifecycle timestamps, and a robust soft-delete mechanic controlled via an overridden `delete()` method. Developed an `ActiveManager` (default `objects` lookups) and an `all_objects` manager to fetch soft-deleted datasets. Created a `TimestampedModel` for non-deletable records, and a `LogModel` for append-only pipelines.
+- **Custom User Model & System Roles (Issue #10):** Built the `apps/users` domain layer inheriting from `AbstractBaseUser` and `PermissionsMixin`, migrating from username identifiers to case-insensitive emails. Added an integer `token_version` column to handle instantaneous multi-device session revocation. Defined robust system roles (`tenant`, `landlord`, `moderator`, `admin`) under `apps/security/constants.py` supported by an automated group-provisioning database data migration.
+- **EU Gender Layout Compliance:** Decoupled data layout logic by introducing `apps/users/choices.py`. Added an optional alphanumeric `gender` state field (`M` for Male, `F` for Female, `X` for Other) matching clean architecture paradigms and European identity metadata standards.
+- **JWT Authorization Layer & Middleware (Issue #11):** Wired `djangorestframework-simplejwt` to split token delivery pathways safely. Client apps ingest short-lived access keys in plain JSON responses, while the refresh mechanism is securely locked inside an `HttpOnly`, `Secure`, `SameSite=Lax` browser cookie. Auth requests pass through a custom automated token rotation and validation middleware (`apps/security/middleware.py`) cross-referencing active session integrity with database `token_version` fields.
+
+### Changed
+- **Immutable Log Security Enforcement:** Hardened abstract `LogModel` behaviors by overriding the `.delete()` method to natively reject hard or soft lifecycle deletions with an explicit `ValidationError`.
+- **Dual-Layer Email Identity Normalization:** Anchored comprehensive `.lower().strip()` string normalizers within both the custom `UserManager._create_user` factory and the model level `User.save()` state hook to completely block duplicate variant entries.
+- **Django Admin Architecture Overhaul:** Fully rewrote user management registration and editing layouts inside `apps/users/admin.py`. Forms now explicitly inherit from native `UserCreationForm` and `UserChangeForm` classes, resolving type-safety constraints while clearing out conflicting legacy `username` properties via custom constructors.
+
 ## [0.1.0] - 2026-07-07
 
 ### Added
