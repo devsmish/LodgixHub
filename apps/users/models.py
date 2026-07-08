@@ -33,7 +33,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True, verbose_name="Active")
     is_staff = models.BooleanField(default=False, verbose_name="Employee status")
     is_superuser = models.BooleanField(default=False, verbose_name="Superuser status")
-    token_version = models.IntegerField(default=1, verbose_name="Token version")
+    token_version = models.PositiveIntegerField(default=1, verbose_name="Token version")
 
     # Lock Audit
     blocked_at = models.DateTimeField(
