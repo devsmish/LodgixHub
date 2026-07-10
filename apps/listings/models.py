@@ -15,7 +15,7 @@ from apps.listings.choices import (
     RoomType,
     StandardAmenity,
 )
-from core.models import BaseModel, TimestampedModel, TimePolicy
+from core.models import BaseModel, TimePolicy, TimestampedModel
 
 
 class Amenity(models.Model):

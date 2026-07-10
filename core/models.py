@@ -2,9 +2,9 @@ import uuid
 from datetime import time
 
 from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 
 class SoftDeleteQuerySet(models.QuerySet):
@@ -112,8 +112,12 @@ class LogModel(models.Model):
 
 
 class TimePolicy(models.Model):
-    check_in_time = models.TimeField(default=time(14, 0), verbose_name=_("Check-in time"))
-    check_out_time = models.TimeField(default=time(11, 0), verbose_name=_("Check-out time"))
+    check_in_time = models.TimeField(
+        default=time(14, 0), verbose_name=_("Check-in time")
+    )
+    check_out_time = models.TimeField(
+        default=time(11, 0), verbose_name=_("Check-out time")
+    )
 
     class Meta:
         abstract = True

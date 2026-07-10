@@ -28,3 +28,16 @@ class CancellationReason(models.TextChoices):
     @classmethod
     def get_description(cls, code):
         return dict(cls.choices).get(code)
+
+
+class DisputeReason(models.TextChoices):
+    CLEANLINESS = "CLEANLINESS", _("Cleanliness issues")
+    AMENITIES_MISSING = "AMENITIES_MISSING", _("Amenities not available")
+    DAMAGED_PROPERTY = "DAMAGED_PROPERTY", _("Property damage")
+    ACCESS_ISSUES = "ACCESS_ISSUES", _("Access/Check-in issues")
+    MISDESCRIPTION = "MISDESCRIPTION", _("Listing misdescription")
+    UNAUTHORIZED_CHARGES = "UNAUTHORIZED_CHARGES", _("Unauthorized charges")
+    EARLY_CHECK_OUT = "EARLY_CHECK_OUT", _("Early check-out request")
+    CANCELLATION_DISPUTE = "CANCELLATION_DISPUTE", _("Cancellation dispute")
+    NOISE_COMPLAINT = "NOISE_COMPLAINT", _("Noise complaint")
+    OTHER = "OTHER", _("Other")
