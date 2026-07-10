@@ -17,3 +17,14 @@ class DisputeStatus(models.TextChoices):
     UNDER_REVIEW = "under_review", _("Under Review by Moderator")
     RESOLVED_REFUNDED = "resolved_refunded", _("Resolved with Full/Partial Refund")
     RESOLVED_REJECTED = "resolved_rejected", _("Resolved - Claim Rejected")
+
+
+class CancellationReason(models.TextChoices):
+    PERSONAL_EMERGENCY = "personal_emergency", _("Personal emergency")
+    CHANGED_PLANS = "changed_plans", _("Changed plans")
+    PROPERTY_UNAVAILABLE = "property_unavailable", _("Property unavailable")
+    CLEANLINESS_ISSUES = "cleanliness_issues", _("Cleanliness issues")
+
+    @classmethod
+    def get_description(cls, code):
+        return dict(cls.choices).get(code)

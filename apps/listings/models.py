@@ -15,7 +15,7 @@ from apps.listings.choices import (
     RoomType,
     StandardAmenity,
 )
-from core.models import BaseModel, TimestampedModel
+from core.models import BaseModel, TimestampedModel, TimePolicy
 
 
 class Amenity(models.Model):
@@ -23,13 +23,13 @@ class Amenity(models.Model):
     slug = models.CharField(
         max_length=50,
         unique=True,
-        choices=StandardAmenity.choices,
+        choices=StandardAmenity,
         verbose_name=_("System Key"),
     )
     group = models.CharField(
         max_length=50,
         blank=True,
-        choices=AmenityGroup.choices,
+        choices=AmenityGroup,
         default=AmenityGroup.BASIC,
         verbose_name=_("Category Group"),
     )
@@ -50,7 +50,7 @@ class Amenity(models.Model):
         super().save(*args, **kwargs)
 
 
-class Listing(TimestampedModel):
+class Listing(TimestampedModel, TimePolicy):
     """
     Core Property asset. Inherits from TimestampedModel (non-deletable).
     """
@@ -66,13 +66,13 @@ class Listing(TimestampedModel):
 
     type = models.CharField(
         max_length=20,
-        choices=ListingType.choices,
+        choices=ListingType,
         default=ListingType.APARTMENT,
         verbose_name=_("Property Type"),
     )
     status = models.CharField(
         max_length=20,
-        choices=ListingStatus.choices,
+        choices=ListingStatus,
         default=ListingStatus.DRAFT,
         verbose_name=_("Status"),
     )
@@ -108,13 +108,13 @@ class Listing(TimestampedModel):
     )
     rental_type = models.CharField(
         max_length=20,
-        choices=RentalType.choices,
+        choices=RentalType,
         default=RentalType.ANY,
         verbose_name=_("Rental Type"),
     )
     meal_type = models.CharField(
         max_length=20,
-        choices=MealType.choices,
+        choices=MealType,
         default=MealType.NONE,
         verbose_name=_("Meal Type"),
     )
@@ -148,7 +148,7 @@ class Listing(TimestampedModel):
         super().save(*args, **kwargs)
 
 
-class Room(BaseModel):
+class Room(BaseModel, TimePolicy):
     """
     Room asset for multi-unit properties (Hotels/Hostels). Inherits from BaseModel (supports soft delete).
     """
@@ -161,7 +161,7 @@ class Room(BaseModel):
     )
     room_type = models.CharField(
         max_length=20,
-        choices=RoomType.choices,
+        choices=RoomType,
         default=RoomType.SINGLE,
         verbose_name=_("Room Type"),
     )

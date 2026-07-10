@@ -11,7 +11,7 @@ from core.models import TimestampedModel
 
 
 def photo_upload_path(instance, filename):
-    # We generate a unique filename to avoid collisions.
+    # Generate a unique filename to avoid collisions.
     ext = filename.split(".")[-1]
     filename = f"{uuid.uuid4()}.{ext}"
 
