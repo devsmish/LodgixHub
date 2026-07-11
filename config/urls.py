@@ -27,5 +27,6 @@ urlpatterns = [
     # path("api/v1/notifications/", include("apps.notifications.urls")),
     # path("api/v1/pricing/", include("apps.pricing.urls")),
     # path("api/v1/reviews/", include("apps.reviews.urls")),
-    path("api/v1/users/", include("apps.users.urls"), name="users"),
+    # path("api/v1/security/", include("apps.security.urls")),
+    path("api/v1/users/", include("apps.users.urls")),
 ]
