@@ -9,9 +9,9 @@ class GenderChoices(models.TextChoices):
 
 
 class BlockedReason(models.TextChoices):
-    SPAM = "SPAM", "Spam and advertising"
-    FRAUD = "FRAUD", "Fraud"
-    TOS_VIOLATION = "TOS_VIOLATION", "Violation of Terms of Use (ToS)"
-    FAKE_LISTING = "FAKE_LISTING", "Fake or fraudulent advertisement"
-    ABUSE = "ABUSE", "Insults, aggression, or inappropriate behavior"
-    OTHER = "OTHER", "Another reason"
+    SPAM = "SPAM", _("Spam and advertising")
+    FRAUD = "FRAUD", _("Fraud")
+    TOS_VIOLATION = "TOS_VIOLATION", _("Violation of Terms of Use (ToS)")
+    FAKE_LISTING = "FAKE_LISTING", _("Fake or fraudulent advertisement")
+    ABUSE = "ABUSE", _("Insults, aggression, or inappropriate behavior")
+    OTHER = "OTHER", _("Another reason")
