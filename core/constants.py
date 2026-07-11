@@ -14,9 +14,6 @@ DISPOSABLE_EMAIL_DOMAINS = {
     "guerrillamail.com",
 }
 
-# listings
-LISTING_MAX_GUESTS_CHOICES = (1, 2, 4, 6, 8, 10, 12)
-
 # pagination
 DEFAULT_PAGE_SIZE = 20
 MAX_PAGE_SIZE = 100
