@@ -119,6 +119,20 @@ class Listing(TimestampedModel, TimePolicy):
         verbose_name=_("Meal Type"),
     )
 
+    views_count = models.PositiveIntegerField(default=0, verbose_name=_("Views Count"))
+    rating_avg = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        verbose_name=_("Average Rating"),
+        help_text=_("Denormalized, recalculated by signal on Review change."),
+    )
+    reviews_count = models.PositiveIntegerField(
+        default=0,
+        verbose_name=_("Reviews Count"),
+        help_text=_("Denormalized, recalculated by signal on Review change."),
+    )
+
     amenities = models.ManyToManyField(
         Amenity, blank=True, related_name="listings", verbose_name=_("Amenities")
     )
