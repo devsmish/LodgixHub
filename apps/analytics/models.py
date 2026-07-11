@@ -22,7 +22,7 @@ class SearchHistory(LogModel):
         null=True,
         blank=True,
         verbose_name=_("Results Count"),
-        help_text=_("Number of listings matched by this query; null-count queries signal catalog gaps."),
+        help_text=_("Number of listings matched by this query."),
     )
 
     class Meta:

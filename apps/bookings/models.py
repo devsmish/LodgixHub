@@ -217,7 +217,7 @@ class Dispute(TimestampedModel):
             if timezone.now() > deadline:
                 raise ValidationError(
                     _(
-                        "Disputes can only be opened within 3 days after the booking is completed."
+                        "Disputes can be opened within 3 days after the booking is completed."
                     )
                 )
 
