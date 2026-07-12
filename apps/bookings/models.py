@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -10,11 +10,13 @@ from django.utils.translation import gettext_lazy as _
 from apps.bookings.choices import (
     BookingStatus,
     DisputeReason,
+    DisputeResolutionFavor,
     DisputeStatus,
     StandardCancellationReason,
 )
 from apps.bookings.constants import (
     DAILY_RENTAL_MAX_DAYS,
+    DISPUTE_ALLOWED_TRANSITIONS,
     DISPUTE_OPEN_WINDOW_DAYS,
     LONG_TERM_MIN_DAYS,
     MAX_BOOKING_DURATION_DAYS,
@@ -201,10 +203,15 @@ class Booking(TimestampedModel):
         # Protecting integrity in disputes
         if (
             self.pk
-            and hasattr(self, "dispute")
-            and self.dispute.status == DisputeStatus.OPEN
+            and self.disputes.filter(
+                status__in=[DisputeStatus.OPEN, DisputeStatus.UNDER_REVIEW]
+            ).exists()
         ):
             raise ValidationError(_("Cannot modify a booking with an active dispute."))
+
+    def get_landlord(self):
+        listing = self.listing or (self.room.listing if self.room else None)
+        return listing.owner if listing else None
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -215,8 +222,8 @@ class Booking(TimestampedModel):
 
 
 class Dispute(TimestampedModel):
-    booking = models.OneToOneField(
-        Booking, on_delete=models.CASCADE, related_name="dispute"
+    booking = models.ForeignKey(
+        Booking, on_delete=models.CASCADE, related_name="disputes"
     )
     opened_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -230,9 +237,35 @@ class Dispute(TimestampedModel):
     status = models.CharField(
         max_length=30, choices=DisputeStatus, default=DisputeStatus.OPEN
     )
-    claim_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    evidence_url = models.URLField(blank=True, null=True)
+    claim_amount = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0, verbose_name=_("Claim amount")
+    )
     resolved_at = models.DateTimeField(null=True, blank=True)
+
+    resolved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="resolved_disputes",
+        verbose_name=_("Resolved by"),
+    )
+    resolution_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name=_("Resolution amount"),
+        help_text=_("The amount actually awarded may be less than the claim_amount."),
+    )
+    resolution_favor = models.CharField(
+        max_length=20,
+        choices=DisputeResolutionFavor,
+        null=True,
+        blank=True,
+        verbose_name=_("Resolution favors"),
+    )
+    moderator_notes = models.TextField(blank=True, verbose_name=_("Moderator notes"))
 
     class Meta:
         indexes = [models.Index(fields=["booking", "status"])]
@@ -262,15 +295,71 @@ class Dispute(TimestampedModel):
     def clean(self):
         super().clean()
 
-        if self.booking.status == BookingStatus.COMPLETED:
-            deadline = self.booking.check_out_date + timedelta(
-                days=DISPUTE_OPEN_WINDOW_DAYS
-            )
-            if timezone.now().date() > deadline:
-                raise ValidationError(
-                    _(
-                        "Disputes can be opened within 3 days after the booking is completed."
+        booking = self.booking
+        landlord = booking.get_landlord()
+        allowed_opener_ids = {booking.tenant_id, getattr(landlord, "id", None)}
+        if self.opened_by_id and self.opened_by_id not in allowed_opener_ids:
+            raise ValidationError(
+                {
+                    "opened_by": _(
+                        "Only the tenant or the landlord of this booking can open a dispute."
                     )
+                }
+            )
+
+        if booking.status not in (BookingStatus.CONFIRMED, BookingStatus.COMPLETED):
+            raise ValidationError(
+                _("Disputes can only be opened for a confirmed or completed booking.")
+            )
+
+        target = booking.room if booking.room else booking.listing
+        check_in_dt = timezone.make_aware(
+            datetime.combine(booking.check_in_date, target.check_in_time)
+        )
+        check_out_dt = timezone.make_aware(
+            datetime.combine(booking.check_out_date, target.check_out_time)
+        )
+        now = timezone.now()
+
+        if now < check_in_dt:
+            raise ValidationError(
+                _("Dispute can only be opened after check-in has started.")
+            )
+
+        deadline = check_out_dt + timedelta(days=DISPUTE_OPEN_WINDOW_DAYS)
+        if now > deadline:
+            raise ValidationError(
+                _("Disputes can be opened only within %(days)s days after checkout.")
+                % {"days": DISPUTE_OPEN_WINDOW_DAYS}
+            )
+
+        active_qs = Dispute.objects.filter(
+            booking=booking,
+            opened_by=self.opened_by,
+            status__in=[DisputeStatus.OPEN, DisputeStatus.UNDER_REVIEW],
+        ).exclude(pk=self.pk)
+        if active_qs.exists():
+            raise ValidationError(
+                _("You already have an active dispute on this booking.")
+            )
+
+        if self.pk:
+            old_status = Dispute.objects.get(pk=self.pk).status
+            if (
+                old_status != self.status
+                and self.status
+                not in DISPUTE_ALLOWED_TRANSITIONS.get(old_status, set())
+            ):
+                raise ValidationError(
+                    {
+                        "status": _(
+                            "Invalid dispute status transition: %(old)s -> %(new)s."
+                        )
+                        % {
+                            "old": old_status,
+                            "new": self.status,
+                        }
+                    }
                 )
 
         if self.claim_amount < 0:
@@ -278,20 +367,98 @@ class Dispute(TimestampedModel):
                 {"claim_amount": _("Claim amount cannot be negative.")}
             )
 
-        if self.claim_amount > self.booking.total_price:
+        if self.claim_amount > booking.total_price:
             raise ValidationError(
                 {"claim_amount": _("Claim amount cannot exceed total booking price.")}
             )
 
+        if self.status in (
+            DisputeStatus.RESOLVED_REFUNDED,
+            DisputeStatus.RESOLVED_REJECTED,
+        ):
+            if not self.resolved_at:
+                raise ValidationError(
+                    {
+                        "resolved_at": _(
+                            "Resolution date is required for resolved disputes."
+                        )
+                    }
+                )
+            if not self.resolved_by_id:
+                raise ValidationError(
+                    {
+                        "resolved_by": _(
+                            "Resolved disputes must record who resolved them."
+                        )
+                    }
+                )
+            if not self.resolution_favor:
+                raise ValidationError(
+                    {
+                        "resolution_favor": _(
+                            "Resolved disputes must record who the resolution favors."
+                        )
+                    }
+                )
+
         if (
-            self.status
-            in [DisputeStatus.RESOLVED_REFUNDED, DisputeStatus.RESOLVED_REJECTED]
-            and not self.resolved_at
+            self.status == DisputeStatus.RESOLVED_REFUNDED
+            and self.resolution_amount is None
         ):
             raise ValidationError(
-                {"resolved_at": _("Resolution date is required for resolved disputes.")}
+                {
+                    "resolution_amount": _(
+                        "A refunded resolution must specify the resolution amount."
+                    )
+                }
             )
 
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Dispute {self.id} on booking {self.booking_id}"
+
+
+class DisputeEvidence(BaseModel):
+
+    dispute = models.ForeignKey(
+        Dispute, on_delete=models.CASCADE, related_name="evidence"
+    )
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="dispute_evidence",
+    )
+    url = models.URLField(verbose_name=_("Evidence URL"))
+    description = models.CharField(
+        max_length=255, blank=True, verbose_name=_("Description")
+    )
+
+    class Meta:
+        verbose_name = _("Dispute Evidence")
+        verbose_name_plural = _("Dispute Evidence")
+
+    def clean(self):
+        super().clean()
+        booking = self.dispute.booking
+        landlord = booking.get_landlord()
+        allowed_uploader_ids = {booking.tenant_id, getattr(landlord, "id", None)}
+        if self.uploaded_by_id and self.uploaded_by_id not in allowed_uploader_ids:
+            raise ValidationError(
+                {
+                    "uploaded_by": _(
+                        "Only the tenant or the landlord of this booking can upload evidence."
+                    )
+                }
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.url

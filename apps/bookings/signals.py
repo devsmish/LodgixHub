@@ -1,4 +1,9 @@
+import django.dispatch
+
 from apps.bookings.choices import StandardCancellationReason
+
+# An extension point for future integration with refunds money.
+dispute_resolved = django.dispatch.Signal()
 
 
 def create_standard_cancellation_reasons(sender, **kwargs):
