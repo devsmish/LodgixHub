@@ -73,7 +73,7 @@ class IsOwner(BasePermission):
         return bool(request.user and request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
-        for field_name in ("owner", "tenant", "user"):
+        for field_name in ("owner", "tenant", "user", "author"):
             if hasattr(obj, field_name):
                 return getattr(obj, field_name) == request.user
         return False
