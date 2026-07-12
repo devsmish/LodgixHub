@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from .choices import DisputeStatus
-from .models import Booking, Dispute
+from apps.bookings.choices import DisputeStatus
+from apps.bookings.models import Booking, CancellationReason, Dispute
 
 
 class DisputeInline(admin.StackedInline):
@@ -19,25 +19,35 @@ class DisputeInline(admin.StackedInline):
     )
 
 
+@admin.register(CancellationReason)
+class CancellationReasonAdmin(admin.ModelAdmin):
+    list_display = ("code", "description")
+    search_fields = ("code", "description")
+
+
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "owner_email",
+        "tenant_email",
         "status",
-        "check_in_at",
-        "check_out_at",
+        "check_in_date",
+        "check_out_date",
         "total_price",
+        "deposit_refunded",
         "has_active_dispute",
     )
-    list_filter = ("status", "check_in_at")
-    search_fields = ("owner__email", "id", "listing__name", "room__name")
-    readonly_fields = ("created_at", "updated_at")
+    list_filter = ("status", "check_in_date")
+    search_fields = ("tenant__email", "id", "listing__title", "room__name")
+    raw_id_fields = ("tenant", "cancelled_by", "cancellation_reason", "listing", "room")
+    readonly_fields = ("created_at", "updated_at", "confirmed_at", "cancelled_at")
     inlines = [DisputeInline]
-    date_hierarchy = "check_in_at"
+    date_hierarchy = "check_in_date"
 
-    def owner_email(self, obj):
-        return obj.owner.email
+    def tenant_email(self, obj):
+        return obj.tenant.email
+
+    tenant_email.short_description = "Tenant"
 
     def has_active_dispute(self, obj):
         return hasattr(obj, "dispute") and obj.dispute.status == DisputeStatus.OPEN
