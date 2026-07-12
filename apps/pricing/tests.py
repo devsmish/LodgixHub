@@ -1,56 +1,159 @@
 from datetime import timedelta
+from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
 
-from apps.listings.models import Listing
+from apps.listings.choices import ListingType
+from apps.listings.models import Address, Listing
 from apps.pricing.models import PriceHistory
 
 User = get_user_model()
 
 
+def make_address(**overrides):
+    defaults = {
+        "region": "Saarland",
+        "city": "Saarlouis",
+        "street": "Kaiser-Wilhelm-Straße",
+        "house_number": "12",
+        "postal_code": "66740",
+    }
+    defaults.update(overrides)
+    return Address.objects.create(**defaults)
+
+
 class PriceHistoryTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create(email="test@example.com")
+        self.landlord = User.objects.create_user(
+            email="landlord@example.com", password="securepassword123"
+        )
         self.listing = Listing.objects.create(
-            owner=self.user,
+            owner=self.landlord,
             title="Test Hotel",
-            type="hotel",
-            latitude=0.0,
-            longitude=0.0,
+            type=ListingType.HOTEL,
+            address=make_address(),
             max_guests=2,
-            price_per_night=100.0,
+            current_price=Decimal("100.00"),
         )
         self.today = timezone.now().date()
 
-    def test_price_history_future_date_validation(self):
-        # The Ban on the Past
+    def test_price_history_past_date_raises(self):
         past_date = self.today - timedelta(days=1)
         history = PriceHistory(
-            listing=self.listing, price=100, effective_date=past_date
+            listing=self.listing,
+            price=100,
+            valid_from=past_date,
+            changed_by=self.landlord,
         )
         with self.assertRaises(ValidationError):
             history.full_clean()
 
-    def test_price_history_overwrite_logic(self):
-        # Verification of record (register) merging
+    def test_first_price_effective_today_is_allowed(self):
+        history = PriceHistory.objects.create(
+            listing=self.listing,
+            price=100,
+            valid_from=self.today,
+            changed_by=self.landlord,
+        )
+        self.assertEqual(history.price, Decimal("100.00"))
+
+    def test_second_price_effective_today_raises(self):
         PriceHistory.objects.create(
-            listing=self.listing, price=100, effective_date=self.today
+            listing=self.listing,
+            price=100,
+            valid_from=self.today,
+            changed_by=self.landlord,
+        )
+        with self.assertRaises(ValidationError):
+            PriceHistory.objects.create(
+                listing=self.listing,
+                price=150,
+                valid_from=self.today,
+                changed_by=self.landlord,
+            )
+
+    def test_future_price_after_first_is_allowed(self):
+        PriceHistory.objects.create(
+            listing=self.listing,
+            price=100,
+            valid_from=self.today,
+            changed_by=self.landlord,
+        )
+        future = PriceHistory.objects.create(
+            listing=self.listing,
+            price=120,
+            valid_from=self.today + timedelta(days=3),
+            changed_by=self.landlord,
+        )
+        self.assertEqual(future.price, Decimal("120.00"))
+
+    def test_negative_or_zero_price_raises(self):
+        history = PriceHistory(
+            listing=self.listing,
+            price=Decimal("0.00"),
+            valid_from=self.today,
+            changed_by=self.landlord,
+        )
+        with self.assertRaises(ValidationError):
+            history.full_clean()
+
+    def test_xor_listing_or_room_constraint(self):
+        history = PriceHistory(
+            price=100, valid_from=self.today, changed_by=self.landlord
+        )
+        with self.assertRaises(ValidationError):
+            history.full_clean()
+
+    def test_multiple_rows_same_valid_from_are_kept_not_overwritten(self):
+        future_date = self.today + timedelta(days=5)
+        PriceHistory.objects.create(
+            listing=self.listing,
+            price=100,
+            valid_from=self.today,
+            changed_by=self.landlord,
         )
         PriceHistory.objects.create(
-            listing=self.listing, price=200, effective_date=self.today
+            listing=self.listing,
+            price=130,
+            valid_from=future_date,
+            changed_by=self.landlord,
+        )
+        corrected = PriceHistory.objects.create(
+            listing=self.listing,
+            price=140,
+            valid_from=future_date,
+            changed_by=self.landlord,
         )
 
-        self.assertEqual(PriceHistory.objects.filter(listing=self.listing).count(), 1)
-        self.assertEqual(PriceHistory.objects.get(listing=self.listing).price, 200)
+        same_date_rows = PriceHistory.objects.filter(
+            listing=self.listing, valid_from=future_date
+        )
+        self.assertEqual(same_date_rows.count(), 2)
+
+        latest = same_date_rows.order_by("-created_at").first()
+        self.assertEqual(latest.pk, corrected.pk)
+        self.assertEqual(latest.price, Decimal("140.00"))
 
     def test_log_model_immutability(self):
-        # Verification that LogModel blocks the update
         entry = PriceHistory.objects.create(
-            listing=self.listing, price=100, effective_date=self.today
+            listing=self.listing,
+            price=100,
+            valid_from=self.today,
+            changed_by=self.landlord,
         )
         entry.price = 500
         with self.assertRaises(ValidationError):
             entry.save()
+
+    def test_bulk_delete_still_protected(self):
+        PriceHistory.objects.create(
+            listing=self.listing,
+            price=100,
+            valid_from=self.today,
+            changed_by=self.landlord,
+        )
+        with self.assertRaises(ValidationError):
+            PriceHistory.objects.filter(listing=self.listing).delete()

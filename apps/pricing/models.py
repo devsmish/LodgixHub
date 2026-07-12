@@ -1,13 +1,16 @@
+from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from core.models import LogModel
 
 
 class PriceHistory(LogModel):
-    # XOR: use CheckConstraint for DB
+
     listing = models.ForeignKey(
         "listings.Listing", on_delete=models.CASCADE, null=True, blank=True
     )
@@ -15,20 +18,30 @@ class PriceHistory(LogModel):
         "listings.Room", on_delete=models.CASCADE, null=True, blank=True
     )
 
-    price = models.DecimalField(max_digits=12, decimal_places=2)
+    price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(0.01)],
+        verbose_name=_("Price"),
+    )
     currency = models.CharField(max_length=3, default="EUR")
-    effective_date = models.DateField(default=timezone.now)
+    valid_from = models.DateField(default=timezone.now, verbose_name=_("Valid from"))
+
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="price_changes",
+        verbose_name=_("Changed by"),
+    )
 
     class Meta:
-        # Uniqueness: object + date = one record
-        unique_together = ("listing", "room", "effective_date")
-        ordering = ["-effective_date", "-created_at"]
+        ordering = ["-valid_from", "-created_at"]
         indexes = [
-            models.Index(fields=["effective_date"], name="idx_price_date"),
+            models.Index(fields=["valid_from"], name="idx_price_date"),
             models.Index(
-                fields=["listing", "effective_date"], name="idx_listing_price_date"
+                fields=["listing", "valid_from"], name="idx_listing_price_date"
             ),
-            models.Index(fields=["room", "effective_date"], name="idx_room_price_date"),
+            models.Index(fields=["room", "valid_from"], name="idx_room_price_date"),
         ]
         constraints = [
             CheckConstraint(
@@ -39,21 +52,35 @@ class PriceHistory(LogModel):
         ]
 
     def clean(self):
-        # XOR validation for admin panel
         if (self.listing and self.room) or (not self.listing and not self.room):
             raise ValidationError(
-                "The price must be linked either to the listing or to the room."
+                _("The price must be linked either to the listing or to the room.")
             )
 
-        # Date validation: prevents setting prices for past dates
-        if self.effective_date < timezone.now().date():
-            raise ValidationError("You cannot set prices for past dates.")
+        today = timezone.now().date()
+
+        if self.valid_from < today:
+            raise ValidationError(
+                {"valid_from": _("You cannot set prices for past dates.")}
+            )
+
+        is_first_price = not PriceHistory.objects.filter(
+            listing=self.listing, room=self.room
+        ).exists()
+        if self.valid_from == today and not is_first_price:
+            raise ValidationError(
+                {
+                    "valid_from": _(
+                        "Cannot set a price effective today, except for the very "
+                        "first price when the listing is created."
+                    )
+                }
+            )
 
     def save(self, *args, **kwargs):
         self.full_clean()
-
-        PriceHistory.objects.filter(
-            listing=self.listing, room=self.room, effective_date=self.effective_date
-        ).delete()
-
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        target = self.listing_id or self.room_id
+        return f"{target}: {self.price} {self.currency} from {self.valid_from}"
