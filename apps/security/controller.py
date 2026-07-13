@@ -7,8 +7,17 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenRefreshView as SimpleJWTTokenRefreshView
 
-from apps.users.serializers import CustomTokenObtainPairSerializer
+from apps.security.dto import CustomTokenObtainPairSerializer
+
+
+class RegisterView(APIView):
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        raise NotImplementedError
 
 
 class LoginView(TokenObtainPairView):
@@ -34,7 +43,6 @@ class LoginView(TokenObtainPairView):
 
 
 class LogoutView(APIView):
-
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -54,3 +62,7 @@ class LogoutView(APIView):
 
         response.delete_cookie("refresh_token")
         return response
+
+
+class TokenRefreshView(SimpleJWTTokenRefreshView):
+    pass
