@@ -3,7 +3,7 @@ from django.db.models.signals import post_migrate
 
 
 class UsersConfig(AppConfig):
-    DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+    default_auto_field = "django.db.models.BigAutoField"
     name = "apps.users"
     verbose_name = "Users"
 

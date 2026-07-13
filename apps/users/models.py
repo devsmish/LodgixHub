@@ -78,7 +78,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     token_version = models.PositiveIntegerField(default=0, verbose_name="Token version")
 
     # Lock Audit
-    is_blocked = models.BooleanField(default=False, verbose_name="Blocked status")
     blocked_at = models.DateTimeField(
         null=True, blank=True, verbose_name="Blocking date"
     )
@@ -142,11 +141,26 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def delete(self, using=None, keep_parents=False):
         self.deleted_at = timezone.now()
-        self.save(using=using, update_fields=["deleted_at", "updated_at"])
+        self.is_active = False
+        self.save(using=using, update_fields=["deleted_at", "is_active", "updated_at"])
 
     def restore(self, using=None):
         self.deleted_at = None
-        self.save(using=using, update_fields=["deleted_at", "updated_at"])
+        self.is_active = True
+        self.blocked_at = None
+        self.blocked_reason = None
+        self.blocked_by = None
+        self.save(
+            using=using,
+            update_fields=[
+                "deleted_at",
+                "is_active",
+                "blocked_at",
+                "blocked_reason",
+                "blocked_by",
+                "updated_at",
+            ],
+        )
 
     @property
     def is_deleted(self):

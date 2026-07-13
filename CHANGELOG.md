@@ -4,6 +4,18 @@ All notable changes to LodgixHub will be documented in this file.
 
 The format follows a simple chronological structure.
 
+## [0.3.0] - 2026-07-13
+
+### Added
+- **Global Domain Dictionaries & Choices (Issues #19, #20):** Introduced centralized, independent choices layers for `listings`, `bookings`, `reviews`, and `notifications`. Deployed the foundational `Amenity` dictionary model with soft-delete behaviors enabled.
+- **Core Property Infrastructure & Validation (Issue #21):** Implemented core `Listing` (Timestamped) and `Room` (BaseModel) schemas. Integrated localized field constraints via Django property validators (latitude/longitude ranges, capacity baselines) and multi-field cross-checks inside `Room.clean()` to reject room attachments on apartment listing types.
+- **Content Assets & Price Ledger (Issue #22):** Deployed the `Photo` model utilizing explicit exclusive-OR bindings to either a Listing or a Room via model layer clean checks and database `CheckConstraint` blocks. Added the append-only `PriceHistory` ledger inheriting from `LogModel` with hooks preventing retrospective historical price mutations.
+- **Transactional Booking & Dispute Layer (Issues #23, #24):** Engineered `Booking`, `Review`, and `Dispute` domain schemas. Enforced data-integrity rules directly in MySQL via database `CheckConstraint` blocks (`check_out_date > check_in_date`), multi-field capacity validation against parent listing structures, and isolated review state gates restricted exclusively to completed operations.
+- **Analytical Event Logging & Deduplication (Issue #25):** Wired `SearchHistory` and `ViewHistory` pipelines using performance-indexed `LogModel` data layouts. Implemented query-string normalizers, denormalized metrics (`views_count`, `reviews_count`) on listings, and a 15-minute sliding session window for view event deduplication.
+
+### Changed
+- **Global Codebase Refactoring & Standardized App Packages (Issue #32):** Retired monolithic `models.py` architectures across all operational modules.
+
 ## [0.2.0] - 2026-07-08
 
 ### Added
