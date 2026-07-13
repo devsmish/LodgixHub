@@ -6,7 +6,7 @@ def create_standard_amenities(sender, **kwargs):
     Automatically populates the `Amenity` table with default values
     immediately after the `listings` application migrations are executed.
     """
-    # The sender in the post_migrate signal is the AppConfig of the application that was just migrated.
+    # The sender in the post_migrate signal is the AppConfig of the app that was just migrated
     if sender.name == "apps.listings":
         Amenity = sender.get_model("Amenity")
 

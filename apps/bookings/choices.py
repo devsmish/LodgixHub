@@ -19,15 +19,17 @@ class DisputeStatus(models.TextChoices):
     RESOLVED_REJECTED = "resolved_rejected", _("Resolved - Claim Rejected")
 
 
-class CancellationReason(models.TextChoices):
+class DisputeResolutionFavor(models.TextChoices):
+    TENANT = "tenant", _("In favor of tenant")
+    LANDLORD = "landlord", _("In favor of landlord")
+    SPLIT = "split", _("Split between both parties")
+
+
+class StandardCancellationReason(models.TextChoices):
     PERSONAL_EMERGENCY = "personal_emergency", _("Personal emergency")
     CHANGED_PLANS = "changed_plans", _("Changed plans")
     PROPERTY_UNAVAILABLE = "property_unavailable", _("Property unavailable")
     CLEANLINESS_ISSUES = "cleanliness_issues", _("Cleanliness issues")
-
-    @classmethod
-    def get_description(cls, code):
-        return dict(cls.choices).get(code)
 
 
 class DisputeReason(models.TextChoices):

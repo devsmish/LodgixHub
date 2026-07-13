@@ -2,67 +2,113 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
 from django.test import TestCase
 
 from apps.listings.choices import ListingStatus, ListingType, RoomType
-from apps.listings.models import Listing, Room
+from apps.listings.models import Address, Amenity, Listing, ListingAmenity, Room
 
 User = get_user_model()
 
 
+def make_address(**overrides):
+    """A common helper — the Address is mandatory for any Listing."""
+    defaults = {
+        "region": "Saarland",
+        "city": "Saarlouis",
+        "street": "Kaiser-Wilhelm-Straße",
+        "house_number": "12",
+        "postal_code": "66740",
+    }
+    defaults.update(overrides)
+    return Address.objects.create(**defaults)
+
+
+class AddressModelTestCase(TestCase):
+
+    def test_latitude_boundaries(self):
+        address = Address(
+            **{
+                "region": "Saarland",
+                "city": "Saarlouis",
+                "street": "Teststraße",
+                "house_number": "1",
+                "postal_code": "66740",
+                "latitude": Decimal("-90.0001"),
+                "longitude": Decimal("0"),
+            }
+        )
+        with self.assertRaises(ValidationError):
+            address.full_clean()
+
+        address.latitude = Decimal("90.0001")
+        with self.assertRaises(ValidationError):
+            address.full_clean()
+
+    def test_longitude_boundaries(self):
+        address = Address(
+            **{
+                "region": "Saarland",
+                "city": "Saarlouis",
+                "street": "Teststraße",
+                "house_number": "1",
+                "postal_code": "66740",
+                "latitude": Decimal("0"),
+                "longitude": Decimal("-180.0001"),
+            }
+        )
+        with self.assertRaises(ValidationError):
+            address.full_clean()
+
+        address.longitude = Decimal("180.0001")
+        with self.assertRaises(ValidationError):
+            address.full_clean()
+
+    def test_latitude_longitude_optional(self):
+        address = Address(
+            **{
+                "region": "Saarland",
+                "city": "Saarlouis",
+                "street": "Teststraße",
+                "house_number": "1",
+                "postal_code": "66740",
+                "latitude": Decimal("49.3137"),
+                "longitude": Decimal("6.7515"),
+            }
+        )
+        address.full_clean()
+
+
 class ListingModelTestCase(TestCase):
-    """
-    Testing validation and constraints for the base listing model.
-    """
+    """Testing validation and constraints for the base listing model."""
 
     def setUp(self):
         self.owner = User.objects.create_user(
             email="owner@example.com", password="securepassword123"
         )
+        self.address = make_address()
         self.valid_listing_data = {
             "owner": self.owner,
             "title": "Test Real Estate",
             "description": "Description object",
             "type": ListingType.APARTMENT,
             "status": ListingStatus.DRAFT,
-            "latitude": Decimal("55.7558"),
-            "longitude": Decimal("37.6173"),
+            "address": self.address,
             "max_guests": 2,
-            "price_per_night": Decimal("3500.00"),
+            "current_price": Decimal("3500.00"),
         }
 
     def test_create_valid_listing(self):
-        """Verification of the successful creation of a valid advertisement and UUID inheritance."""
+        """Verification of the successful creation of
+        a valid advertisement and UUID inheritance."""
         listing = Listing.objects.create(**self.valid_listing_data)
 
         self.assertIsNotNone(listing.id)
         self.assertEqual(len(str(listing.id)), 36)
         self.assertIsNotNone(listing.created_at)
         self.assertEqual(listing.status, ListingStatus.DRAFT)
-
-    def test_latitude_boundaries(self):
-        """Validation check for the latitude range [-90, 90]."""
-        self.valid_listing_data["latitude"] = Decimal("-90.0001")
-        listing_invalid_low = Listing(**self.valid_listing_data)
-        with self.assertRaises(ValidationError):
-            listing_invalid_low.full_clean()
-
-        self.valid_listing_data["latitude"] = Decimal("90.0001")
-        listing_invalid_high = Listing(**self.valid_listing_data)
-        with self.assertRaises(ValidationError):
-            listing_invalid_high.full_clean()
-
-    def test_longitude_boundaries(self):
-        """Validation check for the longitude range [-180, 180]."""
-        self.valid_listing_data["longitude"] = Decimal("-180.0001")
-        listing_invalid_low = Listing(**self.valid_listing_data)
-        with self.assertRaises(ValidationError):
-            listing_invalid_low.full_clean()
-
-        self.valid_listing_data["longitude"] = Decimal("180.0001")
-        listing_invalid_high = Listing(**self.valid_listing_data)
-        with self.assertRaises(ValidationError):
-            listing_invalid_high.full_clean()
+        self.assertTrue(listing.is_active)
+        self.assertIsNone(listing.deleted_at)
 
     def test_listing_max_guests_minimum_constraint(self):
         """Check for the listing capacity limit (max_guests >= 1)."""
@@ -72,11 +118,53 @@ class ListingModelTestCase(TestCase):
         with self.assertRaises(ValidationError):
             listing.full_clean()
 
+    def test_deposit_percent_range_constraint(self):
+        """deposit_percent must be in the range of 0–100."""
+        self.valid_listing_data["deposit_percent"] = 150
+        listing = Listing(**self.valid_listing_data)
+
+        with self.assertRaises(ValidationError):
+            listing.full_clean()
+
+    def test_rooms_count_only_for_apartment_type(self):
+        """rooms_count is forbidden for type != apartment (clean())."""
+        self.valid_listing_data["type"] = ListingType.HOTEL
+        self.valid_listing_data["rooms_count"] = 5
+        listing = Listing(**self.valid_listing_data)
+
+        with self.assertRaises(ValidationError) as context:
+            listing.full_clean()
+        self.assertIn("rooms_count", context.exception.message_dict)
+
+    def test_rooms_count_allowed_for_apartment(self):
+        self.valid_listing_data["rooms_count"] = 3
+        listing = Listing.objects.create(**self.valid_listing_data)
+        self.assertEqual(listing.rooms_count, 3)
+
+    def test_soft_delete_via_base_model(self):
+        listing = Listing.objects.create(**self.valid_listing_data)
+
+        listing.delete()
+
+        self.assertIsNotNone(listing.deleted_at)
+        self.assertNotIn(listing, Listing.objects.all())
+        self.assertIn(listing, Listing.all_objects.all())
+
+        listing.restore()
+        self.assertIn(listing, Listing.objects.all())
+
+    def test_increment_views_count_bypasses_full_clean(self):
+        listing = Listing.objects.create(**self.valid_listing_data)
+        self.assertEqual(listing.views_count, 0)
+
+        listing.increment_views_count()
+        listing.refresh_from_db()
+
+        self.assertEqual(listing.views_count, 1)
+
 
 class RoomModelTestCase(TestCase):
-    """
-    Testing business logic and constraints for Room.
-    """
+    """Testing business logic and constraints for Room."""
 
     def setUp(self):
         self.owner = User.objects.create_user(
@@ -87,20 +175,20 @@ class RoomModelTestCase(TestCase):
             owner=self.owner,
             title="Grand Hotel Plaza",
             type=ListingType.HOTEL,
-            latitude=Decimal("45.0000"),
-            longitude=Decimal("45.0000"),
+            address=make_address(
+                city="Berlin", street="Alexanderplatz", house_number="1"
+            ),
             max_guests=20,
-            price_per_night=Decimal("8000.00"),
+            current_price=Decimal("8000.00"),
         )
 
         self.apartment_listing = Listing.objects.create(
             owner=self.owner,
             title="Cozy studio",
             type=ListingType.APARTMENT,
-            latitude=Decimal("46.0000"),
-            longitude=Decimal("46.0000"),
+            address=make_address(city="Munich", street="Marienplatz", house_number="2"),
             max_guests=4,
-            price_per_night=Decimal("4000.00"),
+            current_price=Decimal("4000.00"),
         )
 
     def test_attach_room_to_hotel_success(self):
@@ -118,7 +206,8 @@ class RoomModelTestCase(TestCase):
         self.assertIsNone(room.deleted_at)
 
     def test_attach_room_to_apartment_raises_validation_error(self):
-        """Verification that clean() prevents linking a room to an APARTMENT and raises a ValidationError."""
+        """Verification that clean() prevents linking a room
+        to an APARTMENT and raises a ValidationError."""
         room = Room(
             listing=self.apartment_listing,
             room_type=RoomType.SINGLE,
@@ -149,3 +238,34 @@ class RoomModelTestCase(TestCase):
 
         with self.assertRaises(ValidationError):
             room.save()
+
+
+class ListingAmenityModelTestCase(TestCase):
+
+    def setUp(self):
+        self.owner = User.objects.create_user(
+            email="host@example.com", password="securepassword123"
+        )
+        self.listing = Listing.objects.create(
+            owner=self.owner,
+            title="Test Listing",
+            type=ListingType.APARTMENT,
+            address=make_address(),
+            max_guests=2,
+            current_price=Decimal("1000.00"),
+        )
+        self.amenity = Amenity.objects.create(name="Wi-Fi", slug="wifi")
+
+    def test_duplicate_listing_amenity_raises_integrity_error(self):
+        ListingAmenity.objects.create(listing=self.listing, amenity=self.amenity)
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                ListingAmenity.objects.create(
+                    listing=self.listing, amenity=self.amenity
+                )
+
+    def test_amenity_group_autoset_on_save(self):
+        """Amenity.save(): StandardAmenity.get_group_for_slug."""
+        wifi = Amenity.objects.get(slug="wifi")
+        self.assertEqual(wifi.group, "basic")

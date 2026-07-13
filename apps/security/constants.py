@@ -9,3 +9,9 @@ SYSTEM_ROLES = [
     GROUP_MODERATOR,
     GROUP_ADMIN,
 ]
+
+JWT_MIDDLEWARE_EXCLUDED_PATHS = {
+    "/api/v1/users/auth/login/",
+    "/api/v1/users/auth/logout/",
+}
+JWT_MIDDLEWARE_EXCLUDED_PATH_PREFIXES = ("/admin/",)

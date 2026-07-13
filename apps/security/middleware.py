@@ -4,6 +4,11 @@ from django.http import HttpRequest, HttpResponse
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken, TokenError
 
+from apps.security.constants import (
+    JWT_MIDDLEWARE_EXCLUDED_PATH_PREFIXES,
+    JWT_MIDDLEWARE_EXCLUDED_PATHS,
+)
+
 
 class JWTAuthMiddleware:
     """
@@ -16,12 +21,8 @@ class JWTAuthMiddleware:
       3. Adds the new access token to the 'X-Access-Token' response header for the frontend.
     """
 
-    excluded_paths = {
-        "/api/v1/users/auth/login/",
-        "/api/v1/users/auth/logout/",
-    }
-
-    excluded_path_prefixes = ("/admin/",)
+    excluded_paths = JWT_MIDDLEWARE_EXCLUDED_PATHS
+    excluded_path_prefixes = JWT_MIDDLEWARE_EXCLUDED_PATH_PREFIXES
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -59,7 +60,6 @@ class JWTAuthMiddleware:
 
         elif minted_access_token:
             response["X-Access-Token"] = minted_access_token
-            response["Access-Control-Expose-Headers"] = "X-Access-Token"
 
         return response
 
