@@ -6,7 +6,22 @@ from django.db.models import CheckConstraint, Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from core.models import LogModel
+from core.models import LogManager, LogModel, LogQuerySet
+
+
+class PriceHistoryQuerySet(LogQuerySet):
+    def effective_on(self, target_date, *, listing=None, room=None):
+        qs = self.filter(valid_from__lte=target_date)
+        if listing is not None:
+            qs = qs.filter(listing=listing)
+        if room is not None:
+            qs = qs.filter(room=room)
+        return qs.order_by("-valid_from", "-created_at")
+
+
+class PriceHistoryManager(LogManager):
+    def get_queryset(self) -> PriceHistoryQuerySet:
+        return PriceHistoryQuerySet(self.model, using=self._db)
 
 
 class PriceHistory(LogModel):
@@ -33,6 +48,8 @@ class PriceHistory(LogModel):
         related_name="price_changes",
         verbose_name=_("Changed by"),
     )
+
+    objects = PriceHistoryManager()
 
     class Meta:
         ordering = ["-valid_from", "-created_at"]

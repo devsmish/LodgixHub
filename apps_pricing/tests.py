@@ -27,6 +27,9 @@ def make_address(**overrides):
 
 class PriceHistoryTest(TestCase):
     def setUp(self):
+        # CHANGED: было User.objects.create(email=...) без пароля и без
+        # нормализации — заменено на create_user(), как везде в остальных
+        # тестах проекта.
         self.landlord = User.objects.create_user(
             email="landlord@example.com", password="securepassword123"
         )
@@ -34,9 +37,9 @@ class PriceHistoryTest(TestCase):
             owner=self.landlord,
             title="Test Hotel",
             type=ListingType.HOTEL,
-            address=make_address(),
+            address=make_address(),  # CHANGED: latitude/longitude больше не на Listing
             max_guests=2,
-            current_price=Decimal("100.00"),
+            current_price=Decimal("100.00"),  # CHANGED: было price_per_night
         )
         self.today = timezone.now().date()
 
@@ -45,13 +48,14 @@ class PriceHistoryTest(TestCase):
         history = PriceHistory(
             listing=self.listing,
             price=100,
-            valid_from=past_date,
-            changed_by=self.landlord,
+            valid_from=past_date,  # CHANGED: было effective_date
+            changed_by=self.landlord,  # NEW
         )
         with self.assertRaises(ValidationError):
             history.full_clean()
 
     def test_first_price_effective_today_is_allowed(self):
+        """NEW: самая первая цена листинга может быть выставлена с valid_from=today."""
         history = PriceHistory.objects.create(
             listing=self.listing,
             price=100,
@@ -61,6 +65,7 @@ class PriceHistoryTest(TestCase):
         self.assertEqual(history.price, Decimal("100.00"))
 
     def test_second_price_effective_today_raises(self):
+        """NEW: раньше valid_from == today разрешался всегда, без исключения только для первой цены."""
         PriceHistory.objects.create(
             listing=self.listing,
             price=100,
@@ -91,6 +96,7 @@ class PriceHistoryTest(TestCase):
         self.assertEqual(future.price, Decimal("120.00"))
 
     def test_negative_or_zero_price_raises(self):
+        """NEW: MinValueValidator(0.01) отсутствовал на уровне поля."""
         history = PriceHistory(
             listing=self.listing,
             price=Decimal("0.00"),
@@ -103,11 +109,16 @@ class PriceHistoryTest(TestCase):
     def test_xor_listing_or_room_constraint(self):
         history = PriceHistory(
             price=100, valid_from=self.today, changed_by=self.landlord
-        )
+        )  # ни listing, ни room
         with self.assertRaises(ValidationError):
             history.full_clean()
 
     def test_multiple_rows_same_valid_from_are_kept_not_overwritten(self):
+        """
+        Регрессия: раньше save() удалял предыдущую запись на ту же дату —
+        прямое нарушение append-only и конфликт с LogQuerySet.delete().
+        Теперь обе строки должны остаться в таблице.
+        """
         future_date = self.today + timedelta(days=5)
         PriceHistory.objects.create(
             listing=self.listing,
@@ -131,8 +142,11 @@ class PriceHistoryTest(TestCase):
         same_date_rows = PriceHistory.objects.filter(
             listing=self.listing, valid_from=future_date
         )
-        self.assertEqual(same_date_rows.count(), 2)
+        self.assertEqual(
+            same_date_rows.count(), 2
+        )  # обе строки на месте, ничего не удалено
 
+        # "Актуальная" цена на эту дату — самая свежая по created_at.
         latest = same_date_rows.order_by("-created_at").first()
         self.assertEqual(latest.pk, corrected.pk)
         self.assertEqual(latest.price, Decimal("140.00"))
@@ -149,6 +163,11 @@ class PriceHistoryTest(TestCase):
             entry.save()
 
     def test_bulk_delete_still_protected(self):
+        """
+        Регрессия/подтверждение: PriceHistory больше не пытается сама себя
+        удалять в обход LogModel — bulk-delete остаётся запрещённым, как и
+        для любого другого LogModel-потомка.
+        """
         PriceHistory.objects.create(
             listing=self.listing,
             price=100,
@@ -159,6 +178,7 @@ class PriceHistoryTest(TestCase):
             PriceHistory.objects.filter(listing=self.listing).delete()
 
     def test_effective_on_picks_max_valid_from_not_exceeding_date(self):
+        """NEW: effective_on() — правило "макс. valid_from <= дата" на реальных данных."""
         PriceHistory.objects.create(
             listing=self.listing,
             price=100,
@@ -172,14 +192,17 @@ class PriceHistoryTest(TestCase):
             changed_by=self.landlord,
         )
 
-        far_future = self.today + timedelta(days=2)
+        far_future = self.today + timedelta(days=2)  # между двумя записями
         effective = PriceHistory.objects.effective_on(
             far_future, listing=self.listing
         ).first()
 
-        self.assertEqual(effective.price, Decimal("100.00"))
+        self.assertEqual(
+            effective.price, Decimal("100.00")
+        )  # цена от +5 дней ещё не наступила
 
     def test_effective_on_breaks_ties_by_created_at(self):
+        """NEW: при одинаковой valid_from должна побеждать самая свежая по created_at запись."""
         future_date = self.today + timedelta(days=5)
         PriceHistory.objects.create(
             listing=self.listing,
