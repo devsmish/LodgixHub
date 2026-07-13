@@ -24,7 +24,7 @@ class DummyProtectedView(APIView):
 
 # Creating a test URL map
 urlpatterns = [
-    path("api/v1/users/", include("apps.users.urls", namespace="users")),
+    path("api/v1/", include("apps.security.urls", namespace="security")),
     path("api/v1/test-protected/", DummyProtectedView.as_view(), name="test-protected"),
 ]
 
@@ -41,8 +41,8 @@ class JWTAuthenticationAndMiddlewareTestCase(APITestCase):
             first_name="John",
             last_name="Doe",
         )
-        self.login_url = reverse("users:login")
-        self.logout_url = reverse("users:logout")
+        self.login_url = reverse("security:login")
+        self.logout_url = reverse("security:logout")
         self.protected_url = reverse("test-protected")
 
     def test_01_login_sets_cookie_and_returns_access_token(self):
