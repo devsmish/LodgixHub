@@ -14,7 +14,9 @@ app_name = "bookings"
 
 router = SimpleRouter()
 router.register("bookings", BookingViewSet, basename="booking")
-router.register("cancellation-reasons", CancellationReasonViewSet, basename="cancellation-reason")
+router.register(
+    "cancellation-reasons", CancellationReasonViewSet, basename="cancellation-reason"
+)
 router.register("disputes", DisputeViewSet, basename="dispute")
 
 urlpatterns = router.urls + [
