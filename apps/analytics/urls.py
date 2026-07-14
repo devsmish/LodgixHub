@@ -1,11 +1,11 @@
 from django.urls import path
 
-from apps.analytics.controller import (
+from apps.analytics.controller.search_history import (
     MySearchHistoryView,
-    MyViewHistoryView,
     PopularSearchKeywordsView,
 )
-from apps.analytics.stats_controller import AdminDashboardStatsView
+from apps.analytics.controller.stats_controller import AdminDashboardStatsView
+from apps.analytics.controller.view_history import MyViewHistoryView
 
 app_name = "analytics"
 
@@ -21,9 +21,4 @@ urlpatterns = [
         name="search-history-mine",
     ),
     path("view-history/mine/", MyViewHistoryView.as_view(), name="view-history-mine"),
-    path(
-        "stats/admin-dashboard/",
-        AdminDashboardStatsView.as_view(),
-        name="admin-dashboard-stats",
-    ),
 ]

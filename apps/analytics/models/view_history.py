@@ -6,39 +6,14 @@ from apps.listings.models import Listing
 from core.models import LogModel
 
 
-class SearchHistory(LogModel):
-
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="search_history",
-        verbose_name=_("User"),
-        help_text=_("Null for unauthenticated guest search."),
-    )
-    keyword = models.CharField(max_length=255, verbose_name=_("Keyword"))
-    results_count = models.PositiveIntegerField(
-        null=True,
-        blank=True,
-        verbose_name=_("Results Count"),
-        help_text=_("Number of listings matched by this query."),
-    )
-
-    class Meta:
-        verbose_name = _("Search History")
-        verbose_name_plural = _("Search History")
-        indexes = [
-            models.Index(fields=["keyword"]),
-            models.Index(fields=["user", "-created_at"]),
-        ]
-
-    def __str__(self):
-        results = self.results_count if self.results_count is not None else "?"
-        return f'"{self.keyword}" ({results} results)'
-
-
 class ViewHistory(LogModel):
+    """
+    Раздел 2.3 ТЗ. Лог просмотра объявления, иммутабелен.
+
+    session_key используется для дедупликации просмотров гостя БЕЗ хранения
+    IP-адреса (более щадящий вариант с точки зрения GDPR — проект развёрнут
+    для аудитории в Германии).
+    """
 
     listing = models.ForeignKey(
         Listing,
@@ -67,9 +42,9 @@ class ViewHistory(LogModel):
         verbose_name = _("View History")
         verbose_name_plural = _("View History")
         indexes = [
-            # For ad popularity and history queries.
+            # Для запросов популярности и истории по объявлению.
             models.Index(fields=["listing", "created_at"]),
-            # For a quick deduplication check during every view.
+            # Для быстрой проверки дедупликации при каждом просмотре.
             models.Index(fields=["listing", "user", "session_key"]),
         ]
 
