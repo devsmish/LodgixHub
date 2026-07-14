@@ -169,6 +169,11 @@ REST_FRAMEWORK = {
         "apps.security.authentication.CustomJWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_THROTTLE_CLASSES": ("rest_framework.throttling.ScopedRateThrottle",),
+    "DEFAULT_THROTTLE_RATES": {
+        "auth-login": "5/min",
+        "auth-register": "5/min",
+    },
 }
 
 SIMPLE_JWT = {

@@ -1,6 +1,11 @@
 from django.urls import path
 
-from apps.security.controller import LoginView, LogoutView, RegisterView, TokenRefreshView
+from apps.security.controller import (
+    LoginView,
+    LogoutView,
+    RegisterView,
+    TokenRefreshView,
+)
 
 app_name = "security"
 
