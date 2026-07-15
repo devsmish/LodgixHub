@@ -1,11 +1,13 @@
 import uuid
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
 from apps.users.choices import BlockedReason, GenderChoices
-from apps.users.managers import CustomUserManager
+from apps.users.constants import MIN_AGE_YEARS
+from apps.users.models import CustomUserManager
 from core.validators import (
     name_validator,
     nickname_validator,
@@ -134,6 +136,29 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.email:
             self.email = self.email.lower()
 
+        if self.birth_date:
+            today = timezone.localdate()
+            if self.birth_date >= today:
+                raise ValidationError(
+                    {"birth_date": "The date of birth must be in the past."}
+                )
+            age = (
+                today.year
+                - self.birth_date.year
+                - (
+                    (today.month, today.day)
+                    < (self.birth_date.month, self.birth_date.day)
+                )
+            )
+            if age < MIN_AGE_YEARS:
+                raise ValidationError(
+                    {
+                        "birth_date": (
+                            f"The user must be at least {MIN_AGE_YEARS} years old."
+                        )
+                    }
+                )
+
     def save(self, *args, **kwargs):
         if self.email:
             self.email = self.email.lower().strip()
@@ -147,13 +172,33 @@ class User(AbstractBaseUser, PermissionsMixin):
     def restore(self, using=None):
         self.deleted_at = None
         self.is_active = True
+        self.save(using=using, update_fields=["deleted_at", "is_active", "updated_at"])
+
+    def block(self, reason, blocked_by, using=None):
+        now = timezone.now()
+        self.is_active = False
+        self.blocked_at = now
+        self.blocked_reason = reason
+        self.blocked_by = blocked_by
+        self.save(
+            using=using,
+            update_fields=[
+                "is_active",
+                "blocked_at",
+                "blocked_reason",
+                "blocked_by",
+                "updated_at",
+            ],
+        )
+
+    def unblock(self, using=None):
+        self.is_active = True
         self.blocked_at = None
         self.blocked_reason = None
         self.blocked_by = None
         self.save(
             using=using,
             update_fields=[
-                "deleted_at",
                 "is_active",
                 "blocked_at",
                 "blocked_reason",
