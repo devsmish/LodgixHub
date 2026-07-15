@@ -9,5 +9,5 @@ router = SimpleRouter()
 router.register("users", UserViewSet, basename="user")
 
 urlpatterns = [
-    path("users/roles/", GroupListView.as_view(), name="roles"),
+    path("roles/", GroupListView.as_view({"get": "list"}), name="roles"),
 ] + router.urls

@@ -3,7 +3,7 @@ from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.security.repositories import UserRepository
-from apps.users.models import User
+from apps.users.models.user import User
 
 
 def register_user(
