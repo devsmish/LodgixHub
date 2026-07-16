@@ -6,8 +6,6 @@ from apps.listings.controller import (
     AvailabilityCalendarView,
     ListingBookingsView,
     ListingViewSet,
-    PriceHistoryListView,
-    PriceSetView,
     RoomDetailView,
     RoomListCreateView,
 )
@@ -16,7 +14,7 @@ app_name = "listings"
 
 router = SimpleRouter()
 router.register("listings", ListingViewSet, basename="listing")
-router.register("listings/amenities", AmenityViewSet, basename="amenity")
+router.register("amenities", AmenityViewSet, basename="amenity")
 
 urlpatterns = router.urls + [
     path(
@@ -38,15 +36,5 @@ urlpatterns = router.urls + [
         "listings/<uuid:listing_id>/bookings/",
         ListingBookingsView.as_view(),
         name="listing-bookings",
-    ),
-    path(
-        "listings/<uuid:listing_id>/price/",
-        PriceSetView.as_view(),
-        name="listing-price-set",
-    ),
-    path(
-        "listings/<uuid:listing_id>/price-history/",
-        PriceHistoryListView.as_view(),
-        name="listing-price-history",
     ),
 ]

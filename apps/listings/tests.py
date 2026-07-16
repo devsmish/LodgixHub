@@ -178,7 +178,7 @@ class RoomModelTestCase(TestCase):
             address=make_address(
                 city="Berlin", street="Alexanderplatz", house_number="1"
             ),
-            max_guests=20,
+            max_guests=16,
             current_price=Decimal("8000.00"),
         )
 
@@ -254,7 +254,7 @@ class ListingAmenityModelTestCase(TestCase):
             max_guests=2,
             current_price=Decimal("1000.00"),
         )
-        self.amenity = Amenity.objects.create(name="Wi-Fi", slug="wifi")
+        self.amenity = Amenity.objects.get(slug="wifi")
 
     def test_duplicate_listing_amenity_raises_integrity_error(self):
         ListingAmenity.objects.create(listing=self.listing, amenity=self.amenity)
