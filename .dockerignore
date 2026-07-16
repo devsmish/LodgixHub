@@ -9,6 +9,7 @@ tools/
 #Ignore secrets and local settings.
 .env
 .env.example
+.env.docker
 
 # Ignore the trash Python and Git
 __pycache__/

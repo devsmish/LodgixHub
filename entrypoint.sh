@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# Останавливаем скрипт при любой ошибке
+# Stop the script on any error.
 set -e
 
-# 1. Ожидаем готовность MySQL (используем системную утилиту netcat 'nc')
-echo "=== Ожидание базы данных MySQL ==="
+# 1. Waiting for MySQL to be ready (using the system utility netcat 'nc')
+echo "=== Waiting for MySQL database ==="
 python -c "
 import socket
 import time
@@ -24,14 +24,14 @@ while True:
     except socket.error:
         time.sleep(0.5)
 "
-echo "База данных готова к работе!"
+echo "The database is ready for use!"
 
-echo "=== Применение миграций Django ==="
+echo "=== Using Django Migrations ==="
 python manage.py migrate
 
-# 2. Автоматическое создание суперпользователя (безопасное и адаптированное под твой User)
+# 2. Automatic creation of a superuser
 if [ "$DJANGO_SUPERUSER_EMAIL" ] && [ "$DJANGO_SUPERUSER_PASSWORD" ]; then
-    echo "=== Проверка и создание суперпользователя ==="
+    echo "=== Checking and creating a superuser ==="
     python manage.py shell -c "
 from django.contrib.auth import get_user_model
 User = get_user_model()
@@ -39,23 +39,25 @@ User = get_user_model()
 email = '$DJANGO_SUPERUSER_EMAIL'
 password = '$DJANGO_SUPERUSER_PASSWORD'
 
-# Ищем по email, так как поля username в модели нет
+# Searching for a user by email
 if not User.objects.filter(email=email).exists():
     extra_fields = {}
 
-    # Если nickname обязателен в твоей модели, передаем его по умолчанию
+    # If the nickname is mandatory, we pass it by default.
     if 'nickname' in User.REQUIRED_FIELDS:
         extra_fields['nickname'] = '$DJANGO_SUPERUSER_NICKNAME'
 
     User.objects.create_superuser(email=email, password=password, **extra_fields)
-    print('Суперпользователь успешно создан!')
+    print('Superuser successfully created!')
 else:
-    print('Суперпользователь уже существует.')
+    print('The superuser already exists.')
 "
 fi
 
-echo "=== Сборка статических файлов (для деплоя) ==="
+echo "=== Building static files (for deployment) ==="
 python manage.py collectstatic --noinput
 
-echo "=== Запуск сервера Django ==="
+echo "=== Starting the Django server ==="
 exec python manage.py runserver 0.0.0.0:8000
+
+# gunicorn server:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000"

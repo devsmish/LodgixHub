@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-# Устанавливаем зависимости для сборки mysqlclient
+# Installing dependencies for building mysqlclient
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     default-libmysqlclient-dev \
@@ -8,22 +8,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
-
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Устанавливаем зависимости
+# Installing dependencies
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Копируем проект
+#Copying the project
 COPY . /app/
 
-# Подготавливаем скрипт автозапуска
+# Preparing the auto-start script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 

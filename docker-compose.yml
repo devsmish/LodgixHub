@@ -10,7 +10,7 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
     ports:
-      - "127.0.0.1:3310:3306" # Пробрасываем порт на 3307 твоего хоста
+      - "127.0.0.1:3310:3306"
     volumes:
       - D:/DB/LodgixHub_db:/var/lib/mysql
     healthcheck:
@@ -29,7 +29,7 @@ services:
     env_file:
       - .env.docker
     environment:
-      - ENV_FILE=.env.docker # Передаем Django имя файла окружения
+      - ENV_FILE=.env.docker
     ports:
       - "7000:8000"
     volumes:
