@@ -23,6 +23,9 @@ class PriceHistoryManager(LogManager):
     def get_queryset(self) -> PriceHistoryQuerySet:
         return PriceHistoryQuerySet(self.model, using=self._db)
 
+    def effective_on(self, target_date, *, listing=None, room=None):
+        return self.get_queryset().effective_on(target_date, listing=listing, room=room)
+
 
 class PriceHistory(LogModel):
 
