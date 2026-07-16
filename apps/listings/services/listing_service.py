@@ -53,7 +53,7 @@ class ListingService:
         if not (check_in and check_out):
             return queryset
 
-        from apps.bookings.booking_availability_guard import get_available_listing_ids
+        from apps.bookings.guards.availability_guard import get_available_listing_ids
 
         available_ids = get_available_listing_ids(check_in, check_out, queryset)
         return queryset.filter(id__in=available_ids)
@@ -148,7 +148,7 @@ class ListingService:
     @transaction.atomic
     def delete_listing(self, listing):
         """Prohibited if there is a booking with a "pending" or "confirmed" status."""
-        from apps.bookings.booking_listing_guard import listing_has_active_bookings
+        from apps.bookings.guards.listing_guard import listing_has_active_bookings
 
         if listing_has_active_bookings(listing):
             raise ListingHasActiveBookingsError()
