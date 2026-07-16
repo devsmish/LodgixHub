@@ -21,7 +21,7 @@ class AvailabilityCalendarView(generics.GenericAPIView):
 
         year, month = self._parse_month(request.query_params.get("month"))
 
-        from apps.bookings.booking_availability_guard import get_listing_calendar
+        from apps.bookings.guards import get_listing_calendar
 
         days = get_listing_calendar(listing, year, month)
         return Response({"year": year, "month": month, "days": days})

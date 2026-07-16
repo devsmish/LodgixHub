@@ -55,16 +55,14 @@ def age_booking_into_dispute_window(booking, *, days_since_checkout=1):
 class CancellationReasonModelTestCase(TestCase):
 
     def test_str_returns_description(self):
-        reason = CancellationReason.objects.create(
-            code=StandardCancellationReason.CHANGED_PLANS,
-            description="Changed plans",
+        # CHANGED_PLANS уже засеян сигналом create_standard_cancellation_reasons
+        # (post_migrate) — повторный create() с тем же code ловит UNIQUE constraint.
+        reason = CancellationReason.objects.get(
+            code=StandardCancellationReason.CHANGED_PLANS
         )
-        self.assertEqual(str(reason), "Changed plans")
+        self.assertEqual(str(reason), reason.description)
 
     def test_code_uniqueness(self):
-        CancellationReason.objects.create(
-            code=StandardCancellationReason.CHANGED_PLANS, description="A"
-        )
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
                 CancellationReason.objects.create(

@@ -22,7 +22,7 @@ class RoomService:
     def _annotate_availability(rooms, check_in, check_out):
         from django.db.models import Count
 
-        from apps.bookings.booking_availability_guard import ACTIVE_BOOKING_STATUSES
+        from apps.bookings.guards.availability_guard import ACTIVE_BOOKING_STATUSES
         from apps.bookings.models import Booking
 
         room_ids = [room.id for room in rooms]
@@ -70,7 +70,7 @@ class RoomService:
     def delete_room(self, room):
         """It is blocked if there is a booking with a "pending"
         or "confirmed" status for future dates."""
-        from apps.bookings.booking_listing_guard import room_has_active_bookings
+        from apps.bookings.guards.listing_guard import room_has_active_bookings
 
         if room_has_active_bookings(room):
             raise RoomHasActiveBookingsError()
