@@ -21,4 +21,9 @@ urlpatterns = [
         name="search-history-mine",
     ),
     path("view-history/mine/", MyViewHistoryView.as_view(), name="view-history-mine"),
+    path(
+        "admin/stats/",
+        AdminDashboardStatsView.as_view(),
+        name="admin-stats",
+    ),
 ]
