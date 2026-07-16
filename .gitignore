@@ -149,6 +149,7 @@ activemq-data/
 
 # Environments
 .env
+.env.docker
 !.env.example
 .envrc
 .venv
@@ -224,7 +225,12 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
+# For Docker
 db/
-*.docker
-Dockerfile
-docker-compose.yml
+staticfiles/
+
+# ==========================================
+# Temporary & Archive Docker files
+# ==========================================
+Dockerfile_old
+docker-compose-old.yml

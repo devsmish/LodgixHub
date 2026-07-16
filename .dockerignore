@@ -1,0 +1,21 @@
+# Ignore local database.
+db/
+db.sqlite3
+
+# Ignoring media files
+media/
+tools/
+
+#Ignore secrets and local settings.
+.env
+.env.example
+
+# Ignore the trash Python and Git
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git
+.gitignore
+.github/
+.flake8
