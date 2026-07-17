@@ -81,15 +81,20 @@ class Review(TimestampedModel):
                 {"author": _("Only the tenant of this booking can leave a review.")}
             )
 
-        derived_listing = self.booking.listing or (
-            self.booking.room.listing if self.booking.room else None
-        )
+        derived_listing = self._derive_listing()
         if derived_listing and self.listing_id != derived_listing.id:
             self.listing = derived_listing
 
     def save(self, *args, **kwargs):
+        if self.booking_id and not self.listing_id:
+            self.listing = self._derive_listing()
         self.full_clean()
         super().save(*args, **kwargs)
+
+    def _derive_listing(self):
+        return self.booking.listing or (
+            self.booking.room.listing if self.booking.room else None
+        )
 
     def __str__(self):
         return f"Review {self.id} for booking {self.booking_id} ({self.rating}/5)"
