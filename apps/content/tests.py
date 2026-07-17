@@ -94,10 +94,16 @@ class PhotoModelTestCase(TestCase):
         self.assertEqual(ordered_ids, [first.id, second.id])
 
     def test_uploaded_by_set_null_on_user_deletion(self):
-        photo = Photo.objects.create(
-            listing=self.listing, image=make_test_image(), uploaded_by=self.user
+        # self.user is also the owner of the Listing (owner=PROTECT) — hard-delete
+        # would directly trigger a ProtectedError. Testing SET_NULL on
+        # uploaded_by requires a separate user without protected relationships.
+        uploader = User.objects.create_user(
+            email="uploader@example.com", password="securepassword123"
         )
-        User.all_objects.filter(pk=self.user.pk).delete()
+        photo = Photo.objects.create(
+            listing=self.listing, image=make_test_image(), uploaded_by=uploader
+        )
+        User.all_objects.filter(pk=uploader.pk).delete()
 
         photo.refresh_from_db()
         self.assertIsNone(photo.uploaded_by)
