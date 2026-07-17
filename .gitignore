@@ -223,3 +223,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+db/
+media/
+staticfiles/
+*.docker
+Dockerfile
+docker-compose.yml

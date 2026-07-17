@@ -4,6 +4,18 @@ All notable changes to LodgixHub will be documented in this file.
 
 The format follows a simple chronological structure.
 
+## [0.4.0] - 2026-07-17
+
+### Added
+- **Global URL Routing Blueprint (Issue #36):** Deployed root API configuration with strict `api/v1/` route isolation. Integrated `SimpleRouter` layers across all standard modules supported by controller placeholder stubs to ensure clean `manage.py check` boots.
+- **Secure Authentication & Token Refresh (Issue #38):** Migrated authorization pipelines to flat `/api/v1/auth/` namespaces. Replaced insecure transport fields with server-side `HttpOnly`, `Secure` browser cookies. Implemented independent `ScopedRateThrottle` rules guarding registration spam via strict 5-requests/min IP limits.
+- **Unified Analytics & Metrics Pipeline (Issues #40, #50):** Finalized profile-scoped user search history workflows and anonymous keyword metrics. Implemented a data-driven `AdminDashboardStatsView` featuring date-range gap analysis, missing-catalog counters, and a 15-minute sliding deduplication cache window.
+- **3-Tier Property & Room Architecture (Issue #46):** Hardened structural boundaries across listing domains. Enforced nested coordinate checks ($[-90, 90]$ / $[-180, 180]$ ranges), model-level XOR constraints for append-only `PriceHistory` logging, and dynamic $available\_count$ mathematical annotations for multi-unit room allocations.
+- **Transactional Booking & Dispute Engines (Issue #48):** Built atomic booking state-machines supporting locked price calculations and automated 15%/10% last-minute discount modifiers. Wired transactional dispute reviews alongside administrative CRUD tables for soft-deletable `CancellationReason` nodes.
+- **Decoupled Review Processing (Issue #52):** Introduced isolated review controller hooks tied directly to validated text schemas. Handled strict constraints prohibiting duplicate record entry or unauthenticated rating overrides.
+- **Asynchronous Notification & Signal Logging (Issue #54):** Deployed decoupled notification log factories wired directly to Django lifecycle signals, preventing thread-blocking deadlocks or circular import execution faults.
+- **Media Asset Management Logic (Issue #56):** Completed the internal payload mappings, service workflows, and data queries handling secure multi-photo ingestion and metadata tracking for listing properties.
+
 ## [0.3.0] - 2026-07-13
 
 ### Added

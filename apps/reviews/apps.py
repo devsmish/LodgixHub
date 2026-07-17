@@ -12,4 +12,4 @@ class ReviewsConfig(AppConfig):
         Standard post_save/post_delete signals are registered simply by importing
         the module containing the @receiver.
         """
-        from apps.reviews import signals
+        from apps.reviews import signals  # noqa: F401
