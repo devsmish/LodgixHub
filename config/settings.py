@@ -185,3 +185,17 @@ SIMPLE_JWT = {
     "ALGORITHM": "HS256",
     "SIGNING_KEY": env.str("JWT_SIGNING_KEY", default=SECRET_KEY),
 }
+
+EMAIL_BACKEND = env.str(
+    "EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"
+)
+DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="noreply@lodgixhub.local.de")
+
+# For SMTP
+# EMAIL_BACKEND = env.str("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+# EMAIL_HOST = env.str("EMAIL_HOST", default="")
+# EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+# EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+# EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", default="")
+# EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", default="")
+# DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="noreply@lodgixhub.local")
