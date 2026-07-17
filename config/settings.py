@@ -209,7 +209,9 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Backend for the LodgixHub booking platform featuring custom Cookie-JWT authentication.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
-
+    "POSTPROCESSING_HOOKS": [
+            "core.swagger_decorators.custom_permission_description_hook",
+    ],
     "SECURITY": [
         {"BearerAuth": []},
         {"CookieAuth": []}

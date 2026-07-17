@@ -61,7 +61,7 @@ class RegisterView(APIView):
         return response
 
 
-@document_cookie_auth(behavior="login")
+@document_cookie_auth(behavior="login", request_serializer=CustomTokenObtainPairSerializer)
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
     permission_classes = [AllowAny]
