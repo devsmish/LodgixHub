@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
                 (
                     "image",
                     models.ImageField(
-                        upload_to=apps.content.photo.photo_upload_path,
+                        upload_to=apps.content.models.photo_upload_path,
                         validators=[core.validators.validate_image],
                         verbose_name="Image",
                     ),
