@@ -7,7 +7,7 @@ The format follows a simple chronological structure.
 ## [0.4.0] - 2026-07-17
 
 ### Added
-- **Global URL Routing Blueprint (Issue #26):** Deployed root API configuration with strict `api/v1/` route isolation. Integrated `SimpleRouter` layers across all standard modules supported by controller placeholder stubs to ensure clean `manage.py check` boots.
+- **Global URL Routing Blueprint (Issue #36):** Deployed root API configuration with strict `api/v1/` route isolation. Integrated `SimpleRouter` layers across all standard modules supported by controller placeholder stubs to ensure clean `manage.py check` boots.
 - **Secure Authentication & Token Refresh (Issue #38):** Migrated authorization pipelines to flat `/api/v1/auth/` namespaces. Replaced insecure transport fields with server-side `HttpOnly`, `Secure` browser cookies. Implemented independent `ScopedRateThrottle` rules guarding registration spam via strict 5-requests/min IP limits.
 - **Unified Analytics & Metrics Pipeline (Issues #40, #50):** Finalized profile-scoped user search history workflows and anonymous keyword metrics. Implemented a data-driven `AdminDashboardStatsView` featuring date-range gap analysis, missing-catalog counters, and a 15-minute sliding deduplication cache window.
 - **3-Tier Property & Room Architecture (Issue #46):** Hardened structural boundaries across listing domains. Enforced nested coordinate checks ($[-90, 90]$ / $[-180, 180]$ ranges), model-level XOR constraints for append-only `PriceHistory` logging, and dynamic $available\_count$ mathematical annotations for multi-unit room allocations.
