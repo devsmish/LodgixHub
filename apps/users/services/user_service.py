@@ -1,6 +1,6 @@
 from django.db import transaction
 
-from apps.bookings.booking_user_guard import (
+from apps.bookings.guards.user_guard import (
     user_has_active_bookings,
     user_has_completed_booking_with_listing_owner,
 )

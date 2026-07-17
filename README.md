@@ -1,10 +1,14 @@
 # LodgixHub
 
-LodgixHub is a Django-based backend MVP for a short-term accommodation booking platform similar to Airbnb or Booking.com. The project covers hotels, hostels, and apartments through a unified listing model and is designed to be developed incrementally with explicit task approval before each implementation step.
+LodgixHub is a Django-based backend MVP for a short-term accommodation booking platform similar to Airbnb or Booking.com. 
+The project covers hotels, hostels, and apartments through a unified listing model and is designed to be developed 
+incrementally with explicit task approval before each implementation step.
 
 ## MVP Goal
 
-The MVP target is to deliver a working backend by **July 22, 2026**. The system must provide authentication, role-based access, property listings, media upload, booking flows, dynamic price calculation, moderation, reviews, basic analytics, documentation, and deployment infrastructure.
+The MVP target is to deliver a working backend by **July 22, 2026**. The system must provide authentication, role-based 
+access, property listings, media upload, booking flows, dynamic price calculation, moderation, reviews, basic analytics, 
+documentation, and deployment infrastructure.
 
 This repository contains the foundational backend setup and the initial Django app structure for the MVP (Version 0.2.0).
 
@@ -19,7 +23,8 @@ Before making changes, the assistant must explain:
 - whether dependencies will be added;
 - which commands may need to be run.
 
-If a requirement is unclear, ambiguous, or has multiple valid implementation options, the assistant must ask clarification questions before proceeding.
+If a requirement is unclear, ambiguous, or has multiple valid implementation options, the assistant must ask 
+clarification questions before proceeding.
 
 ## Functional Scope
 
@@ -153,6 +158,11 @@ The following items are intentionally postponed for post-defense self-developmen
 - SSL.
 - Cloudflare.
 
+### Backend Implementation Status
+All core application modules planned for the platform MVP have been successfully migrated to a stabilized 3-Tier Layered 
+Architecture (`Controller → Service → Repository`) and are fully connected via API version `v1` routes as of 
+release `v0.4.0`.
+
 ## Planned Backend Modules
 
 The backend is split into focused Django apps:
@@ -168,7 +178,31 @@ The backend is split into focused Django apps:
 - `apps/analytics` - search history, view history, popularity aggregations.
 - `apps/notifications` - email notifications and signal handlers.
 
-The existing `config` package remains the Django project configuration package. The `core` app is a separate reusable application for shared domain and infrastructure helpers.
+The existing `config` package remains the Django project configuration package. The `core` app is a separate reusable 
+application for shared domain and infrastructure helpers.
+
+### Standardized Application Directory Layout
+
+To maintain strict separation of concerns, predictable developer experience, and micro-component modularity, every 
+application within the `apps/` directory is standardized to use the following package layout (enforced in 
+Milestone 0.3.0):
+
+```text
+app_name/
+├── migrations/     # Database ledger version files
+├── choices/        # Enum-like classes for field states and type definitions
+├── constants/      # App-specific business logic limits, timeouts, and thresholds
+├── models/         # Multi-file domain entity definitions (exposed via __init__.py)
+├── dto/            # Data Transfer Objects, request/response schemas, and serializers
+├── errors/         # Domain-specific custom exception classes and error codes
+├── filters/        # Advanced query search, filter, and sorting logic
+├── paginations/    # Custom list response pagination definitions
+├── repositories/   # Isolated database access layer (QuerySets, complex ORM logic)
+├── services/       # Pure business logic orchestration layer
+├── controller/     # Thin API request/response handling layer (views/endpoints)
+├── admin.py        # Django Admin site panel registration
+├── apps.py         # App config mapping
+└── urls.py         # Module routing layout
 
 ## Local Development Setup
 

@@ -1,6 +1,9 @@
 from django.urls import path
 
-from apps.content.controller import PhotoDetailView, PhotoListCreateView
+from apps.content.controller.photo_controller import (
+    PhotoDetailView,
+    PhotoListCreateView,
+)
 
 app_name = "content"
 

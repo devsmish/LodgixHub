@@ -154,14 +154,16 @@ class ReviewModelTestCase(TestCase):
             rating=5,
             comment="First review on this booking.",
         )
-        with self.assertRaises(IntegrityError):
-            with transaction.atomic():
-                Review.objects.create(
-                    booking=self.booking,
-                    author=self.tenant,
-                    rating=3,
-                    comment="Trying to review the same booking twice.",
-                )
+        # full_clean() (called from Review.save()) catches the duplicate via
+        # validate_unique() before the query reaches the database—hence
+        # a ValidationError, not an IntegrityError.
+        with self.assertRaises(ValidationError):
+            Review.objects.create(
+                booking=self.booking,
+                author=self.tenant,
+                rating=3,
+                comment="Trying to review the same booking twice.",
+            )
 
     def test_hard_delete_actually_removes_row(self):
         review = Review.objects.create(

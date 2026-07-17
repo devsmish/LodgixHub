@@ -225,12 +225,9 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# For Docker
 db/
+media/
 staticfiles/
-
-# ==========================================
-# Temporary & Archive Docker files
-# ==========================================
-Dockerfile_old
-docker-compose-old.yml
+*.docker
+Dockerfile
+docker-compose.yml

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import NotificationLog
+from apps.notifications.models import NotificationLog
 
 
 @admin.register(NotificationLog)
