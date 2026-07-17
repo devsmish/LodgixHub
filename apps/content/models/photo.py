@@ -87,7 +87,7 @@ class Photo(TimestampedModel):
                 )
             )
 
-        if not self.pk:
+        if self._state.adding:
             target_filter = (
                 {"listing": self.listing} if self.listing else {"room": self.room}
             )
