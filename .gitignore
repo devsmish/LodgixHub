@@ -149,6 +149,7 @@ activemq-data/
 
 # Environments
 .env
+.env.docker
 !.env.example
 .envrc
 .venv
