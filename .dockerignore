@@ -20,3 +20,7 @@ __pycache__/
 .gitignore
 .github/
 .flake8
+
+# Logs
+logs/
+*.log

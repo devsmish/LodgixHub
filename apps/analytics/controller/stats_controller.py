@@ -1,7 +1,8 @@
 from django.db.models import Count
+
 # from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, inline_serializer
-from rest_framework import status, serializers
+from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -30,24 +31,28 @@ class AdminDashboardStatsView(APIView):
                         fields={
                             "date_from": serializers.CharField(allow_null=True),
                             "date_to": serializers.CharField(allow_null=True),
-                        }
+                        },
                     ),
                     "summary": inline_serializer(
                         name="StatsSummary",
                         fields={
                             "searches_count": serializers.IntegerField(),
                             "views_count": serializers.IntegerField(),
-                        }
+                        },
                     ),
                     "gap_analysis": inline_serializer(
                         name="StatsGapAnalysis",
                         fields={
                             "total_zero_result_searches": serializers.IntegerField(),
-                            "recent_zero_result_searches": serializers.ListField(child=serializers.DictField()),
-                        }
+                            "recent_zero_result_searches": serializers.ListField(
+                                child=serializers.DictField()
+                            ),
+                        },
                     ),
-                    "top_trending_listings": serializers.ListField(child=serializers.DictField()),
-                }
+                    "top_trending_listings": serializers.ListField(
+                        child=serializers.DictField()
+                    ),
+                },
             )
         }
     )
