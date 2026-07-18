@@ -22,6 +22,7 @@ class GroupListView(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     queryset = Group.objects.all()
     permission_classes = [IsAdmin]
+    serializer_class = GroupsUpdateSerializer
 
     def list(self, request, *args, **kwargs):
         names = list(self.get_queryset().values_list("name", flat=True))

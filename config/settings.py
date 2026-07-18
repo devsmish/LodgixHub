@@ -10,17 +10,33 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
+from datetime import timedelta
 from pathlib import Path
 
+import sentry_sdk
 from environ import Env
+from sentry_sdk.integrations.django import DjangoIntegration
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = Env()
-env.read_env(str(BASE_DIR / ".env"))
+ENV_FILE = os.getenv("ENV_FILE", ".env")
+env.read_env(str(BASE_DIR / ENV_FILE))
 
-from datetime import timedelta
+# SENTRY INITIALIZATION
+SENTRY_DSN = env.str("SENTRY_DSN", default=None)
+if SENTRY_DSN and not env.bool("DEBUG", default=False):
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        # Sends 100% of transactions for performance monitoring.
+        traces_sample_rate=1.0,
+        # Sends profiles for 100% of transactions.
+        profiles_sample_rate=1.0,
+        send_default_pii=True,  # Associates errors with Django users.
+    )
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -47,6 +63,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
+    "drf_spectacular",
     # local
     "core",
     "apps.users",
@@ -155,6 +172,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Media files
 MEDIA_URL = "media/"
@@ -174,6 +192,7 @@ REST_FRAMEWORK = {
         "auth-login": "5/min",
         "auth-register": "5/min",
     },
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SIMPLE_JWT = {
@@ -183,7 +202,7 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": False,
     "ALGORITHM": "HS256",
-    "SIGNING_KEY": env.str("JWT_SIGNING_KEY", default=SECRET_KEY),
+    "SIGNING_KEY": env.str("JWT_SIGNING_KEY", default=None) or SECRET_KEY,
 }
 
 EMAIL_BACKEND = env.str(
@@ -199,3 +218,86 @@ DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="noreply@lodgixhub.lo
 # EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", default="")
 # EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", default="")
 # DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="noreply@lodgixhub.local")
+
+# Swagger/OpenAPI
+SPECTACULAR_SETTINGS = {
+    "TITLE": "LodgixHub API",
+    "DESCRIPTION": "Backend for the LodgixHub booking platform featuring custom Cookie-JWT authentication.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "POSTPROCESSING_HOOKS": [
+        "core.swagger_decorators.custom_permission_description_hook",
+    ],
+    "SECURITY": [{"BearerAuth": []}, {"CookieAuth": []}],
+    "COMPONENT_SPLIT_REQUEST": True,  # Splitting the schema into Request and Response in the UI
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "description": "Enter the Access Token here (without the word 'Bearer').",
+            },
+            "CookieAuth": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "refresh_token",
+                "description": "Used for silent token renewal (Silent Refresh).",
+            },
+        }
+    },
+}
+
+# LOGGING CONFIGURATION
+LOG_TO_FILE = env.bool("LOG_TO_FILE", default=False)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {asctime} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": "INFO",
+            "formatter": "simple",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        # Logger for custom applications (apps.*)
+        "apps": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": True,
+        },
+    },
+}
+
+if LOG_TO_FILE:
+    LOG_DIR = BASE_DIR / "logs"
+    LOG_DIR.mkdir(exist_ok=True)
+
+    LOGGING["handlers"]["file_errors"] = {
+        "class": "logging.handlers.RotatingFileHandler",
+        "filename": str(LOG_DIR / "errors.log"),
+        "maxBytes": 1024 * 1024 * 5,  # 5 MB
+        "backupCount": 5,
+        "level": "ERROR",
+        "formatter": "verbose",
+    }
+    # Connecting a file handler to loggers
+    LOGGING["loggers"]["django"]["handlers"].append("file_errors")
+    LOGGING["loggers"]["apps"]["handlers"].append("file_errors")

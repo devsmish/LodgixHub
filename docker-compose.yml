@@ -1,0 +1,45 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      MYSQL_DATABASE: ${MYSQL_NAME}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "127.0.0.1:3310:3306"
+    volumes:
+      # local db
+      - D:/DB/LodgixHub_db:/var/lib/mysql
+      # docker db
+      # - db_data:/var/lib/mysql
+      - ./dump:/docker-entrypoint-initdb.d  # To restore the database from a dump, the local directory must be empty.
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    image: lodgixhub-web:local
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env.docker
+    environment:
+      - ENV_FILE=.env.docker
+    ports:
+      - "7000:8000"
+    volumes:
+      - .:/app
+      - media_data:/app/media
+
+volumes:
+  # db_data: # docker db
+  media_data:

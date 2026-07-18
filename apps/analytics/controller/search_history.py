@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,6 +19,7 @@ class PopularSearchKeywordsView(APIView):
 
     permission_classes = [permissions.AllowAny]
 
+    @extend_schema(responses={200: PopularKeywordOutDTO(many=True)})
     def get(self, request):
         limit = int(request.query_params.get("limit", SEARCH_HISTORY_DEFAULT_LIMIT))
         limit = max(1, min(limit, SEARCH_HISTORY_MAX_LIMIT))

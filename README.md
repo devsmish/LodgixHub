@@ -288,6 +288,40 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
+### 9. Containerized Development Setup (Docker)
+
+As of release `v0.5.0`, the application is fully containerized for local development to ensure environment consistency and eliminate host machine dependency mismatches.
+
+#### Prerequisites
+- Docker and Docker Compose installed on your host machine.
+- Ports `8000` (application) and `3307` (MySQL external map) free from conflicts.
+
+#### Environment Configuration
+Create a dedicated `.env.docker` file based on `.env.example`:
+* Change `MYSQL_HOST` to `db` (the service orchestrator name).
+* Configure `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL`, and `DJANGO_SUPERUSER_PASSWORD` to automate admin creation.
+
+#### Execution Commands
+
+* **Build and run the services in the foreground:**
+  ```bash
+  docker compose up --build
+  
+* **Run services in the background (detached mode):**
+  ```bash
+  docker compose up -d
+ 
+* **Stop containers while preserving state (volume data):**
+  ```bash
+  docker compose down
+  
+* **Completely wipe container volumes and reset the database environment:**
+  ```bash
+  docker compose down -v
+  
+Once operational, the Django application will serve traffic at http://127.0.0.1:8000/. 
+External database clients can attach to the isolated MySQL engine via 127.0.0.1:3310.
+
 ## Documentation
 - [Changelog](CHANGELOG.md)
 

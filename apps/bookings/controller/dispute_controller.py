@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, PermissionDenied
@@ -178,6 +179,7 @@ class DisputeEvidenceView(generics.ListCreateAPIView):
         return dispute
 
 
+@extend_schema(responses={204: None})
 class DisputeEvidenceDetailView(generics.DestroyAPIView):
     """DELETE /api/v1/disputes/{dispute_id}/evidence/{pk}/ — автор загрузки или админ."""
 

@@ -149,6 +149,7 @@ activemq-data/
 
 # Environments
 .env
+.env.docker
 !.env.example
 .envrc
 .venv
@@ -227,6 +228,5 @@ __marimo__/
 db/
 media/
 staticfiles/
-*.docker
-Dockerfile
-docker-compose.yml
+logs/
+dump/*.sql
