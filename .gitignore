@@ -228,3 +228,5 @@ __marimo__/
 db/
 media/
 staticfiles/
+logs/
+dump/*.sql

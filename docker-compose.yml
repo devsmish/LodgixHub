@@ -12,7 +12,11 @@ services:
     ports:
       - "127.0.0.1:3310:3306"
     volumes:
+      # local db
       - D:/DB/LodgixHub_db:/var/lib/mysql
+      # docker db
+      # - db_data:/var/lib/mysql
+      - ./dump:/docker-entrypoint-initdb.d  # To restore the database from a dump, the local directory must be empty.
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
@@ -37,4 +41,5 @@ services:
       - media_data:/app/media
 
 volumes:
+  # db_data: # docker db
   media_data:
