@@ -4,6 +4,13 @@ All notable changes to LodgixHub will be documented in this file.
 
 The format follows a simple chronological structure.
 
+## [0.5.0] - 2026-07-18
+
+### Added
+- **Full Application Containerization & Orchestration (Issues #44, #64):** Containerized the Django ecosystem utilizing a custom `python:3.12-slim` Dockerfile alongside an automated healthcheck-dependent `entrypoint.sh` routine executing automatic database migrations and administrative superuser bootstrapping. Deployed isolated, named Docker volumes (`db_data`) mapped to `./dump` via a clean `/docker-entrypoint-initdb.d` path, achieving instant database seeding from localized SQL dumps without exposing sensitive configuration assets to version control.
+- **Interactive OpenAPI 3.0 Document Engines (Issue #60):** Integrated `drf-spectacular` schema compilation engines to dynamically expose `/api/v1/schema/`, `/api/v1/schema/swagger-ui/`, and `/api/v1/schema/redoc/`. Tailored deep schema overrides mapping specialized token delivery pathways, explicitly documenting server-side `HttpOnly` `Set-Cookie` injections, anonymous namespace bypass behaviors for registration/login controllers, and structural `X-Access-Token` response headers.
+- **Production-Ready Unified Logging & Observability (Issue #62):** Integrated `sentry-sdk` tracking engines dynamically restricted to production runtime modes for automatic capturing of multi-variant database exceptions and user contexts. Layered high-volume Django logging routers operating an environment-switched console `StreamHandler` for effortless AWS CloudWatch/Docker log aggregation alongside an isolated, local-only 5MB `RotatingFileHandler` lifecycle system.
+
 ## [0.4.0] - 2026-07-17
 
 ### Added
