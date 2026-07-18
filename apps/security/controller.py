@@ -28,9 +28,11 @@ def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
     )
 
 
-@document_cookie_auth(behavior="register",
-                      request_serializer=RegisterSerializer,
-                      response_serializer=RegisterResponseSerializer)
+@document_cookie_auth(
+    behavior="register",
+    request_serializer=RegisterSerializer,
+    response_serializer=RegisterResponseSerializer,
+)
 class RegisterView(APIView):
     """POST /api/v1/auth/register/ — creates a User and immediately issues tokens."""
 
@@ -61,7 +63,9 @@ class RegisterView(APIView):
         return response
 
 
-@document_cookie_auth(behavior="login", request_serializer=CustomTokenObtainPairSerializer)
+@document_cookie_auth(
+    behavior="login", request_serializer=CustomTokenObtainPairSerializer
+)
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
     permission_classes = [AllowAny]

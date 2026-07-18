@@ -9,11 +9,14 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
+
 import os
 from datetime import timedelta
 from pathlib import Path
 
+import sentry_sdk
 from environ import Env
+from sentry_sdk.integrations.django import DjangoIntegration
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,6 +24,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = Env()
 ENV_FILE = os.getenv("ENV_FILE", ".env")
 env.read_env(str(BASE_DIR / ENV_FILE))
+
+# SENTRY INITIALIZATION
+SENTRY_DSN = env.str("SENTRY_DSN", default=None)
+if SENTRY_DSN and not env.bool("DEBUG", default=False):
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        # Sends 100% of transactions for performance monitoring.
+        traces_sample_rate=1.0,
+        # Sends profiles for 100% of transactions.
+        profiles_sample_rate=1.0,
+        send_default_pii=True,  # Associates errors with Django users.
+    )
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -210,12 +226,9 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "POSTPROCESSING_HOOKS": [
-            "core.swagger_decorators.custom_permission_description_hook",
+        "core.swagger_decorators.custom_permission_description_hook",
     ],
-    "SECURITY": [
-        {"BearerAuth": []},
-        {"CookieAuth": []}
-    ],
+    "SECURITY": [{"BearerAuth": []}, {"CookieAuth": []}],
     "COMPONENT_SPLIT_REQUEST": True,  # Splitting the schema into Request and Response in the UI
     "APPEND_COMPONENTS": {
         "securitySchemes": {
@@ -223,14 +236,68 @@ SPECTACULAR_SETTINGS = {
                 "type": "http",
                 "scheme": "bearer",
                 "bearerFormat": "JWT",
-                "description": "Enter the Access Token here (without the word 'Bearer')."
+                "description": "Enter the Access Token here (without the word 'Bearer').",
             },
             "CookieAuth": {
                 "type": "apiKey",
                 "in": "cookie",
                 "name": "refresh_token",
-                "description": "Used for silent token renewal (Silent Refresh)."
-            }
+                "description": "Used for silent token renewal (Silent Refresh).",
+            },
         }
-    }
+    },
 }
+
+# LOGGING CONFIGURATION
+LOG_TO_FILE = env.bool("LOG_TO_FILE", default=False)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {asctime} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": "INFO",
+            "formatter": "simple",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        # Logger for custom applications (apps.*)
+        "apps": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": True,
+        },
+    },
+}
+
+if LOG_TO_FILE:
+    LOG_DIR = BASE_DIR / "logs"
+    LOG_DIR.mkdir(exist_ok=True)
+
+    LOGGING["handlers"]["file_errors"] = {
+        "class": "logging.handlers.RotatingFileHandler",
+        "filename": str(LOG_DIR / "errors.log"),
+        "maxBytes": 1024 * 1024 * 5,  # 5 MB
+        "backupCount": 5,
+        "level": "ERROR",
+        "formatter": "verbose",
+    }
+    # Connecting a file handler to loggers
+    LOGGING["loggers"]["django"]["handlers"].append("file_errors")
+    LOGGING["loggers"]["apps"]["handlers"].append("file_errors")
