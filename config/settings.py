@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
+    "drf_spectacular",
     # local
     "core",
     "apps.users",
@@ -175,6 +176,7 @@ REST_FRAMEWORK = {
         "auth-login": "5/min",
         "auth-register": "5/min",
     },
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SIMPLE_JWT = {
@@ -200,3 +202,35 @@ DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="noreply@lodgixhub.lo
 # EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", default="")
 # EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", default="")
 # DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="noreply@lodgixhub.local")
+
+# Swagger/OpenAPI
+SPECTACULAR_SETTINGS = {
+    "TITLE": "LodgixHub API",
+    "DESCRIPTION": "Backend for the LodgixHub booking platform featuring custom Cookie-JWT authentication.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "POSTPROCESSING_HOOKS": [
+            "core.swagger_decorators.custom_permission_description_hook",
+    ],
+    "SECURITY": [
+        {"BearerAuth": []},
+        {"CookieAuth": []}
+    ],
+    "COMPONENT_SPLIT_REQUEST": True,  # Splitting the schema into Request and Response in the UI
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "description": "Enter the Access Token here (without the word 'Bearer')."
+            },
+            "CookieAuth": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "refresh_token",
+                "description": "Used for silent token renewal (Silent Refresh)."
+            }
+        }
+    }
+}

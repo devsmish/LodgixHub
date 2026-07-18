@@ -13,6 +13,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from apps.security.dto.register import RegisterResponseSerializer, RegisterSerializer
 from apps.security.dto.token import CustomTokenObtainPairSerializer
 from apps.security.services import mint_token_pair, register_user
+from core.swagger_decorators import document_cookie_auth
 
 
 def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
@@ -27,6 +28,9 @@ def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
     )
 
 
+@document_cookie_auth(behavior="register",
+                      request_serializer=RegisterSerializer,
+                      response_serializer=RegisterResponseSerializer)
 class RegisterView(APIView):
     """POST /api/v1/auth/register/ — creates a User and immediately issues tokens."""
 
@@ -57,6 +61,7 @@ class RegisterView(APIView):
         return response
 
 
+@document_cookie_auth(behavior="login", request_serializer=CustomTokenObtainPairSerializer)
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
     permission_classes = [AllowAny]
@@ -74,6 +79,7 @@ class LoginView(TokenObtainPairView):
         return response
 
 
+@document_cookie_auth(behavior="logout")
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -95,6 +101,7 @@ class LogoutView(APIView):
         return response
 
 
+@document_cookie_auth(behavior="refresh")
 class TokenRefreshView(APIView):
     """
     POST /api/v1/auth/token/refresh/.

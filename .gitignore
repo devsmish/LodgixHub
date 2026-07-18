@@ -228,6 +228,3 @@ __marimo__/
 db/
 media/
 staticfiles/
-*.docker
-Dockerfile
-docker-compose.yml

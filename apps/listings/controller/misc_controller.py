@@ -1,10 +1,13 @@
 from django.db.models import Q
 from django.utils import timezone
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from apps.bookings.dto import BookingSerializer
 from apps.listings.repositories import ListingRepository
 
 
@@ -14,6 +17,7 @@ class AvailabilityCalendarView(generics.GenericAPIView):
     permission_classes = [AllowAny]
     listing_repository = ListingRepository()
 
+    @extend_schema(responses={200: OpenApiTypes.OBJECT})
     def get(self, request, *args, **kwargs):
         listing = self.listing_repository.get_by_id_any(kwargs["listing_id"])
         if listing is None:
@@ -41,6 +45,7 @@ class AvailabilityCalendarView(generics.GenericAPIView):
 class ListingBookingsView(generics.ListAPIView):
     """GET /api/v1/listings/{listing_id}/bookings/ — owner."""
 
+    serializer_class = BookingSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):

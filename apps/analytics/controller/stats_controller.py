@@ -1,5 +1,7 @@
 from django.db.models import Count
-from rest_framework import status
+# from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import status, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -18,6 +20,38 @@ class AdminDashboardStatsView(APIView):
 
     permission_classes = [IsAdmin]
 
+    @extend_schema(
+        responses={
+            200: inline_serializer(
+                name="AdminDashboardStatsResponse",
+                fields={
+                    "period": inline_serializer(
+                        name="StatsPeriod",
+                        fields={
+                            "date_from": serializers.CharField(allow_null=True),
+                            "date_to": serializers.CharField(allow_null=True),
+                        }
+                    ),
+                    "summary": inline_serializer(
+                        name="StatsSummary",
+                        fields={
+                            "searches_count": serializers.IntegerField(),
+                            "views_count": serializers.IntegerField(),
+                        }
+                    ),
+                    "gap_analysis": inline_serializer(
+                        name="StatsGapAnalysis",
+                        fields={
+                            "total_zero_result_searches": serializers.IntegerField(),
+                            "recent_zero_result_searches": serializers.ListField(child=serializers.DictField()),
+                        }
+                    ),
+                    "top_trending_listings": serializers.ListField(child=serializers.DictField()),
+                }
+            )
+        }
+    )
+    # @extend_schema(responses={200: OpenApiTypes.OBJECT})
     def get(self, request):
         date_from = request.query_params.get("date_from")
         date_to = request.query_params.get("date_to")
