@@ -161,7 +161,7 @@ The following items are intentionally postponed for post-defense self-developmen
 ### Backend Implementation Status
 All core application modules planned for the platform MVP have been successfully migrated to a stabilized 3-Tier Layered 
 Architecture (`Controller → Service → Repository`) and are fully connected via API version `v1` routes as of 
-release `v0.4.0`.
+release `v0.6.0`.
 
 ## Planned Backend Modules
 
