@@ -4,6 +4,17 @@ All notable changes to LodgixHub will be documented in this file.
 
 The format follows a simple chronological structure.
 
+## [0.7.0] - 2026-07-19
+
+### Added
+- Comprehensive custom data seeding system (`seed_fake_data` management command).
+- Full German localization dataset (~2,600 name combinations, top 100+ cities with realistic districts, and 68 street types).
+- Dynamic title builder for property listings mixing adjectives, property types, and specific features.
+- Expanded review comment pools (15 positive and 15 mixed templates) for organic-looking feedback.
+
+### Fixed
+- Handled `IntegrityError` unique constraint collisions on user nicknames by automatically appending random suffixes.
+
 ## [0.6.0] - 2026-07-19
 
 ### Added

@@ -126,7 +126,6 @@ clarification questions before proceeding.
 ### Code Quality
 - Black.
 - isort.
-- pylint.
 - flake8.
 - PEP 8 oriented formatting and linting.
 
@@ -162,6 +161,15 @@ The following items are intentionally postponed for post-defense self-developmen
 All core application modules planned for the platform MVP have been successfully migrated to a stabilized 3-Tier Layered 
 Architecture (`Controller → Service → Repository`) and are fully connected via API version `v1` routes as of 
 release `v0.6.0`.
+
+### 📊 Database Seeding
+To populate your local database with realistic German test data (users, listings, reviews, bookings), use the custom management command:
+
+```bash
+# Quick start with default settings (70 landlords, 100 tenants, etc.)
+python manage.py seed_fake_data
+python manage.py seed_fake_data --landlords 100 --listings-per-landlord 4 --tenants 300 --moderators 3
+
 
 ## Planned Backend Modules
 
