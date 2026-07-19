@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
 
@@ -220,3 +221,53 @@ class PriceHistoryTest(TestCase):
             self.today, listing=future_listing
         ).first()
         self.assertIsNone(effective)
+
+
+class UpdateListingCurrentPriceCommandTestCase(TestCase):
+    """Tests for the update_listing_current_price - management command (daily cron job)."""
+
+    def setUp(self):
+        self.landlord = User.objects.create_user(
+            email="landlord_price_cron@test.com", password="pass12345678"
+        )
+        self.address = make_address()
+        self.listing = Listing.objects.create(
+            owner=self.landlord,
+            type=ListingType.APARTMENT,
+            title="Price cron flat",
+            description="A" * 30,
+            address=self.address,
+            current_price=Decimal("100.00"),
+            rental_type="daily",
+            max_guests=2,
+        )
+
+    def test_updates_cache_from_latest_effective_price(self):
+        price = PriceHistory(
+            listing=self.listing,
+            price=Decimal("150.00"),
+            valid_from=timezone.localdate() - timedelta(days=1),
+            changed_by=self.landlord,
+        )
+        PriceHistory.objects.bulk_create([price])
+
+        call_command("update_listing_current_price")
+
+        self.listing.refresh_from_db()
+        self.assertEqual(self.listing.current_price, Decimal("150.00"))
+
+    def test_does_not_touch_cache_when_no_new_price(self):
+        call_command("update_listing_current_price")
+        self.listing.refresh_from_db()
+        self.assertEqual(self.listing.current_price, Decimal("100.00"))
+
+    def test_ignores_future_price(self):
+        PriceHistory.objects.create(
+            listing=self.listing,
+            price=Decimal("999.00"),
+            valid_from=timezone.localdate() + timedelta(days=5),
+            changed_by=self.landlord,
+        )
+        call_command("update_listing_current_price")
+        self.listing.refresh_from_db()
+        self.assertEqual(self.listing.current_price, Decimal("100.00"))

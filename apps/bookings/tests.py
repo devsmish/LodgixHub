@@ -1,9 +1,11 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.db import IntegrityError, transaction
+from django.db.models import QuerySet
 from django.test import TestCase
 from django.utils import timezone
 
@@ -17,6 +19,7 @@ from apps.bookings.choices import (
 from apps.bookings.models import Booking, CancellationReason
 from apps.bookings.services import (
     add_evidence,
+    calculate_auto_cancel_deadline,
     open_dispute,
     resolve_dispute,
     start_review,
@@ -55,8 +58,6 @@ def age_booking_into_dispute_window(booking, *, days_since_checkout=1):
 class CancellationReasonModelTestCase(TestCase):
 
     def test_str_returns_description(self):
-        # CHANGED_PLANS уже засеян сигналом create_standard_cancellation_reasons
-        # (post_migrate) — повторный create() с тем же code ловит UNIQUE constraint.
         reason = CancellationReason.objects.get(
             code=StandardCancellationReason.CHANGED_PLANS
         )
@@ -475,3 +476,116 @@ class DisputeEvidenceModelTestCase(TestCase):
             url="https://example.com/counter-evidence.jpg",
         )
         self.assertEqual(self.dispute.evidence.count(), 1)
+
+
+class AutoCancelDeadlineTestCase(TestCase):
+    """Three examples + a "pre-opening" boundary case."""
+
+    def test_deadline_within_business_hours_with_enough_room(self):
+        created_at = timezone.make_aware(datetime(2026, 7, 20, 14, 0))
+        deadline = calculate_auto_cancel_deadline(created_at)
+        self.assertEqual(deadline, timezone.make_aware(datetime(2026, 7, 20, 14, 30)))
+
+    def test_deadline_spills_over_to_next_business_day(self):
+        created_at = timezone.make_aware(datetime(2026, 7, 20, 20, 50))
+        deadline = calculate_auto_cancel_deadline(created_at)
+        self.assertEqual(deadline, timezone.make_aware(datetime(2026, 7, 21, 9, 20)))
+
+    def test_deadline_outside_business_hours_fully_carries_over(self):
+        created_at = timezone.make_aware(datetime(2026, 7, 20, 23, 0))
+        deadline = calculate_auto_cancel_deadline(created_at)
+        self.assertEqual(deadline, timezone.make_aware(datetime(2026, 7, 21, 9, 30)))
+
+    def test_deadline_before_business_hours_starts_accumulating_at_open(self):
+        created_at = timezone.make_aware(datetime(2026, 7, 20, 6, 0))
+        deadline = calculate_auto_cancel_deadline(created_at)
+        self.assertEqual(deadline, timezone.make_aware(datetime(2026, 7, 20, 9, 30)))
+
+
+class ProcessBookingsCommandTestCase(TestCase):
+    """Tests for the `process_bookings` management command (unified cron)."""
+
+    def setUp(self):
+        self.landlord = User.objects.create_user(
+            email="landlord_cron@test.com", password="pass12345678"
+        )
+        self.tenant = User.objects.create_user(
+            email="tenant_cron@test.com", password="pass12345678"
+        )
+        self.address = make_address()
+        self.listing = Listing.objects.create(
+            owner=self.landlord,
+            type=ListingType.APARTMENT,
+            title="Cron test flat",
+            description="A" * 30,
+            address=self.address,
+            current_price=Decimal("100.00"),
+            rental_type="daily",
+            max_guests=2,
+        )
+
+    def test_overdue_pending_booking_gets_auto_cancelled(self):
+        booking = Booking(
+            tenant=self.tenant,
+            listing=self.listing,
+            status=BookingStatus.PENDING,
+            check_in_date=timezone.localdate() + timedelta(days=5),
+            check_out_date=timezone.localdate() + timedelta(days=7),
+            guests_count=1,
+            total_price=Decimal("200.00"),
+        )
+        Booking.objects.bulk_create([booking])
+        QuerySet(Booking).filter(id=booking.id).update(
+            created_at=timezone.now() - timedelta(days=1)
+        )
+
+        call_command("process_bookings")
+
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, BookingStatus.AUTO_CANCELLED)
+        self.assertIsNotNone(booking.cancelled_at)
+
+    def test_recent_pending_booking_not_touched(self):
+        booking = Booking.objects.create(
+            tenant=self.tenant,
+            listing=self.listing,
+            status=BookingStatus.PENDING,
+            check_in_date=timezone.localdate() + timedelta(days=5),
+            check_out_date=timezone.localdate() + timedelta(days=7),
+            guests_count=1,
+            total_price=Decimal("200.00"),
+        )
+        call_command("process_bookings")
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, BookingStatus.PENDING)
+
+    def test_confirmed_booking_past_checkout_gets_completed(self):
+        booking = Booking(
+            tenant=self.tenant,
+            listing=self.listing,
+            status=BookingStatus.CONFIRMED,
+            check_in_date=timezone.localdate() - timedelta(days=5),
+            check_out_date=timezone.localdate() - timedelta(days=1),
+            guests_count=1,
+            total_price=Decimal("200.00"),
+        )
+        Booking.objects.bulk_create([booking])
+
+        call_command("process_bookings")
+
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, BookingStatus.COMPLETED)
+
+    def test_confirmed_booking_future_checkout_not_touched(self):
+        booking = Booking.objects.create(
+            tenant=self.tenant,
+            listing=self.listing,
+            status=BookingStatus.CONFIRMED,
+            check_in_date=timezone.localdate() + timedelta(days=5),
+            check_out_date=timezone.localdate() + timedelta(days=7),
+            guests_count=1,
+            total_price=Decimal("200.00"),
+        )
+        call_command("process_bookings")
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, BookingStatus.CONFIRMED)

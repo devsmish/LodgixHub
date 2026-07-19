@@ -1,6 +1,8 @@
-from .booking_controller import BookingViewSet
-from .cancellation_reason_controller import CancellationReasonViewSet
-from .dispute_controller import (
+from apps.bookings.controller.booking_controller import BookingViewSet
+from apps.bookings.controller.cancellation_reason_controller import (
+    CancellationReasonViewSet,
+)
+from apps.bookings.controller.dispute_controller import (
     BookingDisputesView,
     DisputeEvidenceDetailView,
     DisputeEvidenceView,
