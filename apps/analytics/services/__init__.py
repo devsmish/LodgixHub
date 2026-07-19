@@ -1,4 +1,5 @@
-from .search_history import SearchHistoryService
-from .view_history import ViewHistoryService
+from apps.analytics.services.search_history import SearchHistoryService
+from apps.analytics.services.stats_service import AdminDashboardStatsService
+from apps.analytics.services.view_history import ViewHistoryService
 
-__all__ = ["SearchHistoryService", "ViewHistoryService"]
+__all__ = ["SearchHistoryService", "ViewHistoryService", "AdminDashboardStatsService"]

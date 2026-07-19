@@ -22,8 +22,8 @@ urlpatterns = [
     ),
     path("view-history/mine/", MyViewHistoryView.as_view(), name="view-history-mine"),
     path(
-        "admin/stats/",
+        "stats/admin-dashboard/",
         AdminDashboardStatsView.as_view(),
-        name="admin-stats",
+        name="admin-dashboard-stats",
     ),
 ]
