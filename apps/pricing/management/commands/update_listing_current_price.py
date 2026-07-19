@@ -21,7 +21,9 @@ class Command(BaseCommand):
     depend on it, and the cache update is not among the email triggers.
     """
 
-    help = "Updates Listing.current_price based on the latest active PriceHistory record."
+    help = (
+        "Updates Listing.current_price based on the latest active PriceHistory record."
+    )
 
     def handle(self, *args, **options):
         today = timezone.localdate()

@@ -51,9 +51,7 @@ class Command(BaseCommand):
                 with transaction.atomic():
                     booking.status = BookingStatus.AUTO_CANCELLED
                     booking.cancelled_at = now
-                    booking.save(
-                        update_fields=["status", "cancelled_at", "updated_at"]
-                    )
+                    booking.save(update_fields=["status", "cancelled_at", "updated_at"])
                 count += 1
             # noqa: BLE001 — A single problematic record shouldn't cause the entire batch to fail.
             except Exception as exc:
