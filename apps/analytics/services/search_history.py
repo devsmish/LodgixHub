@@ -1,5 +1,4 @@
 from apps.analytics.dto.search_history import SearchHistoryCreateDTO
-from apps.analytics.errors import EmptyKeywordError
 from apps.analytics.repositories.search_history import SearchHistoryRepository
 
 
@@ -17,8 +16,6 @@ class SearchHistoryService:
         )
         dto.is_valid(raise_exception=True)
         normalized_keyword = dto.validated_data["keyword"].lower()
-        if not normalized_keyword:
-            raise EmptyKeywordError()
 
         return self.repository.create(
             user=user if (user and user.is_authenticated) else None,
