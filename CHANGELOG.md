@@ -4,6 +4,17 @@ All notable changes to LodgixHub will be documented in this file.
 
 The format follows a simple chronological structure.
 
+## [0.6.0] - 2026-07-19
+
+### Added
+- **Cron Infrastructure Automation & Command Registrations (Issue #70):** Developed and successfully registered dedicated Django management commands (`process_bookings` and `update_listing_current_price`) to handle critical automated routines. Relocated module packages directly into application runtimes (`apps/bookings/management/commands/` and `apps/pricing/management/commands/`) to guarantee correct discovery hooks via Django's `call_command` engine.
+
+### Fixed
+- **System-Wide Timezone Drift Mitigation (Issue #70):** Resolved critical execution timeline bugs within the background scheduling layer. Replaced unstable server-wide `timezone.now()` (UTC) queries with synchronized `timezone.localtime()` calls inside the booking auto-cancellation evaluator, bringing background task iterations into perfect alignment with localized business hour constraints (`calculate_auto_cancel_deadline`).
+- **Concurrent Thread-Safety & Optimization (Issue #68):** Hardened the analytics application layer by migrating `AdminDashboardStatsView` service instantiations away from persistent class attributes and directly into the request processing lifecycles, mitigating state leakage hazards under concurrent multi-worker production configurations.
+- **Database Query Acceleration & Performance Caching (Issue #68):** Eliminated costly N+1 database queries inside the `AdminDashboardStatsService` gap analysis engine by applying explicit `.select_related('user')` pre-fetches. Integrated a robust performance caching strategy for heavy platform summaries to bypass real-time aggregate operations across core tracking ledgers during dashboard reloads.
+- **Decoupled Test Architecture & Log Ledger Security (Issues #68, #70):** Refactored the analytical test suites to communicate strictly through public domain interfaces, retiring fragile manager monkey-patching patterns (`LogQuerySet`). Validated robust validation guards protecting the immutable historical log structure of `PriceHistory` database records against unauthorized mutations or bulk deletions.
+
 ## [0.5.0] - 2026-07-18
 
 ### Added

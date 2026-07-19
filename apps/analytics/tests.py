@@ -51,7 +51,8 @@ class AnalyticsServiceTestCase(TestCase):
         self.assertEqual(record.results_count, 5)
 
     def test_search_history_empty_keyword_error(self):
-        """Verification of EmptyKeywordError generation for an empty query after normalization."""
+        """Verification that DRF ValidationError is raised for an empty query
+        (caught by SearchHistoryCreateDTO.validate_keyword() after trim)."""
         service = SearchHistoryService()
         with self.assertRaises(DRFValidationError):
             service.record_search(user=self.user, keyword="   ")
@@ -98,7 +99,7 @@ class AnalyticsAPITestCase(TestCase):
         )
 
         self.search_history_url = "/api/v1/search-history/mine/"
-        self.admin_stats_url = "/api/v1/admin/stats/"
+        self.admin_stats_url = "/api/v1/stats/admin-dashboard/"
 
     def test_my_search_history_auth_guard(self):
         """Checking access protection for personal search history."""
