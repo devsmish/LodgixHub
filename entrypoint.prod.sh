@@ -30,30 +30,32 @@ echo "The database is ready for use!"
 echo "=== Applying Django migrations ==="
 python manage.py migrate --noinput
 
-# 2. Superuser creation — only runs on first deploy while
-#    DJANGO_SUPERUSER_* vars are set; safe to leave, idempotent check inside.
-if [ "$DJANGO_SUPERUSER_EMAIL" ] && [ "$DJANGO_SUPERUSER_PASSWORD" ]; then
-    echo "=== Checking and creating a superuser ==="
-    python manage.py shell -c "
-from django.contrib.auth import get_user_model
-User = get_user_model()
-
-email = '$DJANGO_SUPERUSER_EMAIL'
-password = '$DJANGO_SUPERUSER_PASSWORD'
-
-if not User.objects.filter(email=email).exists():
-    extra_fields = {}
-    if 'nickname' in User.REQUIRED_FIELDS:
-        extra_fields['nickname'] = '$DJANGO_SUPERUSER_NICKNAME'
-    User.objects.create_superuser(email=email, password=password, **extra_fields)
-    print('Superuser successfully created!')
-else:
-    print('The superuser already exists.')
-"
-fi
+# Note: суперюзер не создаётся здесь — БД в проде восстанавливается
+# из дампа (см. Этап 6), суперюзер там уже есть.
 
 echo "=== Collecting static files ==="
 python manage.py collectstatic --noinput
+
+# Elastic IP недоступен (нет прав в учебном аккаунте) — публичный IP EC2
+# меняется при каждом stop/start. Спрашиваем его у самого инстанса через
+# IMDSv2 и добавляем в ALLOWED_HOSTS/CSRF_TRUSTED_ORIGINS на этот запуск,
+# чтобы не редактировать .env.aws руками перед каждой демонстрацией.
+echo "=== Detecting current public IP (IMDSv2) ==="
+IMDS_TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
+    -H "X-aws-ec2-metadata-token-ttl-seconds: 60" || true)
+
+if [ -n "$IMDS_TOKEN" ]; then
+    CURRENT_PUBLIC_IP=$(curl -s -H "X-aws-ec2-metadata-token: $IMDS_TOKEN" \
+        http://169.254.169.254/latest/meta-data/public-ipv4 || true)
+fi
+
+if [ -n "$CURRENT_PUBLIC_IP" ]; then
+    echo "Detected public IP: $CURRENT_PUBLIC_IP"
+    export ALLOWED_HOSTS="${ALLOWED_HOSTS},${CURRENT_PUBLIC_IP}"
+    export CSRF_TRUSTED_ORIGINS="${CSRF_TRUSTED_ORIGINS},http://${CURRENT_PUBLIC_IP}"
+else
+    echo "WARNING: could not detect public IP via IMDS — falling back to .env.aws values only"
+fi
 
 echo "=== Starting gunicorn ==="
 exec gunicorn config.wsgi:application \

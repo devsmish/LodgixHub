@@ -1,12 +1,36 @@
 services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    env_file:
+      - .env.aws
+    environment:
+      MYSQL_DATABASE: ${MYSQL_NAME}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./dump:/docker-entrypoint-initdb.d  # восстановление дампа при первом старте (пустой volume)
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # порт наружу НЕ пробрасываем — доступ только изнутри docker-сети,
+    # web/celery ходят к нему по имени сервиса "db", как и в dev-compose
+
   web:
     build:
       context: .
       dockerfile: Dockerfile.prod
     image: lodgixhub-web:prod
     restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
     env_file:
-      - .env.aws.example
+      - .env.aws
     volumes:
       - static_data:/app/staticfiles
       # media НЕ монтируем как volume в проде — файлы едут напрямую в S3
@@ -28,3 +52,4 @@ services:
 
 volumes:
   static_data:
+  db_data:
