@@ -235,3 +235,6 @@ dump/*.sql
 !/dump/.gitkeep
 
 *.pem
+.terraform/
+.tfstate
+

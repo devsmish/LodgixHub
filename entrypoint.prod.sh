@@ -1,9 +1,7 @@
 #!/bin/sh
 
-# Stop the script on any error.
 set -e
 
-# 1. Waiting for the database (RDS) to be ready
 echo "=== Waiting for the database ==="
 python -c "
 import socket
@@ -30,16 +28,9 @@ echo "The database is ready for use!"
 echo "=== Applying Django migrations ==="
 python manage.py migrate --noinput
 
-# Note: суперюзер не создаётся здесь — БД в проде восстанавливается
-# из дампа (см. Этап 6), суперюзер там уже есть.
-
 echo "=== Collecting static files ==="
 python manage.py collectstatic --noinput
 
-# Elastic IP недоступен (нет прав в учебном аккаунте) — публичный IP EC2
-# меняется при каждом stop/start. Спрашиваем его у самого инстанса через
-# IMDSv2 и добавляем в ALLOWED_HOSTS/CSRF_TRUSTED_ORIGINS на этот запуск,
-# чтобы не редактировать .env.aws руками перед каждой демонстрацией.
 echo "=== Detecting current public IP (IMDSv2) ==="
 IMDS_TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
     -H "X-aws-ec2-metadata-token-ttl-seconds: 60" || true)

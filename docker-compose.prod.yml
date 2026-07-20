@@ -1,24 +1,14 @@
 services:
-  db:
-    image: mysql:8.0
+  redis:
+    image: redis:7-alpine
     restart: unless-stopped
-    env_file:
-      - .env.aws
-    environment:
-      MYSQL_DATABASE: ${MYSQL_NAME}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
-      - db_data:/var/lib/mysql
-      - ./dump:/docker-entrypoint-initdb.d  # восстановление дампа при первом старте (пустой volume)
+      - redis_data:/data
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
-      timeout: 5s
+      timeout: 3s
       retries: 10
-    # порт наружу НЕ пробрасываем — доступ только изнутри docker-сети,
-    # web/celery ходят к нему по имени сервиса "db", как и в dev-compose
 
   web:
     build:
@@ -27,16 +17,45 @@ services:
     image: lodgixhub-web:prod
     restart: unless-stopped
     depends_on:
-      db:
+      redis:
         condition: service_healthy
     env_file:
       - .env.aws
     volumes:
       - static_data:/app/staticfiles
-      # media НЕ монтируем как volume в проде — файлы едут напрямую в S3
-      # (django-storages/boto3, настраивается в settings.py через USE_S3)
+      - media_data:/app/media
     expose:
       - "8000"
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    image: lodgixhub-web:prod
+    restart: unless-stopped
+    entrypoint: []
+    command: celery -A config worker -l info
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.aws
+    volumes:
+      - media_data:/app/media
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    image: lodgixhub-web:prod
+    restart: unless-stopped
+    entrypoint: []
+    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.aws
 
   nginx:
     image: nginx:1.27-alpine
@@ -45,11 +64,12 @@ services:
       - web
     ports:
       - "80:80"
-      # - "443:443"   # раскомментировать после настройки TLS (certbot)
+      # - "443:443"   # см. обсуждение HTTPS ниже
     volumes:
       - ./deploy/nginx/lodgixhub.conf:/etc/nginx/conf.d/default.conf:ro
       - static_data:/app/staticfiles:ro
 
 volumes:
   static_data:
-  db_data:
+  media_data:
+  redis_data:
