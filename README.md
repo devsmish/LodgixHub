@@ -120,6 +120,13 @@ clarification questions before proceeding.
 ### Test Data
 - Faker-based database seeding for development and demonstration data.
 
+### Notifications and Operations
+- Synchronous email notifications sent directly from signals or views.
+- Exception handling with `try`/`except` where appropriate.
+- Logging and signal handlers for platform alerts.
+- **Asynchronous Task Execution:** Asynchronous job processing powered by **Celery** workers backed by **Redis** brokers.
+- **Dynamic Task Scheduling:** Automated booking auto-cancellation and daily pricing updates controlled via `django-celery-beat` database schedules.
+
 ### API Documentation
 - Swagger/OpenAPI documentation for the backend API.
 
@@ -329,6 +336,31 @@ Create a dedicated `.env.docker` file based on `.env.example`:
   
 Once operational, the Django application will serve traffic at http://127.0.0.1:8000/. 
 External database clients can attach to the isolated MySQL engine via 127.0.0.1:3310.
+
+### 10. ⚙️ Asynchronous Infrastructure (Celery & Redis)
+
+As of release `v0.8.0`, the background processing pipeline relies on Redis and Celery. 
+
+To run the full async infrastructure locally in development mode:
+
+1) **Start Redis Broker & Cache Containers:**
+   ```bash
+   docker run -d --name django-redis -p 6379:6379 redis:alpine
+   
+2) **Start Celery Worker (In a dedicated terminal):**
+   ```bash
+   celery -A config worker --loglevel=info -P solo
+   
+3) **Start Celery Beat Scheduler (In a dedicated terminal):**
+   ```bash
+   celery -A config beat --loglevel=info
+   
+### 11. Faker
+
+Populates the database with default parameters predefined in the argument parser:
+   ```bash
+   python manage.py seed_fake_data
+   python manage.py seed_fake_data --landlords 100 --listings-per-landlord 4 --tenants 300 --moderators 3
 
 ## Documentation
 - [Changelog](CHANGELOG.md)
