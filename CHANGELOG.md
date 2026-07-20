@@ -4,6 +4,17 @@ All notable changes to LodgixHub will be documented in this file.
 
 The format follows a simple chronological structure.
 
+## [0.8.0] - 2026-07-20
+
+### Added
+- **Asynchronous Task Queue & Broker Architecture (Issue #76):** Integrated **Redis** as a Dual-Purpose Broker (`db/0`) and High-Performance Cache Storage (`db/1`), alongside **Celery** as an asynchronous task execution engine.
+- **Dynamic Task Scheduling Layer (Issue #76):** Deployed `django-celery-beat` with `DatabaseScheduler`, exposing live crontab and interval task management via the Django Admin interface.
+- **Background Task Implementations (Issue #76):** Built standalone Celery tasks (`apps.bookings.tasks.run_process_bookings` every 15 mins, and `apps.pricing.tasks.run_update_listing_current_price` daily at 00:05) triggering underlying Django management commands asynchronously.
+
+### Fixed
+- **Windows Process Execution Stability:** Configured `-P solo` worker execution pool patch for stable local development without process pool permissions or handle errors (`PermissionError 13` / `WinError 6`).
+- **Database Engine Interoperability:** Ensured seamless operational continuity across SQLite and MySQL database backends for background task schedules.
+
 ## [0.7.0] - 2026-07-19
 
 ### Added
