@@ -4,7 +4,7 @@ from apps.bookings.models import Booking
 
 
 class BookingCreateSerializer(serializers.Serializer):
-    """POST /api/v1/bookings/ — ровно одно из listing_id/room_id (ТЗ 2.8)."""
+    """POST /api/v1/bookings/ — exactly one of listing_id/room_id."""
 
     listing_id = serializers.UUIDField(required=False)
     room_id = serializers.UUIDField(required=False)
@@ -17,18 +17,18 @@ class BookingCreateSerializer(serializers.Serializer):
         room_id = attrs.get("room_id")
         if bool(listing_id) == bool(room_id):
             raise serializers.ValidationError(
-                "Укажите либо listing_id, либо room_id (ровно одно)."
+                "Specify either listing_id or room_id (exactly one)."
             )
         if attrs["check_in_date"] >= attrs["check_out_date"]:
             raise serializers.ValidationError(
-                {"check_out_date": "Дата выезда должна быть позже даты заезда."}
+                {"check_out_date": "The departure date must be later than the arrival date."}
             )
         return attrs
 
 
 class BookingSerializer(serializers.ModelSerializer):
-    """GET /api/v1/bookings/ и /{id}/ — read-only, total_price всегда фиксирован
-    на момент создания (ТЗ 2.5) и не редактируется ни этим, ни другим сериализатором."""
+    """GET /api/v1/bookings/ и /{id}/ — read-only, total_price is always fixed
+    at the time of creation and is not editable by either this or the other serializer."""
 
     class Meta:
         model = Booking
@@ -55,8 +55,7 @@ class BookingSerializer(serializers.ModelSerializer):
 
 
 class BookingCancelSerializer(serializers.Serializer):
-    """POST /api/v1/bookings/{id}/cancel/ — cancellation_reason_id обязателен
-    только когда отменяет владелец (проверяется в services, не здесь, так как
-    зависит от того, кто именно — арендатор или владелец — делает запрос)."""
+    """POST /api/v1/bookings/{id}/cancel/ — cancellation_reason_id mandatory
+    only when the owner cancels."""
 
     cancellation_reason_id = serializers.UUIDField(required=False)

@@ -106,10 +106,10 @@ def custom_permission_description_hook(result, generator, **kwargs):
     Global post-processing hook for drf-spectacular.
     Uses target view reflection to map permissions directly into the OpenAPI dictionary.
     """
-    # 1. Сначала строим карту: operationId -> список пермишенов
+    # First, a map is built: operationId -> list of permissions.
     operation_permissions = {}
 
-    # generator.endpoints возвращает готовые обработанные эндпоинты
+    # generator.endpoints returns ready-to-use, processed endpoints.
     endpoints = generator.endpoints
 
     for path, path_regex, method, view in endpoints:
@@ -117,7 +117,7 @@ def custom_permission_description_hook(result, generator, **kwargs):
         if not permissions:
             continue
 
-        # Заставляем схему вьюхи сгенерировать точный operationId для данного метода
+        # The view schema generates an exact operationId for this method.
         auto_schema = getattr(view, "schema", None)
         if auto_schema:
             auto_schema.method = method.lower()
@@ -127,7 +127,7 @@ def custom_permission_description_hook(result, generator, **kwargs):
             except Exception:
                 continue
 
-    # 2. Проходим по финальной JSON-схеме и обновляем описания
+    # Iterate through the final JSON schema and update the descriptions.
     for path, methods in result.get("paths", {}).items():
         for method_name, operation in methods.items():
             operation_id = operation.get("operationId")

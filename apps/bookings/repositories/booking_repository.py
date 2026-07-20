@@ -2,7 +2,6 @@ from apps.bookings.models import Booking
 
 
 class BookingRepository:
-    """Только запросы к БД."""
 
     @staticmethod
     def get_all_queryset():

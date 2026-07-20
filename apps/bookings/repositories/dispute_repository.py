@@ -2,7 +2,6 @@ from apps.bookings.models import Dispute, DisputeEvidence
 
 
 class DisputeRepository:
-    """Только запросы к БД."""
 
     @staticmethod
     def get_for_booking(booking_id):

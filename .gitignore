@@ -150,6 +150,7 @@ activemq-data/
 # Environments
 .env
 .env.docker
+.env.aws
 !.env.example
 .envrc
 .venv
