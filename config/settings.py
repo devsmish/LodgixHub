@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     "apps.analytics",
     "apps.notifications",
     "apps.security",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -301,3 +302,37 @@ if LOG_TO_FILE:
     # Connecting a file handler to loggers
     LOGGING["loggers"]["django"]["handlers"].append("file_errors")
     LOGGING["loggers"]["apps"]["handlers"].append("file_errors")
+
+# 1. Redis cache for Django (DB 1)
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+# 2. Redis broker for Celery (DB 0)
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+CELERY_TIMEZONE = "UTC"
+CELERY_ENABLE_UTC = False
+
+# cron in code
+# from celery.schedules import crontab
+#
+# CELERY_BEAT_SCHEDULE = {
+#     'process_bookings_every_15_mins': {
+#         'task': 'apps.bookings.tasks.run_process_bookings',
+#         'schedule': crontab(minute='*/15'),
+#     },
+#     'update_pricing_daily': {
+#         'task': 'apps.pricing.tasks.run_update_listing_current_price',
+#         'schedule': crontab(minute=5, hour=0),
+#     },
+# }
+
+# cron in AdminPanel
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
