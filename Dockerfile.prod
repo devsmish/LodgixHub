@@ -1,0 +1,35 @@
+FROM python:3.12-slim
+
+# Installing dependencies for building mysqlclient
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    default-libmysqlclient-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV DJANGO_SETTINGS_MODULE=config.settings
+
+WORKDIR /app
+
+# Installing dependencies (gunicorn добавлен в requirements.txt — см. ниже)
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copying the project
+COPY . /app/
+
+# Preparing the prod auto-start script
+COPY entrypoint.prod.sh /entrypoint.prod.sh
+RUN chmod +x /entrypoint.prod.sh
+
+# Непривилегированный пользователь — best practice для прод-контейнера
+RUN useradd --create-home --shell /bin/bash appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
+EXPOSE 8000
+
+ENTRYPOINT ["/entrypoint.prod.sh"]
