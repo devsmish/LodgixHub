@@ -8,11 +8,9 @@ from core.models import LogModel
 
 class ViewHistory(LogModel):
     """
-    Раздел 2.3 ТЗ. Лог просмотра объявления, иммутабелен.
-
-    session_key используется для дедупликации просмотров гостя БЕЗ хранения
-    IP-адреса (более щадящий вариант с точки зрения GDPR — проект развёрнут
-    для аудитории в Германии).
+    The ad view log is immutable.
+    The session_key is used to deduplicate guest views WITHOUT storing
+    IP addresses.
     """
 
     listing = models.ForeignKey(
@@ -42,9 +40,9 @@ class ViewHistory(LogModel):
         verbose_name = _("View History")
         verbose_name_plural = _("View History")
         indexes = [
-            # Для запросов популярности и истории по объявлению.
+            # For ad popularity and history queries.
             models.Index(fields=["listing", "created_at"]),
-            # Для быстрой проверки дедупликации при каждом просмотре.
+            # For a quick deduplication check during every view.
             models.Index(fields=["listing", "user", "session_key"]),
         ]
 

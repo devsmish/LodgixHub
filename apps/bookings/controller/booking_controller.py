@@ -108,5 +108,5 @@ class BookingViewSet(
             return None
         reason = CancellationReason.objects.filter(id=reason_id).first()
         if reason is None:
-            raise NotFound("Причина отмены не найдена.")
+            raise NotFound("The reason for the cancellation was not found.")
         return reason
