@@ -14,7 +14,7 @@ ENV DJANGO_SETTINGS_MODULE=config.settings
 
 WORKDIR /app
 
-# Installing dependencies
+# Installing dependencies (gunicorn добавлен в requirements.txt — см. ниже)
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
@@ -27,6 +27,7 @@ COPY entrypoint.prod.sh /entrypoint.prod.sh
 RUN chmod +x /entrypoint.prod.sh
 
 RUN useradd --create-home --shell /bin/bash appuser \
+    && mkdir -p /app/staticfiles /app/media \
     && chown -R appuser:appuser /app
 USER appuser
 
