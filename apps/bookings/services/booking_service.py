@@ -30,8 +30,7 @@ class BookingService:
     def __init__(self, repository: BookingRepository = None):
         self.repository = repository or BookingRepository()
 
-    # --- список / видимость (ТЗ 2.8: "Свои брони: арендатор — tenant=me;
-    # арендодатель — listing.owner=me") ---
+    # list of your bookings
 
     def list_for_user(self, user):
         return (
@@ -47,7 +46,7 @@ class BookingService:
         landlord = booking.get_landlord()
         return booking.tenant_id == user.id or (landlord and landlord.id == user.id)
 
-    # --- создание (ТЗ 2.8: последовательность валидаций) ---
+    # validation sequence for creation
 
     @transaction.atomic
     def create_booking(
@@ -84,8 +83,7 @@ class BookingService:
             total_price=total_price,
             deposit_amount=deposit_amount,
         )
-        # Booking.save() уже вызывает full_clean() — дублирует проверку дат/
-        # capacity/пересечений как второй слой защиты (ТЗ 2.11: dto + модель).
+
         booking.save()
         return booking
 
@@ -94,23 +92,23 @@ class BookingService:
         if listing_id:
             listing = Listing.all_objects.filter(id=listing_id).first()
             if listing is None:
-                raise NotFound("Объявление не найдено.")
+                raise NotFound("Ad not found.")
             return listing, listing
 
         room = Room.all_objects.filter(id=room_id).select_related("listing").first()
         if room is None:
-            raise NotFound("Комната не найдена.")
+            raise NotFound("Room not found.")
         return room, room.listing
 
     @staticmethod
     def _guard_bookable(listing):
-        """ТЗ 2.8, шаг 1: listing.status == published AND listing.is_active == True."""
+        """listing.status == published AND listing.is_active == True."""
         if listing.status != ListingStatus.PUBLISHED or not listing.is_active:
             raise ListingNotBookableError()
 
     @staticmethod
     def _guard_availability(target, check_in_date, check_out_date, *, is_room):
-        """ТЗ 2.8, шаг 3: формула доступности — 409, если available <= 0."""
+        """Availability formula — error 409 if available <= 0."""
         overlap = Q(
             check_in_date__lt=check_out_date,
             check_out_date__gt=check_in_date,
@@ -126,11 +124,10 @@ class BookingService:
 
     @staticmethod
     def _calculate_price(*, target, check_in_date, check_out_date, is_room):
-        """ТЗ 2.5/2.8, шаг 4: актуальная цена из PriceHistory на check_in_date,
-        скидка 15%/10% при бронировании на сегодня/завтра, умножение на число
-        суток. Результат — то самое 'зафиксированное' значение: возвращается
-        один раз здесь и больше нигде не пересчитывается (см. confirm/reject/
-        cancel ниже — они не трогают total_price вообще)."""
+        """the current price from PriceHistory for the check-in date,
+        a 15%/10% discount for bookings for today/tomorrow, multiplied by the number
+        of nights. The result is a fixed value: it is returned
+        once here and is not recalculated anywhere else."""
         from apps.pricing.models import PriceHistory
 
         price_entry = PriceHistory.objects.effective_on(
@@ -140,7 +137,7 @@ class BookingService:
         ).first()
         if price_entry is None:
             raise ListingNotBookableError(
-                "Для объявления/комнаты ещё не установлена цена на эту дату."
+                "A price has not yet been set for this listing/room for this date."
             )
 
         base_price = price_entry.price
@@ -161,7 +158,7 @@ class BookingService:
             Decimal("0.01")
         )
 
-    # --- подтверждение / отклонение (только владелец, ТЗ 2.8) ---
+    # Confirmation/rejection by owner only
 
     def confirm(self, *, booking, actor):
         self._guard_is_landlord(booking, actor)
@@ -170,8 +167,6 @@ class BookingService:
 
         booking.status = BookingStatus.CONFIRMED
         booking.confirmed_at = timezone.now()
-        # Явный update_fields — total_price/deposit_amount физически не могут
-        # быть переписаны этим вызовом, даже случайно.
         booking.save(update_fields=["status", "confirmed_at", "updated_at"])
         return booking
 
@@ -189,10 +184,10 @@ class BookingService:
         landlord = booking.get_landlord()
         if landlord is None or landlord.id != actor.id:
             raise PermissionDenied(
-                "Только владелец объявления может выполнить это действие."
+                "Only the owner of the listing can perform this action."
             )
 
-    # --- отмена (арендатор — до 24ч, владелец — с причиной, ТЗ 2.8) ---
+    # Cancellation: tenant — up to 24 hours in advance; owner — with a reason.
 
     def cancel(self, *, booking, actor, cancellation_reason=None):
         is_tenant = booking.tenant_id == actor.id
@@ -200,7 +195,7 @@ class BookingService:
         is_landlord = landlord is not None and landlord.id == actor.id
 
         if not (is_tenant or is_landlord):
-            raise PermissionDenied("Вы не участник этой брони.")
+            raise PermissionDenied("You are not a participant in this booking.")
 
         if booking.status not in (BookingStatus.PENDING, BookingStatus.CONFIRMED):
             raise BookingTransitionNotAllowedError()
@@ -214,8 +209,6 @@ class BookingService:
         booking.cancelled_at = timezone.now()
         booking.cancelled_by = actor
         booking.cancellation_reason = cancellation_reason
-        # Опять же — total_price/deposit_amount вне update_fields, отмена
-        # никогда не может задеть зафиксированную цену.
         booking.save(
             update_fields=[
                 "status",
@@ -235,9 +228,10 @@ class BookingService:
 
     @staticmethod
     def _tenant_cancel_deadline(booking):
-        """ТЗ 2.8: 'не позже чем за 24 часа до check_in_date'. Момент заезда
-        берётся с реальным check_in_time объявления/комнаты (TimePolicy) —
-        тот же паттерн, что уже используется в Dispute.clean()."""
+        """
+        No later than 24 hours before the check-in date. The check-in time
+        is based on the actual check-in time for the listing/room (TimePolicy).
+        """
         target = booking.room if booking.room else booking.listing
         check_in_dt = timezone.make_aware(
             datetime.combine(booking.check_in_date, target.check_in_time)
@@ -248,5 +242,5 @@ class BookingService:
     def _cancel_as_landlord(cancellation_reason):
         if cancellation_reason is None:
             raise CancellationReasonRequiredError()
-        # TODO(apps.notifications): автописьмо-извинение арендатору (ТЗ 2.4).
+        # TODO(apps.notifications): automated apology email to the tenant.
         return BookingStatus.CANCELLED_BY_LANDLORD

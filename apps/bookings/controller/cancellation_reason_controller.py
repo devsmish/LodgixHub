@@ -7,9 +7,9 @@ from apps.security.permissions import IsAdmin
 
 
 class CancellationReasonViewSet(viewsets.ModelViewSet):
-    """/api/v1/cancellation-reasons/ — справочник (ТЗ 2.12).
-    GET — Авторизованный (не AllowAny — так в ТЗ). POST/PATCH/DELETE — Админ.
-    DELETE — soft delete (унаследован от BaseModel)."""
+    """/api/v1/cancellation-reasons/ — reference data.
+    GET — Authorized. POST/PATCH/DELETE — Admin.
+    DELETE — soft delete."""
 
     queryset = CancellationReason.objects.all()
     serializer_class = CancellationReasonSerializer

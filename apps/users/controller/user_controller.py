@@ -1,4 +1,5 @@
 from django.contrib.auth.models import Group
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -22,8 +23,10 @@ class GroupListView(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     queryset = Group.objects.all()
     permission_classes = [IsAdmin]
-    serializer_class = GroupsUpdateSerializer
 
+    @extend_schema(
+        responses={200: OpenApiResponse(response={"type": "array", "items": {"type": "string"}})}
+    )
     def list(self, request, *args, **kwargs):
         names = list(self.get_queryset().values_list("name", flat=True))
         return Response(names)

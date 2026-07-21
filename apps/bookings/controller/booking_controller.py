@@ -9,7 +9,7 @@ from apps.bookings.dto import (
     BookingCreateSerializer,
     BookingSerializer,
 )
-from apps.bookings.models import CancellationReason
+from apps.bookings.models import CancellationReason, Booking
 from apps.bookings.repositories import BookingRepository
 from apps.bookings.services import BookingService
 from apps.security.constants import GROUP_ADMIN
@@ -20,11 +20,13 @@ class BookingViewSet(
 ):
 
     permission_classes = [IsAuthenticated]
-
+    queryset = Booking.objects.all()
     repository = BookingRepository()
     service = BookingService()
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False) or not self.request.user.is_authenticated:
+            return Booking.objects.none()
         return self.service.list_for_user(self.request.user)
 
     def get_serializer_class(self):
@@ -45,7 +47,7 @@ class BookingViewSet(
         user = self.request.user
         is_admin = user.is_superuser or user.groups.filter(name=GROUP_ADMIN).exists()
         if not (self.service.is_participant(booking, user) or is_admin):
-            raise PermissionDenied("Вы не участник этой брони.")
+            raise PermissionDenied("You are not a participant in this booking.")
 
     # GET /api/v1/bookings/
     def list(self, request, *args, **kwargs):
@@ -108,5 +110,5 @@ class BookingViewSet(
             return None
         reason = CancellationReason.objects.filter(id=reason_id).first()
         if reason is None:
-            raise NotFound("Причина отмены не найдена.")
+            raise NotFound("The reason for the cancellation was not found.")
         return reason

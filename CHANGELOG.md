@@ -4,6 +4,18 @@ All notable changes to LodgixHub will be documented in this file.
 
 The format follows a simple chronological structure.
 
+## [1.0.0] - 2026-07-21
+
+### Fixed
+- **Django Admin Interface:** Fixed plain-text password rendering and form validation failures during user creation in `CustomUserAdmin` by correctly referencing `password1` and `password2` form fields instead of the raw model field `password`.
+
+### Refactored
+- **OpenAPI / Swagger Schema Introspection (drf-spectacular):**
+  - **UUID Path Parameter Preservation:** Configured static class-level `queryset` attributes on `BookingViewSet` and `ReviewViewSet`, preventing schema introspection fallback from `uuid` to `string`.
+  - **Complete Schema Introspection Coverage:** Added explicit `@extend_schema` decorators and DTO response serializers across `apps.security`, `apps.users`, `apps.listings`, and `apps.admin` controllers (reducing schema errors from 28 to 0).
+  - **Custom JWT Swagger Integration:** Registered `OpenApiAuthenticationExtension` for `CustomJWTAuthentication` in `apps.security.schema` to enable interactive "Authorize" functionality in Swagger UI.
+  - **Legacy Endpoints Cleanup:** Linked `BookingSerializer` and owner-only access controls to `ListingBookingsView`.
+
 ## [0.9.0] - 2026-07-21
 
 ### Added

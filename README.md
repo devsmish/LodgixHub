@@ -125,10 +125,16 @@ clarification questions before proceeding.
 - Exception handling with `try`/`except` where appropriate.
 - Logging and signal handlers for platform alerts.
 - **Asynchronous Task Execution:** Asynchronous job processing powered by **Celery** workers backed by **Redis** brokers.
-- **Dynamic Task Scheduling:** Automated booking auto-cancellation and daily pricing updates controlled via `django-celery-beat` database schedules.
+- **Dynamic Task Scheduling:** Automated booking auto-cancellation and daily pricing updates controlled via 
+- `django-celery-beat` database schedules.
 
 ### API Documentation
-- Swagger/OpenAPI documentation for the backend API.
+- Interactive Swagger/OpenAPI documentation powered by `drf-spectacular` available at `/api/v1/schema/swagger-ui/`.
+- Native support for UUID path parameters across all domain endpoints (`/api/v1/listings/{id}/`, 
+- `/api/v1/bookings/{id}/`, etc.).
+- Complete authentication schema integration via `CustomJWTAuthentication` with native Swagger UI "Authorize" button 
+- support (`Bearer <token>`).
+- Zero-error OpenAPI schema compilation pipeline.
 
 ### Code Quality
 - Black.
@@ -140,7 +146,12 @@ clarification questions before proceeding.
 - Docker Compose for local/containerized execution.
 - MySQL for local development and external database setups.
 - **Production Stack:** Gunicorn + Nginx reverse proxy, Celery worker, Celery beat, and dual-purpose Redis broker/cache.
-- **AWS Deployment (IaC):** Terraform module (`deploy/terraform/`) for automated EC2 instance provisioning with dynamic public IP detection via IMDSv2.
+- **AWS Deployment (IaC):** Terraform module (`deploy/terraform/`) for automated EC2 instance provisioning with dynamic 
+- public IP detection via IMDSv2.
+
+### Admin Panel & Security
+- Secure user creation and editing via Django Admin with properly masked input fields (`type="password"`) and automatic 
+- password confirmation validation (`password1` / `password2`).
 
 ## Out of MVP Scope
 
@@ -168,7 +179,8 @@ Architecture (`Controller → Service → Repository`) and are fully connected v
 release `v0.6.0`.
 
 ### 📊 Database Seeding
-To populate your local database with realistic German test data (users, listings, reviews, bookings), use the custom management command:
+To populate your local database with realistic German test data (users, listings, reviews, bookings), use the custom 
+management command:
 
 ```bash
 # Quick start with default settings (70 landlords, 100 tenants, etc.)
@@ -303,7 +315,8 @@ python manage.py runserver
 
 ### 9. Containerized Development Setup (Docker)
 
-As of release `v0.5.0`, the application is fully containerized for local development to ensure environment consistency and eliminate host machine dependency mismatches.
+As of release `v0.5.0`, the application is fully containerized for local development to ensure environment consistency 
+and eliminate host machine dependency mismatches.
 
 #### Prerequisites
 - Docker and Docker Compose installed on your host machine.
@@ -312,7 +325,8 @@ As of release `v0.5.0`, the application is fully containerized for local develop
 #### Environment Configuration
 Create a dedicated `.env.docker` file based on `.env.example`:
 * Change `MYSQL_HOST` to `db` (the service orchestrator name).
-* Configure `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL`, and `DJANGO_SUPERUSER_PASSWORD` to automate admin creation.
+* Configure `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL`, and `DJANGO_SUPERUSER_PASSWORD` to automate admin 
+* creation.
 
 #### Execution Commands
 

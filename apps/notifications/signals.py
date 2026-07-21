@@ -22,10 +22,10 @@ def notify_registration(sender, instance, created, **kwargs):
     NotificationService.send(
         user=instance,
         notification_type=NotificationType.REGISTRATION,
-        subject="Добро пожаловать!",
+        subject="Welcome!",
         message=(
-            f"Здравствуйте, {instance.first_name or instance.email}! "
-            "Регистрация на платформе прошла успешно."
+            f"Hello, {instance.first_name or instance.email}! "
+            "Registration on the platform was successful."
         ),
     )
 

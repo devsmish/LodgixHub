@@ -1,5 +1,4 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
-from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, PermissionDenied
@@ -26,7 +25,7 @@ from apps.security.permissions import IsAdmin, IsModerator
 
 
 class BookingDisputesView(generics.ListCreateAPIView):
-    """GET/POST /api/v1/bookings/{booking_id}/disputes/ — только участники брони."""
+    """GET/POST /api/v1/bookings/{booking_id}/disputes/ — booking participants only."""
 
     permission_classes = [IsAuthenticated]
 
@@ -68,13 +67,12 @@ class BookingDisputesView(generics.ListCreateAPIView):
         if booking is None:
             raise NotFound()
         if not self.booking_service.is_participant(booking, self.request.user):
-            raise PermissionDenied("Вы не участник этой брони.")
+            raise PermissionDenied("You are not a participant in this booking.")
         return booking
 
 
 class DisputeViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    """review/resolve — только модератор/админ (бизнес-логика уже готова
-    в apps.bookings.services, здесь только тонкая обвязка)."""
+    """review/resolve — moderator/admin only"""
 
     repository = DisputeRepository()
     permission_classes = [IsAuthenticated]
@@ -133,7 +131,7 @@ class DisputeViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
 
 class DisputeEvidenceView(generics.ListCreateAPIView):
-    """GET/POST /api/v1/disputes/{dispute_id}/evidence/ — только участники."""
+    """GET/POST /api/v1/disputes/{dispute_id}/evidence/ — participants only."""
 
     permission_classes = [IsAuthenticated]
 
@@ -179,11 +177,11 @@ class DisputeEvidenceView(generics.ListCreateAPIView):
         return dispute
 
 
-@extend_schema(responses={204: None})
 class DisputeEvidenceDetailView(generics.DestroyAPIView):
-    """DELETE /api/v1/disputes/{dispute_id}/evidence/{pk}/ — автор загрузки или админ."""
+    """DELETE /api/v1/disputes/{dispute_id}/evidence/{pk}/ — the uploader or the admin."""
 
     permission_classes = [IsAuthenticated]
+    serializer_class = DisputeEvidenceSerializer
     dispute_repository = DisputeRepository()
 
     def get_queryset(self):
@@ -200,6 +198,6 @@ class DisputeEvidenceDetailView(generics.DestroyAPIView):
         is_admin = user.is_superuser
         if not (evidence.uploaded_by_id == user.id or is_admin):
             raise PermissionDenied(
-                "Удалить доказательство может только автор загрузки."
+                "Only the uploader can delete the proof."
             )
         return evidence

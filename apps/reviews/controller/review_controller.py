@@ -12,6 +12,7 @@ from apps.reviews.dto import (
     ReviewStatusUpdateSerializer,
     ReviewUpdateSerializer,
 )
+from apps.reviews.models import Review
 from apps.reviews.repositories import ReviewRepository
 from apps.reviews.services import ReviewService
 from apps.security.permissions import IsAdmin, IsLandlord, IsModerator, IsOwner
@@ -19,6 +20,7 @@ from apps.security.permissions import IsAdmin, IsLandlord, IsModerator, IsOwner
 
 class ReviewViewSet(viewsets.GenericViewSet):
 
+    queryset = Review.objects.all()
     repository = ReviewRepository()
     service = ReviewService()
     booking_repository = BookingRepository()

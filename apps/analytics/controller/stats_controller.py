@@ -1,11 +1,11 @@
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.analytics.services import AdminDashboardStatsService
 from apps.security.permissions import IsAdmin
+from apps.analytics.constants import ADMIN_DASHBOARD_RESPONSE_SCHEMA
 
 
 class AdminDashboardStatsView(APIView):
@@ -19,7 +19,13 @@ class AdminDashboardStatsView(APIView):
     permission_classes = [IsAdmin]
     service = AdminDashboardStatsService()
 
-    @extend_schema(responses={200: OpenApiTypes.OBJECT})
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("date_from", str, description="ISO 8601, включительно"),
+            OpenApiParameter("date_to", str, description="ISO 8601, включительно"),
+        ],
+        responses={200: OpenApiResponse(response=ADMIN_DASHBOARD_RESPONSE_SCHEMA)},
+    )
     def get(self, request):
         data = self.service.get_summary(
             date_from=request.query_params.get("date_from"),
