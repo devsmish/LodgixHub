@@ -1,4 +1,3 @@
-from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.listings.models import Room
@@ -27,7 +26,6 @@ class RoomSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("id", "listing", "created_at", "updated_at")
 
-    @extend_schema_field(serializers.IntegerField())
     def get_available_count(self, obj):
         return getattr(obj, "_available_count", None)
 

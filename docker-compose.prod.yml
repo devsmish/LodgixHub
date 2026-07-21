@@ -64,7 +64,7 @@ services:
       - web
     ports:
       - "80:80"
-      # - "443:443"   # см. обсуждение HTTPS ниже
+      # - "443:443"
     volumes:
       - ./deploy/nginx/lodgixhub.conf:/etc/nginx/conf.d/default.conf:ro
       - static_data:/app/staticfiles:ro

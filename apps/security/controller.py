@@ -1,4 +1,5 @@
 from django.conf import settings
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -10,10 +11,13 @@ from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from apps.security.dto.auth_responses import (
+    LogoutResponseSerializer,
+    TokenRefreshResponseSerializer,
+)
 from apps.security.dto.register import RegisterResponseSerializer, RegisterSerializer
 from apps.security.dto.token import CustomTokenObtainPairSerializer
 from apps.security.services import mint_token_pair, register_user
-from core.swagger_decorators import document_cookie_auth
 
 
 def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
@@ -28,11 +32,6 @@ def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
     )
 
 
-@document_cookie_auth(
-    behavior="register",
-    request_serializer=RegisterSerializer,
-    response_serializer=RegisterResponseSerializer,
-)
 class RegisterView(APIView):
     """POST /api/v1/auth/register/ — creates a User and immediately issues tokens."""
 
@@ -44,6 +43,7 @@ class RegisterView(APIView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "auth-register"
 
+    @extend_schema(request=RegisterSerializer, responses={201: RegisterResponseSerializer})
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -63,9 +63,6 @@ class RegisterView(APIView):
         return response
 
 
-@document_cookie_auth(
-    behavior="login", request_serializer=CustomTokenObtainPairSerializer
-)
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
     permission_classes = [AllowAny]
@@ -83,10 +80,10 @@ class LoginView(TokenObtainPairView):
         return response
 
 
-@document_cookie_auth(behavior="logout")
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=None, responses={200: LogoutResponseSerializer})
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("refresh_token")
         response = Response(
@@ -105,7 +102,6 @@ class LogoutView(APIView):
         return response
 
 
-@document_cookie_auth(behavior="refresh")
 class TokenRefreshView(APIView):
     """
     POST /api/v1/auth/token/refresh/.
@@ -114,6 +110,7 @@ class TokenRefreshView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
+    @extend_schema(request=None, responses={200: TokenRefreshResponseSerializer})
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("refresh_token")
         if not refresh_token:

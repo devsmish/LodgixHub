@@ -195,7 +195,7 @@ class BookingService:
         is_landlord = landlord is not None and landlord.id == actor.id
 
         if not (is_tenant or is_landlord):
-            raise PermissionDenied("You are not a participant in this armor.")
+            raise PermissionDenied("You are not a participant in this booking.")
 
         if booking.status not in (BookingStatus.PENDING, BookingStatus.CONFIRMED):
             raise BookingTransitionNotAllowedError()
