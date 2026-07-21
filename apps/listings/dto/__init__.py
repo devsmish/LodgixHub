@@ -8,7 +8,7 @@ from .listing_dto import (
     ListingStatusUpdateSerializer,
     ListingUpdateSerializer,
 )
-from .room_dto import RoomCreateSerializer, RoomSerializer, RoomUpdateSerializer
+from apps.listings.dto.room_dto import RoomCreateSerializer, RoomSerializer, RoomUpdateSerializer
 
 __all__ = [
     "AddressSerializer",

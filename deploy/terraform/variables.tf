@@ -5,24 +5,24 @@ variable "aws_region" {
 }
 
 variable "ec2_sg_id" {
-  description = "ID существующей Security Group для EC2 (создана вручную, IAM-пользователь лабы не может создавать SG)"
+  description = "ID of the existing security group for EC2"
   type        = string
 }
 
 variable "key_name" {
-  description = "Имя существующего EC2 key pair (создан вручную через aws ec2 create-key-pair)"
+  description = "Name of an existing EC2 key pair"
   type        = string
   default     = "lodgixhub-key"
 }
 
 variable "instance_type" {
-  description = "Тип EC2-инстанса"
+  description = "EC2 instance type"
   type        = string
   default     = "t3.micro"
 }
 
 variable "instance_name" {
-  description = "Тег Name для инстанса"
+  description = "Name tag for the instance"
   type        = string
   default     = "lodgixhub-ec2"
 }

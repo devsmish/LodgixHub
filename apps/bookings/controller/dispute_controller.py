@@ -1,5 +1,4 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
-from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, PermissionDenied
@@ -68,7 +67,7 @@ class BookingDisputesView(generics.ListCreateAPIView):
         if booking is None:
             raise NotFound()
         if not self.booking_service.is_participant(booking, self.request.user):
-            raise PermissionDenied("Вы не участник этой брони.")
+            raise PermissionDenied("You are not a participant in this booking.")
         return booking
 
 
@@ -178,11 +177,11 @@ class DisputeEvidenceView(generics.ListCreateAPIView):
         return dispute
 
 
-@extend_schema(responses={204: None})
 class DisputeEvidenceDetailView(generics.DestroyAPIView):
     """DELETE /api/v1/disputes/{dispute_id}/evidence/{pk}/ — the uploader or the admin."""
 
     permission_classes = [IsAuthenticated]
+    serializer_class = DisputeEvidenceSerializer
     dispute_repository = DisputeRepository()
 
     def get_queryset(self):

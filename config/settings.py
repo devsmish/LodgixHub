@@ -247,6 +247,12 @@ SPECTACULAR_SETTINGS = {
             },
         }
     },
+    "ENUM_NAME_OVERRIDES": {
+        "ListingStatusEnum": "apps.listings.choices.ListingStatus",
+        "BookingStatusEnum": "apps.bookings.choices.BookingStatus",
+        "ReviewStatusEnum": "apps.reviews.choices.ReviewStatus",
+        "DisputeStatusEnum": "apps.bookings.choices.DisputeStatus",
+    },
 }
 
 # LOGGING CONFIGURATION
