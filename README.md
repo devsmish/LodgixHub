@@ -138,11 +138,9 @@ clarification questions before proceeding.
 
 ### Infrastructure
 - Docker Compose for local/containerized execution.
-- MySQL for local development.
-- AWS deployment through Terraform:
-  - EC2 for the application;
-  - RDS MySQL for the database;
-  - S3 for listing photos.
+- MySQL for local development and external database setups.
+- **Production Stack:** Gunicorn + Nginx reverse proxy, Celery worker, Celery beat, and dual-purpose Redis broker/cache.
+- **AWS Deployment (IaC):** Terraform module (`deploy/terraform/`) for automated EC2 instance provisioning with dynamic public IP detection via IMDSv2.
 
 ## Out of MVP Scope
 
@@ -321,18 +319,22 @@ Create a dedicated `.env.docker` file based on `.env.example`:
 * **Build and run the services in the foreground:**
   ```bash
   docker compose up --build
+  ```
   
 * **Run services in the background (detached mode):**
   ```bash
   docker compose up -d
+  ```
  
 * **Stop containers while preserving state (volume data):**
   ```bash
   docker compose down
+  ```
   
 * **Completely wipe container volumes and reset the database environment:**
   ```bash
   docker compose down -v
+  ```
   
 Once operational, the Django application will serve traffic at http://127.0.0.1:8000/. 
 External database clients can attach to the isolated MySQL engine via 127.0.0.1:3310.
@@ -346,14 +348,17 @@ To run the full async infrastructure locally in development mode:
 1) **Start Redis Broker & Cache Containers:**
    ```bash
    docker run -d --name django-redis -p 6379:6379 redis:alpine
+   ```
    
 2) **Start Celery Worker (In a dedicated terminal):**
    ```bash
    celery -A config worker --loglevel=info -P solo
+   ```
    
 3) **Start Celery Beat Scheduler (In a dedicated terminal):**
    ```bash
    celery -A config beat --loglevel=info
+   ```
    
 ### 11. Faker
 
@@ -361,6 +366,24 @@ Populates the database with default parameters predefined in the argument parser
    ```bash
    python manage.py seed_fake_data
    python manage.py seed_fake_data --landlords 100 --listings-per-landlord 4 --tenants 300 --moderators 3
+  ```
+
+### 12. ☁️ AWS Production Deployment
+
+For production deployments on AWS EC2:
+
+1. **Provision Infrastructure:**
+   Navigate to `deploy/terraform/` and apply the Terraform configuration:
+   ```bash
+   cd deploy/terraform
+   terraform init
+   terraform plan
+   terraform apply
+   ```
+2. Deploy Application Stack:
+   ```bash
+   docker compose -f docker-compose.prod.yml up -d --build
+   ```
 
 ## Documentation
 - [Changelog](CHANGELOG.md)

@@ -4,6 +4,17 @@ All notable changes to LodgixHub will be documented in this file.
 
 The format follows a simple chronological structure.
 
+## [0.9.0] - 2026-07-21
+
+### Added
+- **AWS Production Infrastructure Setup:** Deployed containerized production runtime stack (`Dockerfile.prod`, `entrypoint.prod.sh`, `docker-compose.prod.yml`, Nginx reverse proxy) featuring IMDSv2 dynamic public IP detection for `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`.
+- **Terraform Infrastructure as Code (IaC):** Added minimal Terraform module in `deploy/terraform/` for automated EC2 instance provisioning and Docker bootstrap.
+
+### Fixed
+- **Windows Process Execution Stability:** Configured `-P solo` worker execution pool patch for stable local development without process pool permissions or handle errors (`PermissionError 13` / `WinError 6`).
+- **Database Engine Interoperability:** Ensured seamless operational continuity across SQLite and MySQL database backends for background task schedules.
+- **Git Security Rules for IaC:** Updated `.gitignore` to explicitly ignore Terraform state files (`*.tfstate`), execution plans (`*.tfplan`), local `.terraform/` cache, and sensitive variable files (`*.tfvars`).
+
 ## [0.8.0] - 2026-07-20
 
 ### Added

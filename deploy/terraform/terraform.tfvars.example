@@ -1,0 +1,5 @@
+aws_region    = "eu-central-1"
+ec2_sg_id     = "sg-0a0a0a0a0a0a0a0a0"
+key_name      = "name-key"
+instance_type = "t3.micro"
+instance_name = "instance-ec2"

@@ -150,7 +150,9 @@ activemq-data/
 # Environments
 .env
 .env.docker
+.env.aws
 !.env.example
+!.env.aws.example
 .envrc
 .venv
 env/
@@ -230,3 +232,24 @@ media/
 staticfiles/
 logs/
 dump/*.sql
+!/dump/.gitkeep
+
+*.pem
+
+# Terraform
+.terraform/
+
+# Terraform State
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+*.tfplan
+crash.log
+crash.*.log
