@@ -235,6 +235,21 @@ dump/*.sql
 !/dump/.gitkeep
 
 *.pem
-.terraform/
-.tfstate
 
+# Terraform
+.terraform/
+
+# Terraform State
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+*.tfplan
+crash.log
+crash.*.log
