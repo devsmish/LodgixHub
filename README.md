@@ -10,7 +10,7 @@ The MVP target is to deliver a working backend by **July 22, 2026**. The system 
 access, property listings, media upload, booking flows, dynamic price calculation, moderation, reviews, basic analytics, 
 documentation, and deployment infrastructure.
 
-This repository contains the foundational backend setup and the initial Django app structure for the MVP (Version 0.2.0).
+This repository contains the foundational backend setup and the initial Django app structure for the MVP (Version 1.0.0).
 
 ## Development Agreement
 
