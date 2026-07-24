@@ -48,7 +48,10 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = register_user(**serializer.validated_data)
+        data = dict(serializer.validated_data)
+        data.pop("terms_accepted", None)
+
+        user = register_user(**data)
         refresh = mint_token_pair(user)
 
         response_data = RegisterResponseSerializer(
