@@ -23,6 +23,7 @@ from apps.bookings.models import Booking
 from apps.bookings.repositories import BookingRepository
 from apps.listings.choices import ListingStatus
 from apps.listings.models import Listing, Room
+from apps.security.constants import GROUP_ADMIN
 
 
 class BookingService:
@@ -33,6 +34,9 @@ class BookingService:
     # list of your bookings
 
     def list_for_user(self, user):
+        if self._is_admin(user):
+            return self.repository.get_all_queryset()
+
         return (
             self.repository.get_all_queryset()
             .filter(
@@ -40,6 +44,10 @@ class BookingService:
             )
             .distinct()
         )
+
+    @staticmethod
+    def _is_admin(user) -> bool:
+        return user.is_superuser or user.groups.filter(name=GROUP_ADMIN).exists()
 
     @staticmethod
     def is_participant(booking, user) -> bool:
