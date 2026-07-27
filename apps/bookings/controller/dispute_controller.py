@@ -22,6 +22,13 @@ from apps.bookings.services import (
     start_review,
 )
 from apps.security.permissions import IsAdmin, IsModerator
+from apps.security.constants import GROUP_ADMIN, GROUP_MODERATOR
+
+
+def _is_moderator_or_admin(user) -> bool:
+    if user.is_superuser:
+        return True
+    return user.groups.filter(name__in=(GROUP_MODERATOR, GROUP_ADMIN)).exists()
 
 
 class BookingDisputesView(generics.ListCreateAPIView):
@@ -41,7 +48,7 @@ class BookingDisputesView(generics.ListCreateAPIView):
         )
 
     def get_queryset(self):
-        booking = self._get_participant_booking()
+        booking = self._get_visible_booking()
         return self.dispute_repository.get_for_booking(booking.id)
 
     def create(self, request, *args, **kwargs):
@@ -70,20 +77,49 @@ class BookingDisputesView(generics.ListCreateAPIView):
             raise PermissionDenied("You are not a participant in this booking.")
         return booking
 
+    def _get_visible_booking(self):
+        booking = self.booking_repository.get_by_id(self.kwargs["booking_id"])
+        if booking is None:
+            raise NotFound()
+        if not (
+            self.booking_service.is_participant(booking, self.request.user)
+            or _is_moderator_or_admin(self.request.user)
+        ):
+            raise PermissionDenied("You are not a participant in this booking.")
+        return booking
 
-class DisputeViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+
+class DisputeViewSet(
+    mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+):
     """review/resolve — moderator/admin only"""
 
     repository = DisputeRepository()
+    booking_service = BookingService()
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        from django.db.models import Case, IntegerField, Value, When
+
+        from apps.bookings.choices import DisputeStatus
         from apps.bookings.models import Dispute
 
-        return Dispute.objects.all()
+        queryset = Dispute.objects.all()
+        status_param = self.request.query_params.get("status")
+        if status_param:
+            queryset = queryset.filter(status=status_param)
+
+        # Open and pending disputes are at the front of the queue.
+        priority = Case(
+            When(status=DisputeStatus.OPEN, then=Value(0)),
+            When(status=DisputeStatus.UNDER_REVIEW, then=Value(1)),
+            default=Value(2),
+            output_field=IntegerField(),
+        )
+        return queryset.order_by(priority, "-created_at")
 
     def get_permissions(self):
-        if self.action in ("review", "resolve"):
+        if self.action in ("list", "review", "resolve"):
             return [(IsModerator | IsAdmin)()]
         return [IsAuthenticated()]
 
@@ -96,6 +132,15 @@ class DisputeViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         dispute = self.repository.get_by_id(self.kwargs["pk"])
         if dispute is None:
             raise NotFound()
+
+        # review/resolve are already filtered out at the get_permissions() level
+        # (moderator/admin only) — here we further restrict retrieve specifically:
+        # booking participant or the same moderator/admin, not just any authenticated user.
+        if self.action == "retrieve" and not (
+            self.booking_service.is_participant(dispute.booking, self.request.user)
+            or _is_moderator_or_admin(self.request.user)
+        ):
+            raise PermissionDenied("You are not a participant in this booking.")
         return dispute
 
     # PATCH /api/v1/disputes/{id}/review/
@@ -173,7 +218,7 @@ class DisputeEvidenceView(generics.ListCreateAPIView):
         if dispute is None:
             raise NotFound()
         if not self.booking_service.is_participant(dispute.booking, self.request.user):
-            raise PermissionDenied("Вы не участник этого спора.")
+            raise PermissionDenied("You are not a participant in this booking.")
         return dispute
 
 
