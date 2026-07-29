@@ -4,7 +4,7 @@ from apps.listings.models import Amenity
 
 
 class AmenitySerializer(serializers.ModelSerializer):
-    """GET/POST /api/v1/amenities/ ."""
+    """GET/POST /api/v1/amenities/ - reference list (slug — free text)."""
 
     class Meta:
         model = Amenity
