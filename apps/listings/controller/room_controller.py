@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from apps.listings.dto import RoomCreateSerializer, RoomSerializer, RoomUpdateSerializer
 from apps.listings.repositories import ListingRepository, RoomRepository
 from apps.listings.services import RoomService
+from apps.listings.services.listing_service import ListingService
 
 
 class RoomListCreateView(generics.GenericAPIView):
@@ -17,6 +18,7 @@ class RoomListCreateView(generics.GenericAPIView):
     listing_repository = ListingRepository()
     room_repository = RoomRepository()
     service = RoomService()
+    listing_service = ListingService()
 
     def get_permissions(self):
         if self.request.method == "GET":
@@ -29,8 +31,17 @@ class RoomListCreateView(generics.GenericAPIView):
         return RoomCreateSerializer if self.request.method == "POST" else RoomSerializer
 
     def get(self, request, *args, **kwargs):
+        listing_id = kwargs["listing_id"]
+        listing = self.listing_repository.get_by_id_any(listing_id)
+        if listing is None or not self.listing_service.can_view_detail(
+            request.user, listing
+        ):
+            # Same convention as GET /listings/{id}/ and the photo gallery:
+            # 404 so we don't leak the existence of a draft/hidden listing.
+            raise NotFound()
+
         rooms = self.service.list_for_listing(
-            listing_id=kwargs["listing_id"],
+            listing_id=listing_id,
             check_in=request.query_params.get("check_in"),
             check_out=request.query_params.get("check_out"),
         )
