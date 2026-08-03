@@ -21,14 +21,17 @@ class BookingCreateSerializer(serializers.Serializer):
             )
         if attrs["check_in_date"] >= attrs["check_out_date"]:
             raise serializers.ValidationError(
-                {"check_out_date": "The departure date must be later than the arrival date."}
+                {
+                    "check_out_date": "The departure date must be later than the arrival date."
+                }
             )
         return attrs
 
 
 class BookingSerializer(serializers.ModelSerializer):
     """GET /api/v1/bookings/ и /{id}/ — read-only, total_price is always fixed
-    at the time of creation and is not editable by either this or the other serializer."""
+    at the time of creation and is not editable by either this or the other serializer.
+    """
 
     class Meta:
         model = Booking

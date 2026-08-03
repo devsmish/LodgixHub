@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.http import JsonResponse
 from django.urls import include, path, re_path
 from django.views.static import serve
 from drf_spectacular.views import (
@@ -8,7 +9,7 @@ from drf_spectacular.views import (
 )
 
 from config import settings
-from django.http import JsonResponse
+
 
 def health_check(request):
     return JsonResponse({"status": "ok"})

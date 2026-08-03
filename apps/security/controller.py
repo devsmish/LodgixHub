@@ -43,7 +43,9 @@ class RegisterView(APIView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "auth-register"
 
-    @extend_schema(request=RegisterSerializer, responses={201: RegisterResponseSerializer})
+    @extend_schema(
+        request=RegisterSerializer, responses={201: RegisterResponseSerializer}
+    )
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

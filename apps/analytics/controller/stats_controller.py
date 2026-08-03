@@ -3,9 +3,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.analytics.constants import ADMIN_DASHBOARD_RESPONSE_SCHEMA
 from apps.analytics.services import AdminDashboardStatsService
 from apps.security.permissions import IsAdmin
-from apps.analytics.constants import ADMIN_DASHBOARD_RESPONSE_SCHEMA
 
 
 class AdminDashboardStatsView(APIView):

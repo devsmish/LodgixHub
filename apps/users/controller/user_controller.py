@@ -25,7 +25,11 @@ class GroupListView(mixins.ListModelMixin, viewsets.GenericViewSet):
     permission_classes = [IsAdmin]
 
     @extend_schema(
-        responses={200: OpenApiResponse(response={"type": "array", "items": {"type": "string"}})}
+        responses={
+            200: OpenApiResponse(
+                response={"type": "array", "items": {"type": "string"}}
+            )
+        }
     )
     def list(self, request, *args, **kwargs):
         names = list(self.get_queryset().values_list("name", flat=True))

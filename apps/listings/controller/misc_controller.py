@@ -20,7 +20,9 @@ class AvailabilityCalendarView(generics.GenericAPIView):
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                "month", str, description="YYYY-MM format; defaults to the current month."
+                "month",
+                str,
+                description="YYYY-MM format; defaults to the current month.",
             )
         ],
         responses={
@@ -76,9 +78,7 @@ class ListingBookingsView(generics.ListAPIView):
         if listing is None:
             raise NotFound()
         if listing.owner_id != self.request.user.id:
-            raise PermissionDenied(
-                "Only the listing owner can view its bookings."
-            )
+            raise PermissionDenied("Only the listing owner can view its bookings.")
 
         from apps.bookings.models import Booking
 
@@ -86,4 +86,3 @@ class ListingBookingsView(generics.ListAPIView):
         return Booking.objects.filter(
             Q(listing_id=listing_id) | Q(room__listing_id=listing_id)
         )
-
