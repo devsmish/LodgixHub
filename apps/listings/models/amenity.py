@@ -5,10 +5,11 @@ from django.utils.translation import gettext_lazy as _
 from apps.listings.choices import AmenityGroup, StandardAmenity
 from core.models import BaseModel
 
-amenity_slug_validator = RegexValidator(
-    regex=r"^[a-z0-9_]+$",
+validate_amenity_slug = RegexValidator(
+    regex=r"^[a-z][a-z0-9_]*$",
     message=_(
-        "The slug may contain only lowercase Latin letters, digits, and underscores."
+        "Slug must be lowercase snake_case: start with a letter, "
+        "only lowercase letters, digits and underscores."
     ),
 )
 
@@ -18,11 +19,12 @@ class Amenity(BaseModel):
     slug = models.CharField(
         max_length=50,
         unique=True,
-        validators=[amenity_slug_validator],
+        validators=[validate_amenity_slug],
         verbose_name=_("System Key"),
         help_text=_(
-            "Free-form unique key (e.g. 'sauna'). StandardAmenity only seeds "
-            "the initial well-known set — it does not restrict new values."
+            "Free-form system key, lowercase snake_case. StandardAmenity is only "
+            "the source of default seed data (see apps/listings/signals.py), "
+            "not a closed set — new amenities are not restricted to it."
         ),
     )
     group = models.CharField(
