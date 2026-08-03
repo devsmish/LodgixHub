@@ -316,13 +316,15 @@ CACHES = {
         "LOCATION": env.str("REDIS_CACHE_URL", default="redis://127.0.0.1:6379/1"),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        },
     }
 }
 
 # 2. Redis broker for Celery (DB 0)
 CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", default="redis://127.0.0.1:6379/0")
-CELERY_RESULT_BACKEND = env.str("CELERY_RESULT_BACKEND", default="redis://127.0.0.1:6379/0")
+CELERY_RESULT_BACKEND = env.str(
+    "CELERY_RESULT_BACKEND", default="redis://127.0.0.1:6379/0"
+)
 CELERY_TIMEZONE = "UTC"
 CELERY_ENABLE_UTC = True
 
@@ -341,4 +343,4 @@ CELERY_ENABLE_UTC = True
 # }
 
 # cron in AdminPanel
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"

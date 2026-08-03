@@ -1,8 +1,10 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from apps.bookings.validators.cancellation_reason_code import (
+    validate_cancellation_reason_code,
+)
 from core.models import BaseModel
-from apps.bookings.validators.cancellation_reason_code import validate_cancellation_reason_code
 
 
 class CancellationReason(BaseModel):

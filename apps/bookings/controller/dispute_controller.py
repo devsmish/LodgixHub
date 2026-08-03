@@ -21,8 +21,8 @@ from apps.bookings.services import (
     resolve_dispute,
     start_review,
 )
-from apps.security.permissions import IsAdmin, IsModerator
 from apps.security.constants import GROUP_ADMIN, GROUP_MODERATOR
+from apps.security.permissions import IsAdmin, IsModerator
 
 
 def _is_moderator_or_admin(user) -> bool:
@@ -258,7 +258,5 @@ class DisputeEvidenceDetailView(generics.DestroyAPIView):
 
         user = self.request.user
         if not (evidence.uploaded_by_id == user.id or _is_moderator_or_admin(user)):
-            raise PermissionDenied(
-                "Only the uploader can delete the proof."
-            )
+            raise PermissionDenied("Only the uploader can delete the proof.")
         return evidence
