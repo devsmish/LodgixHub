@@ -59,7 +59,7 @@ class CancellationReasonModelTestCase(TestCase):
 
     def test_str_returns_description(self):
         reason = CancellationReason.objects.get(
-            code=StandardCancellationReason.CHANGED_PLANS
+            code=StandardCancellationReason.CHANGED_PLANS.name
         )
         self.assertEqual(str(reason), reason.description)
 
@@ -67,7 +67,7 @@ class CancellationReasonModelTestCase(TestCase):
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
                 CancellationReason.objects.create(
-                    code=StandardCancellationReason.CHANGED_PLANS, description="B"
+                    code=StandardCancellationReason.CHANGED_PLANS.name, description="B"
                 )
 
 

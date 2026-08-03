@@ -16,6 +16,6 @@ def create_standard_cancellation_reasons(sender, **kwargs):
 
         for choice in StandardCancellationReason:
             CancellationReason.objects.get_or_create(
-                code=choice.value,
+                code=choice.name,
                 defaults={"description": choice.label},
             )
