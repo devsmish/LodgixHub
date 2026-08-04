@@ -11,6 +11,7 @@ from apps.content.dto import (
 from apps.content.repositories import PhotoRepository
 from apps.content.services import PhotoService
 from apps.listings.repositories import ListingRepository
+from apps.listings.services.listing_service import ListingService
 from apps.security.constants import GROUP_ADMIN
 
 
@@ -23,6 +24,7 @@ class PhotoListCreateView(generics.GenericAPIView):
     listing_repository = ListingRepository()
     repository = PhotoRepository()
     service = PhotoService()
+    listing_service = ListingService()
 
     def get_permissions(self):
         if self.request.method == "GET":
@@ -35,7 +37,16 @@ class PhotoListCreateView(generics.GenericAPIView):
         )
 
     def get(self, request, *args, **kwargs):
-        photos = self.service.list_for_listing(kwargs["listing_id"])
+        listing_id = kwargs["listing_id"]
+        listing = self.listing_repository.get_by_id_any(listing_id)
+        if listing is None or not self.listing_service.can_view_detail(
+            request.user, listing
+        ):
+            # Same convention as GET /listings/{id}/: 404 so we don't leak
+            # the existence of a draft/hidden listing to outsiders/guests.
+            raise NotFound()
+
+        photos = self.service.list_for_listing(listing_id)
         return Response(PhotoSerializer(photos, many=True).data)
 
     def post(self, request, *args, **kwargs):

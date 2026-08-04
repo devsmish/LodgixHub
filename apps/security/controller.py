@@ -43,12 +43,17 @@ class RegisterView(APIView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "auth-register"
 
-    @extend_schema(request=RegisterSerializer, responses={201: RegisterResponseSerializer})
+    @extend_schema(
+        request=RegisterSerializer, responses={201: RegisterResponseSerializer}
+    )
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = register_user(**serializer.validated_data)
+        data = dict(serializer.validated_data)
+        data.pop("terms_accepted", None)
+
+        user = register_user(**data)
         refresh = mint_token_pair(user)
 
         response_data = RegisterResponseSerializer(

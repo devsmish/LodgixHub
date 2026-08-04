@@ -7,4 +7,6 @@ class SecurityConfig(AppConfig):
     verbose_name = "Security"
 
     def ready(self):
-        from apps.security import schema  # noqa: F401 — регистрирует CustomJWTAuthentication в drf-spectacular
+        from apps.security import (  # noqa: F401 — регистрирует CustomJWTAuthentication в drf-spectacular
+            schema,
+        )

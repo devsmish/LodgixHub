@@ -26,7 +26,7 @@ class RoomSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("id", "listing", "created_at", "updated_at")
 
-    def get_available_count(self, obj):
+    def get_available_count(self, obj) -> int | None:
         return getattr(obj, "_available_count", None)
 
 

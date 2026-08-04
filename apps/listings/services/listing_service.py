@@ -77,14 +77,14 @@ class ListingService:
         listing = self.repository.get_by_id_any(listing_id)
         if listing is None or listing.is_deleted:
             return None
-        if not self._can_view_detail(user, listing):
+        if not self.can_view_detail(user, listing):
             return None
 
         self._record_view(listing, user, session_key)
         listing.refresh_from_db(fields=["views_count"])
         return listing
 
-    def _can_view_detail(self, user, listing) -> bool:
+    def can_view_detail(self, user, listing) -> bool:
         if listing.is_visible_to_public:
             return True
         if not (user and user.is_authenticated):
