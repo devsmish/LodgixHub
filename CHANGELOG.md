@@ -4,6 +4,31 @@ All notable changes to LodgixHub will be documented in this file.
 
 The format follows a simple chronological structure.
 
+## [1.0.1] - 2026-08-04
+
+### Added
+- **Automated Deployment Script (Issue #90):** Added `./scripts/deploy.sh` for streamlined AWS EC2 production deployment, featuring automated Git synchronization, docker-compose build/up routines, container status checks, and instant log verification.
+
+### Fixed
+- **Registration Parameter Mismatch (Issue #94):** Resolved `500 Internal Server Error` during `POST /api/v1/auth/register/` by removing/popping `terms_accepted` from `serializer.validated_data` before invoking `register_user()`.
+- **Admin Global Booking Visibility (Issue #96):** Updated `BookingService.list_for_user()` to grant administrators (`is_superuser=True` or members of the `admin` group) global query access to all system bookings via `GET /api/v1/bookings/`.
+- **Moderator Access & Dispute System Flow (Issue #98):**
+  - Exposed global moderation queue endpoint (`GET /api/v1/disputes/`) sorted by priority status (`open` and `under_review` first) with `?status=` filtering support.
+  - Allowed moderators/admins to inspect dispute threads under `GET /api/v1/bookings/{id}/disputes/`.
+  - Restricted single dispute detail retrieval (`GET /api/v1/disputes/{id}/`) strictly to booking participants and staff.
+- **Dispute Evidence Permissions & Admin Group Identification (Issue #100):**
+  - Extended evidence read permissions (`GET /api/v1/disputes/{id}/evidence/`) to moderators and administrators.
+  - Fixed evidence removal (`DELETE /api/v1/disputes/{id}/evidence/{evidence_id}/`) to properly recognize non-superuser business admins (members of the Django `admin` group) using `_is_moderator_or_admin()`.
+- **Dynamic Catalog Entity Deadlock & Regex Validation (Issues #102, #106):**
+  - Replaced closed `choices` enums with format regex validators (`^[a-z][a-z0-9_]*$` for `Amenity.slug` and `^[A-Z_]+$` for `CancellationReason.code`), enabling dynamic creation via `POST /api/v1/amenities/` and `POST /api/v1/cancellation-reasons/`.
+  - Updated `bookings_signals.py` to seed `CancellationReason.code` using `choice.name` (uppercase, e.g., `"CHANGED_PLANS"`) to comply with regex constraints, updating test suite assertions accordingly.
+- **Draft Listing Sub-Resource Data Leakage (Issue #104):** Enforced parent listing visibility checks (`ListingService.can_view_detail`) on `PhotoListCreateView` (`/photos/`) and `RoomListCreateView` (`/rooms/`), returning `404 Not Found` for non-owners/anonymous users accessing draft listing details.
+- **drf-spectacular Type Hints (Issue #92):** Added explicit `-> int | None` return type hint to `RoomSerializer.get_available_count()`, preventing OpenAPI schema fallback to string.
+
+### Refactored & Changed
+- **API Routing Documentation Correction (Issue #106):** Corrected documentation references to mount `Amenity` endpoints flat at `/api/v1/amenities/` instead of nested under `/api/v1/listings/amenities/`.
+- **Codebase Formatting & Style Cleanup:** Executed repo-wide `isort .`, `black .`, and `flake8 .` code style formatting and linting pass.
+
 ## [1.0.0] - 2026-07-21
 
 ### Fixed
