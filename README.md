@@ -10,7 +10,7 @@ The MVP target is to deliver a working backend by **July 22, 2026**. The system 
 access, property listings, media upload, booking flows, dynamic price calculation, moderation, reviews, basic analytics, 
 documentation, and deployment infrastructure.
 
-This repository contains the foundational backend setup and the initial Django app structure for the MVP (Version 1.0.0).
+This repository contains the foundational backend setup and application structure for the platform (Release Version 1.0.1).
 
 ## Development Agreement
 
@@ -397,6 +397,8 @@ For production deployments on AWS EC2:
 2. Deploy Application Stack:
    ```bash
    docker compose -f docker-compose.prod.yml up -d --build
+   chmod +x ./scripts/deploy.sh
+   ./scripts/deploy.sh
    ```
 
 ## Documentation
