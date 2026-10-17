@@ -36,7 +36,7 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage reports
+# Unit test / coverage reports / tests_e2e
 htmlcov/
 .tox/
 .nox/
@@ -50,6 +50,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+tests_e2e/**/__pycache__/
 
 # Translations
 *.mo
