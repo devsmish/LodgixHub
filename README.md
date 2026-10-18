@@ -402,15 +402,24 @@ transport mechanisms, and test cases:
 ```text
 tests_e2e/
 ├── actions/
-│   ├── base.py         # Abstract contracts (AuthActions, ListingActions, BookingActions, etc.) — ABC, zero HTTP/Playwright dependencies
-│   ├── api/            # Current transport implementation: pure HTTP via Playwright APIRequestContext
-│   └── ui/             # Placeholder for future browser-based UI actions (same method signatures using Playwright Page)
+│   ├── base.py                      # Abstract contracts (AuthActions, ListingActions, BookingActions, etc.) — ABC, zero HTTP/Playwright dependencies
+│   ├── api/                         # Current transport implementation: pure HTTP via Playwright APIRequestContext
+│   │   ├── actor.py                 # Actor facade aggregating domain API actions
+│   │   ├── auth_actions.py          # Concrete API implementation for authentication
+│   │   ├── base_api_action.py       # Core base class for Playwright-driven HTTP requests
+│   │   ├── booking_actions.py       # Concrete API implementation for bookings
+│   │   ├── listing_actions.py       # Concrete API implementation for listings
+│   │   ├── playwright_thread.py     # Background thread runner for Playwright synchronization isolation
+│   │   └── room_actions.py          # Concrete API implementation for rooms
+│   └── ui/                          # Placeholder for future browser-based UI actions (same method signatures using Playwright Page)
 ├── fixtures/
-│   ├── users.py        # Role management (tenant/landlord/moderator/admin)
-│   └── data.py         # Test payload builders
+│   ├── data.py                      # Request payload builders and data factories
+│   └── users.py                     # User role management (tenant, landlord, moderator, admin)
 ├── tests/
-│   └── test_*.py       # E2E test cases bound exclusively to actions/base.py contracts
-└── conftest.py         # Test harness wiring (live_server, Playwright lifecycle, actor isolation)
+│   ├── test_bookings.py             # End-to-end black-box test scenarios for booking workflows
+│   └── test_*.py                    # E2E test cases bound exclusively to actions/base.py contracts
+├── conftest.py                      # Test harness wiring, live_server, and lifecycle fixtures
+└── e2e_settings.py                  # Dedicated E2E environment configuration and overrides
 ```
 
 Tests interact exclusively with high-level action facades (e.g., actor.auth.register(...), actor.bookings.create(...)) 
@@ -457,6 +466,10 @@ browser/page fixtures.
 4. Throttling Adjustments: Overriding REST_FRAMEWORK settings via override_settings(REST_FRAMEWORK={...}) directly can 
 wipe out authentication classes. Fixtures patch specific keys (such as DEFAULT_THROTTLE_RATES) dynamically without 
 stripping global authentication classes.
+5. **Booking Validation Exception Handling:** E2E integration testing successfully caught an edge case where 
+`BookingService.create_booking()` missed the conversion of Django's `ValidationError` to DRF standards (unlike reviews 
+or photos). This caused capacity and duration limit breaches to return `500 Internal Server Error` instead of `400 Bad 
+Request`. Fixed via standard `try/except` translation in `apps/bookings/services/booking_service.py`.
 
 ## Documentation
 - [Changelog](CHANGELOG.md)
