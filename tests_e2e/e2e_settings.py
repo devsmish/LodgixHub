@@ -17,7 +17,7 @@ same test suite to be run in a CI environment in either mode without requiring a
 """
 import os
 
-TEST_MODE = os.environ.get("E2E_TEST_MODE", "api")
+TEST_MODE = os.environ.get("E2E_TEST_MODE", "actions/api")
 
 # Если TEST_MODE="api" и BASE_URL не задан явно — используется live_server от
 # pytest-django (реальный Django dev-сервер, поднятый на время сессии тестов).
