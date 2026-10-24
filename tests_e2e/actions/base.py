@@ -126,3 +126,49 @@ class BookingActions(ABC):
     @abstractmethod
     def cancel(self, booking_id: str, *, cancellation_reason_id: str | None = None) -> ActionResult:
         ...
+
+
+class DisputeActions(ABC):
+    @abstractmethod
+    def open(self, booking_id: str, *, reason_category: str, reason: str, claim_amount: str = "0.00") -> ActionResult:
+        """POST /bookings/{booking_id}/disputes/ — open a dispute regarding a booking."""
+
+    @abstractmethod
+    def list_for_booking(self, booking_id: str) -> ActionResult:
+        """GET /bookings/{booking_id}/disputes/ — all disputes regarding a specific booking."""
+
+    @abstractmethod
+    def get(self, dispute_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def list(self, *, status: str | None = None) -> ActionResult:
+        """GET /disputes/ — moderation queue (moderator/admin) or one's own disputes."""
+
+    @abstractmethod
+    def review(self, dispute_id: str) -> ActionResult:
+        """PATCH /disputes/{id}/review/ — open -> under_review, moderator/admin."""
+
+    @abstractmethod
+    def resolve(
+        self,
+        dispute_id: str,
+        *,
+        status: str,
+        resolution_favor: str,
+        resolution_amount: str | None = None,
+        notes: str = "",
+    ) -> ActionResult:
+        """POST /disputes/{id}/resolve/ — under_review -> resolved_*, moderator/admin."""
+
+    @abstractmethod
+    def add_evidence(self, dispute_id: str, *, url: str, description: str = "") -> ActionResult:
+        ...
+
+    @abstractmethod
+    def list_evidence(self, dispute_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def delete_evidence(self, dispute_id: str, evidence_id: str) -> ActionResult:
+        ...
