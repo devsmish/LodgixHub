@@ -20,6 +20,7 @@ from tests_e2e.actions.api.auth_actions import APIAuthActions
 from tests_e2e.actions.api.booking_actions import APIBookingActions
 from tests_e2e.actions.api.dispute_actions import APIDisputeActions
 from tests_e2e.actions.api.listing_actions import APIListingActions
+from tests_e2e.actions.api.photo_actions import APIPhotoActions
 from tests_e2e.actions.api.playwright_thread import PlaywrightThread
 from tests_e2e.actions.api.room_actions import APIRoomActions
 
@@ -30,10 +31,11 @@ class APIActor:
         self.auth = APIAuthActions(request_context, self.session, pw_thread)
         self.listings = APIListingActions(request_context, self.session, pw_thread)
         self.rooms = APIRoomActions(request_context, self.session, pw_thread)
+        self.photos = APIPhotoActions(request_context, self.session, pw_thread)
         self.bookings = APIBookingActions(request_context, self.session, pw_thread)
         self.disputes = APIDisputeActions(request_context, self.session, pw_thread)
 
-    def use_token(self, access_token: str) -> None:
+def use_token(self, access_token: str) -> None:
         """Injecting an existing access token directly (bypassing `/auth/login/`) —
         used for roles that cannot be created via public registration (e.g.,
         moderator/admin); see `fixtures/users.py`."""
