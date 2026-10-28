@@ -102,6 +102,16 @@ class RoomActions(ABC):
         ...
 
 
+class PhotoActions(ABC):
+    @abstractmethod
+    def upload(self, listing_id: str, *, image_bytes: bytes, filename: str = "photo.jpg", caption: str = "") -> ActionResult:
+        """POST /listings/{listing_id}/photos/ — multipart."""
+
+    @abstractmethod
+    def list_for_listing(self, listing_id: str) -> ActionResult:
+        ...
+
+
 class BookingActions(ABC):
     @abstractmethod
     def create(self, payload: dict) -> ActionResult:

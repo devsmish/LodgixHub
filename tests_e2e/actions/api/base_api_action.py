@@ -19,6 +19,8 @@ from Django/pytest-django—otherwise, access to the database will break.
 """
 from __future__ import annotations
 
+from typing import Any
+
 from tests_e2e.actions.api.playwright_thread import PlaywrightThread
 from tests_e2e.actions.base import ActionResult
 from tests_e2e.e2e_settings import API_PREFIX
@@ -73,6 +75,13 @@ class BaseAPIAction:
     def _post(self, path: str, json_body: dict | None = None) -> ActionResult:
         headers = self._headers()
         return self._dispatch(lambda: self._ctx.post(self._url(path), data=json_body, headers=headers))
+
+    def _post_multipart(self, path: str, multipart: dict) -> ActionResult:
+        """For file uploads (Photo), Playwright automatically sets the `multipart/form-data`
+        and `boundary` parameters. Do not manually modify the `Content-Type` header, as
+        doing so will cause it—along with the `boundary`—to be lost."""
+        headers = self._headers()
+        return self._dispatch(lambda: self._ctx.post(self._url(path), multipart=multipart, headers=headers))
 
     def _patch(self, path: str, json_body: dict | None = None) -> ActionResult:
         headers = self._headers()
