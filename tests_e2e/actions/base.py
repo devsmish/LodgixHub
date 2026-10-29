@@ -63,15 +63,28 @@ class AuthActions(ABC):
         first_name: str = "",
         last_name: str = "",
         terms_accepted: bool = True,
+        password_confirm: str | None = None,
     ) -> ActionResult:
         """New user registration. Upon success, the action implementation
-        itself must store the access token for subsequent calls made on
+        must itself store the access token for subsequent calls made on
         behalf of this user (the session/context is bound to a single
-        actor)."""
+        actor). `password_confirm` defaults to the value of `password`
+        (the standard scenario); it is passed explicitly only for tests
+        involving a mismatch in the confirmation field."""
 
     @abstractmethod
     def login(self, *, email: str, password: str) -> ActionResult:
         ...
+
+    @abstractmethod
+    def refresh(self) -> ActionResult:
+        """POST /auth/token/refresh/ — reads the `refresh_token` from an
+        `HttpOnly` cookie associated with the current actor (Playwright
+        handles the storage of this cookie automatically following a
+        `register` or `login` operation) and returns a new access token.
+        Upon success, the implementation automatically updates
+        `ActorSession.access_token`, just as it does during `register` or
+        `login`."""
 
     @abstractmethod
     def logout(self) -> ActionResult:
@@ -84,11 +97,31 @@ class ListingActions(ABC):
         """Creates an ad on behalf of the current actor (always in 'draft' status)."""
 
     @abstractmethod
+    def update(self, listing_id: str, payload: dict) -> ActionResult:
+        """PATCH /listings/{id}/ — partial update."""
+
+    @abstractmethod
+    def delete(self, listing_id: str) -> ActionResult:
+        """DELETE /listings/{id}/ — soft delete."""
+
+    @abstractmethod
     def publish(self, listing_id: str) -> ActionResult:
         """draft -> published, accessible only to the owner."""
 
     @abstractmethod
     def get(self, listing_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def list(self, params: dict | None = None) -> ActionResult:
+        """GET /listings/ — a public list (only published + active items are visible)."""
+
+    @abstractmethod
+    def mine(self) -> ActionResult:
+        """GET /listings/mine/ — your own listings, regardless of their status; for landlords only."""
+
+    @abstractmethod
+    def toggle_active(self, listing_id: str) -> ActionResult:
         ...
 
 
@@ -109,6 +142,26 @@ class PhotoActions(ABC):
 
     @abstractmethod
     def list_for_listing(self, listing_id: str) -> ActionResult:
+        ...
+
+
+class AmenityActions(ABC):
+    @abstractmethod
+    def create(self, *, name: str, slug: str, icon: str = "") -> ActionResult:
+        """POST /amenities/ — admin only."""
+
+    @abstractmethod
+    def list(self) -> ActionResult:
+        ...
+
+
+class CancellationReasonActions(ABC):
+    @abstractmethod
+    def create(self, *, code: str, description: str) -> ActionResult:
+        """POST /cancellation-reasons/ — admin only."""
+
+    @abstractmethod
+    def list(self) -> ActionResult:
         ...
 
 

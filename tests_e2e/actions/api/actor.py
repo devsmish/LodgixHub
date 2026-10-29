@@ -15,9 +15,11 @@ will remain unaffected.
 """
 from __future__ import annotations
 
+from tests_e2e.actions.api.amenity_actions import APIAmenityActions
 from tests_e2e.actions.api.base_api_action import ActorSession
 from tests_e2e.actions.api.auth_actions import APIAuthActions
 from tests_e2e.actions.api.booking_actions import APIBookingActions
+from tests_e2e.actions.api.cancellation_reason_actions import APICancellationReasonActions
 from tests_e2e.actions.api.dispute_actions import APIDisputeActions
 from tests_e2e.actions.api.listing_actions import APIListingActions
 from tests_e2e.actions.api.photo_actions import APIPhotoActions
@@ -34,6 +36,8 @@ class APIActor:
         self.photos = APIPhotoActions(request_context, self.session, pw_thread)
         self.bookings = APIBookingActions(request_context, self.session, pw_thread)
         self.disputes = APIDisputeActions(request_context, self.session, pw_thread)
+        self.amenities = APIAmenityActions(request_context, self.session, pw_thread)
+        self.cancellation_reasons = APICancellationReasonActions(request_context, self.session, pw_thread)
 
 def use_token(self, access_token: str) -> None:
         """Injecting an existing access token directly (bypassing `/auth/login/`) —

@@ -126,7 +126,7 @@ class JWTAuthenticationAndMiddlewareTestCase(APITestCase):
         jti = refresh["jti"]
         self.assertTrue(BlacklistedToken.objects.filter(token__jti=jti).exists())
 
-    # --- NEW: register --------------------------------------------------
+    # NEW: register
 
     def _valid_register_payload(self, **overrides):
         payload = {
@@ -188,7 +188,7 @@ class JWTAuthenticationAndMiddlewareTestCase(APITestCase):
         with self.assertRaises(Group.DoesNotExist):
             self.client.post(self.register_url, self._valid_register_payload())
 
-    # ------- Token refresh ----------------------------------------------
+    # Token refresh
 
     def test_11_token_refresh_returns_new_access_token(self):
         refresh = RefreshToken.for_user(self.user)
@@ -201,8 +201,15 @@ class JWTAuthenticationAndMiddlewareTestCase(APITestCase):
         self.assertIn("access", response.data)
 
     def test_12_token_refresh_without_cookie_raises(self):
+        """TokenRefreshView.authentication_classes = [] (it reads the refresh_token
+        from a cookie, not from a header) — consequently, DRF lacks an authenticator
+        capable of providing a WWW-Authenticate header. As a result, the
+        exception_handler, in accordance with the HTTP specification, downgrades the
+        AuthenticationFailed exception from 401 to 403
+        (see rest_framework.views.exception_handler). This is not a bug in the view;
+        403 is the only correct status code in this context."""
         response = self.client.post(self.refresh_url)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_12b_token_refresh_ignores_stale_authorization_header(self):
         """
@@ -225,6 +232,7 @@ class JWTAuthenticationAndMiddlewareTestCase(APITestCase):
         self.assertIn("access", response.data)
 
     def test_13_token_refresh_with_blacklisted_token_raises(self):
+        """The same root cause as for test_12 above."""
         refresh = RefreshToken.for_user(self.user)
         refresh["token_version"] = self.user.token_version
         refresh.blacklist()
@@ -232,9 +240,9 @@ class JWTAuthenticationAndMiddlewareTestCase(APITestCase):
 
         response = self.client.post(self.refresh_url)
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    # ------- Throttling ---------------------------------------------------
+    # Throttling
 
     def test_14_login_throttled_after_5_attempts_per_minute(self):
         """Brute-force protection — no more than 5 login attempts
