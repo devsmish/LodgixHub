@@ -145,6 +145,26 @@ class PhotoActions(ABC):
         ...
 
 
+class AmenityActions(ABC):
+    @abstractmethod
+    def create(self, *, name: str, slug: str, icon: str = "") -> ActionResult:
+        """POST /amenities/ — admin only."""
+
+    @abstractmethod
+    def list(self) -> ActionResult:
+        ...
+
+
+class CancellationReasonActions(ABC):
+    @abstractmethod
+    def create(self, *, code: str, description: str) -> ActionResult:
+        """POST /cancellation-reasons/ — admin only."""
+
+    @abstractmethod
+    def list(self) -> ActionResult:
+        ...
+
+
 class BookingActions(ABC):
     @abstractmethod
     def create(self, payload: dict) -> ActionResult:
