@@ -63,15 +63,28 @@ class AuthActions(ABC):
         first_name: str = "",
         last_name: str = "",
         terms_accepted: bool = True,
+        password_confirm: str | None = None,
     ) -> ActionResult:
         """New user registration. Upon success, the action implementation
-        itself must store the access token for subsequent calls made on
+        must itself store the access token for subsequent calls made on
         behalf of this user (the session/context is bound to a single
-        actor)."""
+        actor). `password_confirm` defaults to the value of `password`
+        (the standard scenario); it is passed explicitly only for tests
+        involving a mismatch in the confirmation field."""
 
     @abstractmethod
     def login(self, *, email: str, password: str) -> ActionResult:
         ...
+
+    @abstractmethod
+    def refresh(self) -> ActionResult:
+        """POST /auth/token/refresh/ — reads the `refresh_token` from an
+        `HttpOnly` cookie associated with the current actor (Playwright
+        handles the storage of this cookie automatically following a
+        `register` or `login` operation) and returns a new access token.
+        Upon success, the implementation automatically updates
+        `ActorSession.access_token`, just as it does during `register` or
+        `login`."""
 
     @abstractmethod
     def logout(self) -> ActionResult:
