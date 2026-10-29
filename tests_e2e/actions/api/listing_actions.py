@@ -5,19 +5,34 @@ from tests_e2e.actions.base import ActionResult, ListingActions
 
 
 class APIListingActions(BaseAPIAction, ListingActions):
-    """POST /listings/, PATCH /listings/{id}/status/, GET /listings/{id}/.
-
-    Only the minimum required for Booking scenarios has been implemented.
+    """See apps/listings/controller/listing_controller.py — full CRUD for
+    listings, excluding amenities/search-filters. POST /listings/,
+    PATCH /listings/{id}/status/, GET /listings/{id}/ and others.
     """
 
     def create(self, payload: dict) -> ActionResult:
         return self._post("/listings/", payload)
+
+    def update(self, listing_id: str, payload: dict) -> ActionResult:
+        return self._patch(f"/listings/{listing_id}/", payload)
+
+    def delete(self, listing_id: str) -> ActionResult:
+        return self._delete(f"/listings/{listing_id}/")
 
     def publish(self, listing_id: str) -> ActionResult:
         return self._patch(f"/listings/{listing_id}/status/", {"status": "published"})
 
     def get(self, listing_id: str) -> ActionResult:
         return self._get(f"/listings/{listing_id}/")
+
+    def list(self, params: dict | None = None) -> ActionResult:
+        return self._get("/listings/", params=params)
+
+    def mine(self) -> ActionResult:
+        return self._get("/listings/mine/")
+
+    def toggle_active(self, listing_id: str) -> ActionResult:
+        return self._post(f"/listings/{listing_id}/toggle-active/")
 
     def set_price(self, listing_id: str, *, price: str, valid_from: str) -> ActionResult:
         """POST /listings/{listing_id}/price/ — falls outside the abstract

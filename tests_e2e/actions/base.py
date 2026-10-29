@@ -97,11 +97,31 @@ class ListingActions(ABC):
         """Creates an ad on behalf of the current actor (always in 'draft' status)."""
 
     @abstractmethod
+    def update(self, listing_id: str, payload: dict) -> ActionResult:
+        """PATCH /listings/{id}/ — partial update."""
+
+    @abstractmethod
+    def delete(self, listing_id: str) -> ActionResult:
+        """DELETE /listings/{id}/ — soft delete."""
+
+    @abstractmethod
     def publish(self, listing_id: str) -> ActionResult:
         """draft -> published, accessible only to the owner."""
 
     @abstractmethod
     def get(self, listing_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def list(self, params: dict | None = None) -> ActionResult:
+        """GET /listings/ — a public list (only published + active items are visible)."""
+
+    @abstractmethod
+    def mine(self) -> ActionResult:
+        """GET /listings/mine/ — your own listings, regardless of their status; for landlords only."""
+
+    @abstractmethod
+    def toggle_active(self, listing_id: str) -> ActionResult:
         ...
 
 
