@@ -87,6 +87,10 @@ class BaseAPIAction:
         headers = self._headers()
         return self._dispatch(lambda: self._ctx.patch(self._url(path), data=json_body, headers=headers))
 
+    def _put(self, path: str, json_body: dict | None = None) -> ActionResult:
+        headers = self._headers()
+        return self._dispatch(lambda: self._ctx.put(self._url(path), data=json_body, headers=headers))
+
     def _delete(self, path: str) -> ActionResult:
         headers = self._headers()
         return self._dispatch(lambda: self._ctx.delete(self._url(path), headers=headers))
