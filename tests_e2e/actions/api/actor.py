@@ -25,6 +25,7 @@ from tests_e2e.actions.api.listing_actions import APIListingActions
 from tests_e2e.actions.api.photo_actions import APIPhotoActions
 from tests_e2e.actions.api.playwright_thread import PlaywrightThread
 from tests_e2e.actions.api.room_actions import APIRoomActions
+from tests_e2e.actions.api.user_actions import APIUserActions
 
 
 class APIActor:
@@ -38,6 +39,7 @@ class APIActor:
         self.disputes = APIDisputeActions(request_context, self.session, pw_thread)
         self.amenities = APIAmenityActions(request_context, self.session, pw_thread)
         self.cancellation_reasons = APICancellationReasonActions(request_context, self.session, pw_thread)
+        self.users = APIUserActions(request_context, self.session, pw_thread)
 
 def use_token(self, access_token: str) -> None:
         """Injecting an existing access token directly (bypassing `/auth/login/`) —

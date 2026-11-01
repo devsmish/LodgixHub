@@ -235,3 +235,41 @@ class DisputeActions(ABC):
     @abstractmethod
     def delete_evidence(self, dispute_id: str, evidence_id: str) -> ActionResult:
         ...
+
+
+class UserActions(ABC):
+    @abstractmethod
+    def me(self) -> ActionResult:
+        """GET /users/me/."""
+
+    @abstractmethod
+    def update_me(self, payload: dict) -> ActionResult:
+        """PATCH /users/me/."""
+
+    @abstractmethod
+    def delete_me(self) -> ActionResult:
+        """DELETE /users/me/."""
+
+    @abstractmethod
+    def get_public_profile(self, user_id: str) -> ActionResult:
+        """GET /users/{id}/ — requires a joint active/completed booking with this owner."""
+
+    @abstractmethod
+    def list_users(self, params: dict | None = None) -> ActionResult:
+        """GET /users/ — moderator/admin."""
+
+    @abstractmethod
+    def block(self, user_id: str, *, reason: str) -> ActionResult:
+        """POST /users/{id}/block/ — admin."""
+
+    @abstractmethod
+    def unblock(self, user_id: str) -> ActionResult:
+        """POST /users/{id}/unblock/ — admin."""
+
+    @abstractmethod
+    def update_groups(self, user_id: str, *, groups: list[str]) -> ActionResult:
+        """PATCH /users/{id}/groups/ — admin."""
+
+    @abstractmethod
+    def delete_user(self, user_id: str) -> ActionResult:
+        """DELETE /users/{id}/ — admin."""

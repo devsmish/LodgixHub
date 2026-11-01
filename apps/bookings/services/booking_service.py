@@ -61,14 +61,14 @@ class BookingService:
 
     @transaction.atomic
     def create_booking(
-            self,
-            *,
-            tenant,
-            listing_id,
-            room_id,
-            check_in_date,
-            check_out_date,
-            guests_count,
+        self,
+        *,
+        tenant,
+        listing_id,
+        room_id,
+        check_in_date,
+        check_out_date,
+        guests_count,
     ):
         is_room = room_id is not None
         target, listing = self._resolve_target(listing_id, room_id)

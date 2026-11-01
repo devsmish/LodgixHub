@@ -51,7 +51,7 @@ class BaseModel(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True)
 
     objects = SoftDeleteManager()
-    all_objects = models.Manager()
+    all_objects = models.Manager.from_queryset(SoftDeleteQuerySet)()
 
     class Meta:
         abstract = True
