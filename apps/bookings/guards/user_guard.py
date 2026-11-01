@@ -4,10 +4,7 @@ from apps.bookings.choices import BookingStatus
 from apps.bookings.models import Booking
 
 ACTIVE_BOOKING_STATUSES = (BookingStatus.PENDING, BookingStatus.CONFIRMED)
-COMPLETED_OR_ACTIVE_STATUSES = (
-    ACTIVE_BOOKING_STATUSES,
-    BookingStatus.COMPLETED,
-)
+COMPLETED_OR_ACTIVE_STATUSES = (*ACTIVE_BOOKING_STATUSES, BookingStatus.COMPLETED)
 
 
 def has_active_bookings_as_tenant(user) -> bool:
