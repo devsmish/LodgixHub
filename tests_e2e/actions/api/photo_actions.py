@@ -5,7 +5,7 @@ from tests_e2e.actions.base import ActionResult, PhotoActions
 
 
 class APIPhotoActions(BaseAPIAction, PhotoActions):
-    """POST (multipart)/GET /listings/{listing_id}/photos/."""
+    """POST(multipart)/GET /listings/{listing_id}/photos/, PATCH/DELETE .../{photo_id}/."""
 
     def upload(self, listing_id: str, *, image_bytes: bytes, filename: str = "photo.jpg", caption: str = "") -> ActionResult:
         return self._post_multipart(
@@ -15,6 +15,12 @@ class APIPhotoActions(BaseAPIAction, PhotoActions):
                 "caption": caption,
             },
         )
+
+    def update(self, listing_id: str, photo_id: str, payload: dict) -> ActionResult:
+        return self._patch(f"/listings/{listing_id}/photos/{photo_id}/", payload)
+
+    def delete(self, listing_id: str, photo_id: str) -> ActionResult:
+        return self._delete(f"/listings/{listing_id}/photos/{photo_id}/")
 
     def list_for_listing(self, listing_id: str) -> ActionResult:
         return self._get(f"/listings/{listing_id}/photos/")
