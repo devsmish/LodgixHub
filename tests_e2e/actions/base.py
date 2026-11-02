@@ -143,6 +143,14 @@ class RoomActions(ABC):
         ...
 
     @abstractmethod
+    def update(self, listing_id: str, room_id: str, payload: dict) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def delete(self, listing_id: str, room_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
     def list_for_listing(self, listing_id: str) -> ActionResult:
         ...
 
