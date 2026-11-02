@@ -161,6 +161,14 @@ class PhotoActions(ABC):
         """POST /listings/{listing_id}/photos/ — multipart."""
 
     @abstractmethod
+    def update(self, listing_id: str, photo_id: str, payload: dict) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def delete(self, listing_id: str, photo_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
     def list_for_listing(self, listing_id: str) -> ActionResult:
         ...
 
