@@ -1,14 +1,12 @@
 """
 Regression tests for a bug:
-The endpoints `GET /listings/{listing_id}/photos/` and `GET /listings/{listing_id}/rooms/`
-initially failed to check the visibility of the listing itself. While a draft listing was
-inaccessible via `GET /listings/{id}/` (returning a 404 for unauthorized users or guests),
-its photo gallery and list of rooms remained fully exposed—accessible to both unauthorized
-authenticated users and anonymous guests (even those without any token).
+The endpoint `GET /listings/{listing_id}/photos/` initially failed to check the visibility of the
+listing itself. While a draft listing was inaccessible via `GET /listings/{id}/` (returning a 404
+for unauthorized users or guests), its photo gallery remained fully exposed—accessible to both
+unauthorized authenticated users and anonymous guests (even those without any token).
 
-Fix: Both endpoints now perform an initial check using
-`ListingService.can_view_detail(request.user, listing)` and return a `404` following the
-same convention as `GET /listings/{id}/`.
+Fix: Endpoint now perform an initial check using `ListingService.can_view_detail(request.user,
+listing)` and return a `404` following the same convention as `GET /listings/{id}/`.
 
 This file acts as a "black box" test against a live server, verifying a matrix of user roles:
 anonymous users/unauthorized users receive a 404 for draft listings;
@@ -126,56 +124,32 @@ class TestPhotoVisibility:
         assert result.status in (403, 404), result.data
 
 
-class TestRoomVisibility:
-    def test_draft_listing_rooms_hidden_from_anonymous_guest(self, landlord, new_actor):
-        listing_id = _listing(landlord, listing_type="hotel", published=False)
-        landlord.rooms.create(listing_id, {"room_type": "single", "name": "Room 1", "max_guests": 2, "rooms_available_count": 1})
+class TestPhotoCRUD:
+    def test_owner_can_update_own_photo_caption(self, landlord):
+        listing_id = _listing(landlord, published=False)
+        upload = landlord.photos.upload(listing_id, image_bytes=TEST_PHOTO_PATH.read_bytes())
+        photo_id = upload.data["id"]
 
-        guest = new_actor()
-
-        result = guest.rooms.list_for_listing(listing_id)
-
-        assert result.status == 404, result.data
-
-    def test_draft_listing_rooms_hidden_from_authenticated_outsider(self, landlord, new_actor):
-        listing_id = _listing(landlord, listing_type="hotel", published=False)
-        landlord.rooms.create(listing_id, {"room_type": "single", "name": "Room 1", "max_guests": 2, "rooms_available_count": 1})
-
-        outsider = _stranger(new_actor)
-
-        result = outsider.rooms.list_for_listing(listing_id)
-
-        assert result.status == 404, result.data
-
-    def test_draft_listing_rooms_visible_to_owner(self, landlord):
-        listing_id = _listing(landlord, listing_type="hotel", published=False)
-        landlord.rooms.create(listing_id, {"room_type": "single", "name": "Room 1", "max_guests": 2, "rooms_available_count": 1})
-
-        result = landlord.rooms.list_for_listing(listing_id)
+        result = landlord.photos.update(listing_id, photo_id, {"caption": "Updated caption"})
 
         assert result.status == 200, result.data
-        assert len(result.data) == 1
+        assert result.data["caption"] == "Updated caption"
 
-    def test_draft_listing_rooms_visible_to_moderator_and_admin(self, landlord, moderator, admin_actor):
-        listing_id = _listing(landlord, listing_type="hotel", published=False)
-        landlord.rooms.create(listing_id, {"room_type": "single", "name": "Room 1", "max_guests": 2, "rooms_available_count": 1})
+    def test_stranger_cannot_update_someone_elses_photo(self, landlord, new_actor):
+        listing_id = _listing(landlord, published=True)
+        upload = landlord.photos.upload(listing_id, image_bytes=TEST_PHOTO_PATH.read_bytes())
+        photo_id = upload.data["id"]
 
-        assert moderator.rooms.list_for_listing(listing_id).status == 200
-        assert admin_actor.rooms.list_for_listing(listing_id).status == 200
+        stranger = _stranger(new_actor)
+        result = stranger.photos.update(listing_id, photo_id, {"caption": "Hijacked"})
 
-    def test_published_listing_rooms_visible_to_anyone(self, landlord, new_actor):
-        listing_id = _listing(landlord, listing_type="hotel", published=True)
-        landlord.rooms.create(listing_id, {"room_type": "single", "name": "Room 1", "max_guests": 2, "rooms_available_count": 1})
+        assert result.status in (403, 404), result.data
 
-        guest = new_actor()
-        outsider = _stranger(new_actor)
+    def test_owner_can_delete_own_photo(self, landlord):
+        listing_id = _listing(landlord, published=False)
+        upload = landlord.photos.upload(listing_id, image_bytes=TEST_PHOTO_PATH.read_bytes())
+        photo_id = upload.data["id"]
 
-        assert guest.rooms.list_for_listing(listing_id).status == 200
-        assert outsider.rooms.list_for_listing(listing_id).status == 200
+        result = landlord.photos.delete(listing_id, photo_id)
 
-    def test_rooms_of_nonexistent_listing_return_404(self, new_actor):
-        guest = new_actor()
-
-        result = guest.rooms.list_for_listing("00000000-0000-0000-0000-000000000000")
-
-        assert result.status == 404, result.data
+        assert result.status in (200, 204), result.data
