@@ -34,6 +34,16 @@ class APIListingActions(BaseAPIAction, ListingActions):
     def toggle_active(self, listing_id: str) -> ActionResult:
         return self._post(f"/listings/{listing_id}/toggle-active/")
 
+    def set_amenities(self, listing_id: str, *, amenity_ids: list[str]) -> ActionResult:
+        return self._put(f"/listings/{listing_id}/amenities/", {"amenity_ids": amenity_ids})
+
+    def availability_calendar(self, listing_id: str, *, month: str | None = None) -> ActionResult:
+        params = {"month": month} if month else None
+        return self._get(f"/listings/{listing_id}/availability-calendar/", params=params)
+
+    def listing_bookings(self, listing_id: str) -> ActionResult:
+        return self._get(f"/listings/{listing_id}/bookings/")
+
     def set_price(self, listing_id: str, *, price: str, valid_from: str) -> ActionResult:
         """POST /listings/{listing_id}/price/ — falls outside the abstract
         `ListingActions` contract (there is currently no equivalent in the
