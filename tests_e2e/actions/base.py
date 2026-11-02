@@ -124,6 +124,18 @@ class ListingActions(ABC):
     def toggle_active(self, listing_id: str) -> ActionResult:
         ...
 
+    @abstractmethod
+    def set_amenities(self, listing_id: str, *, amenity_ids: list[str]) -> ActionResult:
+        """PUT /listings/{id}/amenities/ — complete replacement of the set; strictly
+        `IsOwner` (unlike `update`, which also allows `IsModerator`|`IsAdmin`)."""
+
+    @abstractmethod
+    def availability_calendar(self, listing_id: str, *, month: str | None = None) -> ActionResult:
+        """GET /listings/{id}/availability-calendar/?month=YYYY-MM — AllowAny."""
+
+    @abstractmethod
+    def listing_bookings(self, listing_id: str) -> ActionResult:
+        """GET /listings/{id}/bookings/ — only owner."""
 
 class RoomActions(ABC):
     @abstractmethod
