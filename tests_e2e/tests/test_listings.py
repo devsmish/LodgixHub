@@ -5,9 +5,9 @@ and `destroy` is worth noting (apps/listings/controller/listing_controller.py::g
 allows only `(IsOwner | IsAdmin)`—excluding the moderator. This is an intentional distinction
 (a moderator can edit or unpublish a problematic listing, but does not have the authority to
 physically delete it); it is not a bug.
-Linking amenities (PUT .../amenities/), availability calendar, and owner-created bookings for
-a listing. Of particular note is the asymmetry in permissions for `amenities`: it is strictly
-`IsOwner`, with no `IsModerator` or `IsAdmin` access (unlike the `update` action).
+Linking of amenities (PUT .../amenities/), availability calendar, owner bookings for a listing,
+and price history. Of particular note is the asymmetry of permissions for `amenities`: strictly
+`IsOwner`, with no `IsModerator`/`IsAdmin` access (unlike the `update` action).
 """
 from __future__ import annotations
 
@@ -259,3 +259,30 @@ class TestListingBookingsView:
         result = guest.listings.listing_bookings(listing_id)
 
         assert result.status in (401, 403), result.data
+
+
+class TestPriceHistory:
+    def test_owner_can_see_price_history(self, landlord):
+        listing_id = _published_listing(landlord)
+
+        result = landlord.listings.price_history(listing_id)
+
+        assert result.status == 200, result.data
+        assert len(result.data) >= 1
+
+    def test_admin_can_see_someone_elses_price_history(self, landlord, admin_actor):
+        listing_id = _published_listing(landlord)
+
+        result = admin_actor.listings.price_history(listing_id)
+
+        assert result.status == 200, result.data
+
+    def test_stranger_cannot_see_someone_elses_price_history(self, landlord, new_actor):
+        listing_id = _published_listing(landlord)
+
+        stranger = new_actor()
+        stranger.auth.register(**register_payload(role="landlord", prefix="stranger"))
+
+        result = stranger.listings.price_history(listing_id)
+
+        assert result.status == 403, result.data
