@@ -52,3 +52,8 @@ class APIListingActions(BaseAPIAction, ListingActions):
         than accessing `Listing.current_price` directly (see
         `apps/bookings/services/booking_service.py::_calculate_price`)."""
         return self._post(f"/listings/{listing_id}/price/", {"price": price, "valid_from": valid_from})
+
+    def price_history(self, listing_id: str) -> ActionResult:
+        """GET /listings/{listing_id}/price-history/ — Owner|Admin. Follows the
+        same "outside the abstract contract" logic as `set_price` above."""
+        return self._get(f"/listings/{listing_id}/price-history/")
