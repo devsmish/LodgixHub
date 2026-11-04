@@ -24,6 +24,7 @@ from tests_e2e.actions.api.dispute_actions import APIDisputeActions
 from tests_e2e.actions.api.listing_actions import APIListingActions
 from tests_e2e.actions.api.photo_actions import APIPhotoActions
 from tests_e2e.actions.api.playwright_thread import PlaywrightThread
+from tests_e2e.actions.api.review_actions import APIReviewActions
 from tests_e2e.actions.api.room_actions import APIRoomActions
 from tests_e2e.actions.api.user_actions import APIUserActions
 
@@ -31,14 +32,15 @@ from tests_e2e.actions.api.user_actions import APIUserActions
 class APIActor:
     def __init__(self, request_context, pw_thread: PlaywrightThread):
         self.session = ActorSession()
-        self.auth = APIAuthActions(request_context, self.session, pw_thread)
-        self.listings = APIListingActions(request_context, self.session, pw_thread)
-        self.rooms = APIRoomActions(request_context, self.session, pw_thread)
-        self.photos = APIPhotoActions(request_context, self.session, pw_thread)
-        self.bookings = APIBookingActions(request_context, self.session, pw_thread)
-        self.disputes = APIDisputeActions(request_context, self.session, pw_thread)
         self.amenities = APIAmenityActions(request_context, self.session, pw_thread)
+        self.auth = APIAuthActions(request_context, self.session, pw_thread)
+        self.bookings = APIBookingActions(request_context, self.session, pw_thread)
         self.cancellation_reasons = APICancellationReasonActions(request_context, self.session, pw_thread)
+        self.disputes = APIDisputeActions(request_context, self.session, pw_thread)
+        self.listings = APIListingActions(request_context, self.session, pw_thread)
+        self.photos = APIPhotoActions(request_context, self.session, pw_thread)
+        self.reviews = APIReviewActions(request_context, self.session, pw_thread)
+        self.rooms = APIRoomActions(request_context, self.session, pw_thread)
         self.users = APIUserActions(request_context, self.session, pw_thread)
 
 def use_token(self, access_token: str) -> None:
