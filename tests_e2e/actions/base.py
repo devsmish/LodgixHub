@@ -301,3 +301,45 @@ class UserActions(ABC):
     @abstractmethod
     def delete_user(self, user_id: str) -> ActionResult:
         """DELETE /users/{id}/ — admin."""
+
+
+class ReviewActions(ABC):
+    @abstractmethod
+    def create(self, *, booking_id: str, rating: int, comment: str = "") -> ActionResult:
+        """POST /reviews/."""
+
+    @abstractmethod
+    def get(self, review_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def update(self, review_id: str, *, rating: int | None = None, comment: str | None = None) -> ActionResult:
+        """PATCH /reviews/{id}/ — author only, 7-day window."""
+
+    @abstractmethod
+    def delete(self, review_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def respond(self, review_id: str, *, response_text: str) -> ActionResult:
+        """POST /reviews/{id}/respond/ — listing owner only."""
+
+    @abstractmethod
+    def update_status(self, review_id: str, *, status: str) -> ActionResult:
+        """PATCH /reviews/{id}/status/ — moderator/admin only."""
+
+    @abstractmethod
+    def list_for_listing(self, listing_id: str) -> ActionResult:
+        """GET /reviews/?listing_id= — public, only published items."""
+
+    @abstractmethod
+    def list_moderation_queue(self) -> ActionResult:
+        """GET /reviews/ (without listing_id) — moderator/admin only."""
+
+    @abstractmethod
+    def mine(self) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def for_landlord(self) -> ActionResult:
+        ...
