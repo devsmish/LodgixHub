@@ -91,7 +91,7 @@ class TestBookingCreation:
         first = tenant.bookings.create(payload)
         assert first.status == 201, first.data
 
-        second = tenant.bookings.create(payload)  # те же даты, тот же listing
+        second = tenant.bookings.create(payload)  # same dates, same listing
         assert second.status == 409, second.data
 
     def test_duration_exceeding_max_booking_days_is_rejected(self, tenant, landlord):
@@ -170,5 +170,58 @@ class TestBookingVisibility:
         stranger.auth.register(**register_payload(role="tenant", prefix="stranger"))
 
         result = stranger.bookings.get(booking_id)
+
+        assert result.status in (403, 404), result.data
+
+
+class TestBookingCancellation:
+    def test_tenant_can_cancel_pending_booking_within_free_window(self, tenant, landlord):
+        """TENANT_FREE_CANCEL_CUTOFF_HOURS = 24 — by default, a booking is created for 7 days
+        in advance (booking_payload), which falls well within the free cancellation window;
+        no reason is required (providing a reason is only applicable for the landlord)."""
+        listing_id = _published_listing(landlord)
+        created = tenant.bookings.create(booking_payload(listing_id=listing_id))
+        booking_id = created.data["id"]
+
+        result = tenant.bookings.cancel(booking_id)
+
+        assert result.status == 200, result.data
+        assert result.data["status"] == "cancelled_by_tenant"
+
+    def test_landlord_requires_cancellation_reason(self, tenant, landlord):
+        listing_id = _published_listing(landlord)
+        created = tenant.bookings.create(booking_payload(listing_id=listing_id))
+        booking_id = created.data["id"]
+        landlord.bookings.confirm(booking_id)
+
+        result = landlord.bookings.cancel(booking_id)
+
+        assert result.status == 400, result.data
+
+    def test_landlord_can_cancel_with_reason(self, tenant, landlord, admin_actor):
+        listing_id = _published_listing(landlord)
+        created = tenant.bookings.create(booking_payload(listing_id=listing_id))
+        booking_id = created.data["id"]
+        landlord.bookings.confirm(booking_id)
+
+        reasons = admin_actor.cancellation_reasons.list()
+        reason_id = reasons.data[0]["id"]
+
+        result = landlord.bookings.cancel(booking_id, cancellation_reason_id=reason_id)
+
+        assert result.status == 200, result.data
+        assert result.data["status"] == "cancelled_by_landlord"
+
+    def test_stranger_cannot_cancel_someone_elses_booking(self, tenant, landlord, new_actor):
+        listing_id = _published_listing(landlord)
+        created = tenant.bookings.create(booking_payload(listing_id=listing_id))
+        booking_id = created.data["id"]
+
+        stranger = new_actor()
+        from tests_e2e.fixtures.data import register_payload
+
+        stranger.auth.register(**register_payload(role="tenant", prefix="stranger"))
+
+        result = stranger.bookings.cancel(booking_id)
 
         assert result.status in (403, 404), result.data
