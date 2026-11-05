@@ -16,6 +16,7 @@ will remain unaffected.
 from __future__ import annotations
 
 from tests_e2e.actions.api.amenity_actions import APIAmenityActions
+from tests_e2e.actions.api.analytics_actions import APIAnalyticsActions
 from tests_e2e.actions.api.base_api_action import ActorSession
 from tests_e2e.actions.api.auth_actions import APIAuthActions
 from tests_e2e.actions.api.booking_actions import APIBookingActions
@@ -33,6 +34,7 @@ class APIActor:
     def __init__(self, request_context, pw_thread: PlaywrightThread):
         self.session = ActorSession()
         self.amenities = APIAmenityActions(request_context, self.session, pw_thread)
+        self.analytics = APIAnalyticsActions(request_context, self.session, pw_thread)
         self.auth = APIAuthActions(request_context, self.session, pw_thread)
         self.bookings = APIBookingActions(request_context, self.session, pw_thread)
         self.cancellation_reasons = APICancellationReasonActions(request_context, self.session, pw_thread)

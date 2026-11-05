@@ -343,3 +343,21 @@ class ReviewActions(ABC):
     @abstractmethod
     def for_landlord(self) -> ActionResult:
         ...
+
+
+class AnalyticsActions(ABC):
+    @abstractmethod
+    def popular_search_keywords(self) -> ActionResult:
+        """GET /search-history/popular/ — AllowAny."""
+
+    @abstractmethod
+    def my_search_history(self) -> ActionResult:
+        """GET /search-history/mine/ — IsAuthenticated."""
+
+    @abstractmethod
+    def my_view_history(self) -> ActionResult:
+        """GET /view-history/mine/ — IsAuthenticated."""
+
+    @abstractmethod
+    def admin_dashboard_stats(self) -> ActionResult:
+        """GET /stats/admin-dashboard/ — IsAdmin only."""
