@@ -23,6 +23,7 @@ from tests_e2e.actions.api.booking_actions import APIBookingActions
 from tests_e2e.actions.api.cancellation_reason_actions import APICancellationReasonActions
 from tests_e2e.actions.api.dispute_actions import APIDisputeActions
 from tests_e2e.actions.api.listing_actions import APIListingActions
+from tests_e2e.actions.api.notification_actions import APINotificationActions
 from tests_e2e.actions.api.photo_actions import APIPhotoActions
 from tests_e2e.actions.api.playwright_thread import PlaywrightThread
 from tests_e2e.actions.api.review_actions import APIReviewActions
@@ -40,6 +41,7 @@ class APIActor:
         self.cancellation_reasons = APICancellationReasonActions(request_context, self.session, pw_thread)
         self.disputes = APIDisputeActions(request_context, self.session, pw_thread)
         self.listings = APIListingActions(request_context, self.session, pw_thread)
+        self.notifications = APINotificationActions(request_context, self.session, pw_thread)
         self.photos = APIPhotoActions(request_context, self.session, pw_thread)
         self.reviews = APIReviewActions(request_context, self.session, pw_thread)
         self.rooms = APIRoomActions(request_context, self.session, pw_thread)

@@ -361,3 +361,9 @@ class AnalyticsActions(ABC):
     @abstractmethod
     def admin_dashboard_stats(self) -> ActionResult:
         """GET /stats/admin-dashboard/ — IsAdmin only."""
+
+
+class NotificationActions(ABC):
+    @abstractmethod
+    def list_logs(self) -> ActionResult:
+        """GET /notifications/logs/ — IsAdmin only."""
