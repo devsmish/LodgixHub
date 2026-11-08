@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -12,12 +13,14 @@ from apps.bookings.constants import (
     LAST_MINUTE_DISCOUNT_SAME_DAY,
     TENANT_FREE_CANCEL_CUTOFF_HOURS,
 )
+
 from apps.bookings.errors import (
     BookingCancelWindowExpiredError,
     BookingNotAvailableError,
     BookingTransitionNotAllowedError,
     CancellationReasonRequiredError,
     ListingNotBookableError,
+    convert_django_validation_error,
 )
 from apps.bookings.models import Booking
 from apps.bookings.repositories import BookingRepository
@@ -92,7 +95,10 @@ class BookingService:
             deposit_amount=deposit_amount,
         )
 
-        booking.save()
+        try:
+            booking.save()
+        except DjangoValidationError as exc:
+            raise convert_django_validation_error(exc) from exc
         return booking
 
     @staticmethod

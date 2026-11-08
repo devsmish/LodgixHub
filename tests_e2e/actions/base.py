@@ -1,0 +1,369 @@
+"""
+Business-action-level contracts are analogous to the "Page Object" pattern
+in the classic POM (Page Object Model) approach, with the difference that
+instead of a "page," the focus is on a "resource" or "use case" (e.g., Auth,
+Listing, Booking, etc.).
+
+The concept is that tests located in `tests_e2e/tests/*.py` never interact
+directly with HTTP or Playwright. Instead, they invoke methods—such as
+`auth.register(...)` or `bookings.create(...)`—which are defined here as
+an abstract contract.
+
+Currently, the only implementation is located in `actions/api/*.py` (pure
+HTTP via the Playwright `APIRequestContext`). Once the frontend is introduced,
+implementations with the same method names and signatures will be added to
+`actions/ui/*.py`; internally, however, these will perform actions by clicking
+on page elements via the Playwright `Page` object, rather than making HTTP
+requests. The tests themselves will not need to be modified—the only change
+required will be which implementation the factory in `conftest.py` provides
+(see `E2E_TEST_MODE`).
+
+`Namedtuple`/`dataclass` results (`ActionResult`) are used instead of a plain
+`dict` to ensure that the structure of the returned value remains consistent
+across both API and UI implementations—even though the underlying mechanism
+for determining the status differs fundamentally (e.g., an HTTP status code
+for the API versus the visibility of an error element in the UI). The fields
+`status` and `ok` form a shared, minimal contract, while `data` and `raw` are
+implementation-specific and are not guaranteed to be present in the UI.
+"""
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from typing import Any
+
+
+@dataclass
+class ActionResult:
+    """A unified wrapper for action results, independent of the transport layer.
+
+    ok — whether the action was successful from a business logic perspective
+         (for APIs: 2xx; for UI: e.g., "form submitted without errors")
+    status — HTTP status, if applicable (only for API implementations; None for UI)
+    data — the parsed response body (API) / data extracted from the page (UI)
+    raw — the original transport object (Playwright APIResponse / Page) —
+          used only within Action classes and for rare edge-case
+          test assertions; in general, tests should rely on data/status.
+    """
+
+    ok: bool
+    status: int | None
+    data: Any
+    raw: Any = field(default=None, repr=False)
+
+
+class AuthActions(ABC):
+    @abstractmethod
+    def register(
+        self,
+        *,
+        email: str,
+        password: str,
+        role: str,
+        first_name: str = "",
+        last_name: str = "",
+        terms_accepted: bool = True,
+        password_confirm: str | None = None,
+    ) -> ActionResult:
+        """New user registration. Upon success, the action implementation
+        must itself store the access token for subsequent calls made on
+        behalf of this user (the session/context is bound to a single
+        actor). `password_confirm` defaults to the value of `password`
+        (the standard scenario); it is passed explicitly only for tests
+        involving a mismatch in the confirmation field."""
+
+    @abstractmethod
+    def login(self, *, email: str, password: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def refresh(self) -> ActionResult:
+        """POST /auth/token/refresh/ — reads the `refresh_token` from an
+        `HttpOnly` cookie associated with the current actor (Playwright
+        handles the storage of this cookie automatically following a
+        `register` or `login` operation) and returns a new access token.
+        Upon success, the implementation automatically updates
+        `ActorSession.access_token`, just as it does during `register` or
+        `login`."""
+
+    @abstractmethod
+    def logout(self) -> ActionResult:
+        ...
+
+
+class ListingActions(ABC):
+    @abstractmethod
+    def create(self, payload: dict) -> ActionResult:
+        """Creates an ad on behalf of the current actor (always in 'draft' status)."""
+
+    @abstractmethod
+    def update(self, listing_id: str, payload: dict) -> ActionResult:
+        """PATCH /listings/{id}/ — partial update."""
+
+    @abstractmethod
+    def delete(self, listing_id: str) -> ActionResult:
+        """DELETE /listings/{id}/ — soft delete."""
+
+    @abstractmethod
+    def publish(self, listing_id: str) -> ActionResult:
+        """draft -> published, accessible only to the owner."""
+
+    @abstractmethod
+    def get(self, listing_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def list(self, params: dict | None = None) -> ActionResult:
+        """GET /listings/ — a public list (only published + active items are visible)."""
+
+    @abstractmethod
+    def mine(self) -> ActionResult:
+        """GET /listings/mine/ — your own listings, regardless of their status; for landlords only."""
+
+    @abstractmethod
+    def toggle_active(self, listing_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def set_amenities(self, listing_id: str, *, amenity_ids: list[str]) -> ActionResult:
+        """PUT /listings/{id}/amenities/ — complete replacement of the set; strictly
+        `IsOwner` (unlike `update`, which also allows `IsModerator`|`IsAdmin`)."""
+
+    @abstractmethod
+    def availability_calendar(self, listing_id: str, *, month: str | None = None) -> ActionResult:
+        """GET /listings/{id}/availability-calendar/?month=YYYY-MM — AllowAny."""
+
+    @abstractmethod
+    def listing_bookings(self, listing_id: str) -> ActionResult:
+        """GET /listings/{id}/bookings/ — only owner."""
+
+class RoomActions(ABC):
+    @abstractmethod
+    def create(self, listing_id: str, payload: dict) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def update(self, listing_id: str, room_id: str, payload: dict) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def delete(self, listing_id: str, room_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def list_for_listing(self, listing_id: str) -> ActionResult:
+        ...
+
+
+class PhotoActions(ABC):
+    @abstractmethod
+    def upload(self, listing_id: str, *, image_bytes: bytes, filename: str = "photo.jpg", caption: str = "") -> ActionResult:
+        """POST /listings/{listing_id}/photos/ — multipart."""
+
+    @abstractmethod
+    def update(self, listing_id: str, photo_id: str, payload: dict) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def delete(self, listing_id: str, photo_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def list_for_listing(self, listing_id: str) -> ActionResult:
+        ...
+
+
+class AmenityActions(ABC):
+    @abstractmethod
+    def create(self, *, name: str, slug: str, icon: str = "") -> ActionResult:
+        """POST /amenities/ — admin only."""
+
+    @abstractmethod
+    def list(self) -> ActionResult:
+        ...
+
+
+class CancellationReasonActions(ABC):
+    @abstractmethod
+    def create(self, *, code: str, description: str) -> ActionResult:
+        """POST /cancellation-reasons/ — admin only."""
+
+    @abstractmethod
+    def list(self) -> ActionResult:
+        ...
+
+
+class BookingActions(ABC):
+    @abstractmethod
+    def create(self, payload: dict) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def get(self, booking_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def list(self) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def confirm(self, booking_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def reject(self, booking_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def cancel(self, booking_id: str, *, cancellation_reason_id: str | None = None) -> ActionResult:
+        ...
+
+
+class DisputeActions(ABC):
+    @abstractmethod
+    def open(self, booking_id: str, *, reason_category: str, reason: str, claim_amount: str = "0.00") -> ActionResult:
+        """POST /bookings/{booking_id}/disputes/ — open a dispute regarding a booking."""
+
+    @abstractmethod
+    def list_for_booking(self, booking_id: str) -> ActionResult:
+        """GET /bookings/{booking_id}/disputes/ — all disputes regarding a specific booking."""
+
+    @abstractmethod
+    def get(self, dispute_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def list(self, *, status: str | None = None) -> ActionResult:
+        """GET /disputes/ — moderation queue (moderator/admin) or one's own disputes."""
+
+    @abstractmethod
+    def review(self, dispute_id: str) -> ActionResult:
+        """PATCH /disputes/{id}/review/ — open -> under_review, moderator/admin."""
+
+    @abstractmethod
+    def resolve(
+        self,
+        dispute_id: str,
+        *,
+        status: str,
+        resolution_favor: str,
+        resolution_amount: str | None = None,
+        notes: str = "",
+    ) -> ActionResult:
+        """POST /disputes/{id}/resolve/ — under_review -> resolved_*, moderator/admin."""
+
+    @abstractmethod
+    def add_evidence(self, dispute_id: str, *, url: str, description: str = "") -> ActionResult:
+        ...
+
+    @abstractmethod
+    def list_evidence(self, dispute_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def delete_evidence(self, dispute_id: str, evidence_id: str) -> ActionResult:
+        ...
+
+
+class UserActions(ABC):
+    @abstractmethod
+    def me(self) -> ActionResult:
+        """GET /users/me/."""
+
+    @abstractmethod
+    def update_me(self, payload: dict) -> ActionResult:
+        """PATCH /users/me/."""
+
+    @abstractmethod
+    def delete_me(self) -> ActionResult:
+        """DELETE /users/me/."""
+
+    @abstractmethod
+    def get_public_profile(self, user_id: str) -> ActionResult:
+        """GET /users/{id}/ — requires a joint active/completed booking with this owner."""
+
+    @abstractmethod
+    def list_users(self, params: dict | None = None) -> ActionResult:
+        """GET /users/ — moderator/admin."""
+
+    @abstractmethod
+    def block(self, user_id: str, *, reason: str) -> ActionResult:
+        """POST /users/{id}/block/ — admin."""
+
+    @abstractmethod
+    def unblock(self, user_id: str) -> ActionResult:
+        """POST /users/{id}/unblock/ — admin."""
+
+    @abstractmethod
+    def update_groups(self, user_id: str, *, groups: list[str]) -> ActionResult:
+        """PATCH /users/{id}/groups/ — admin."""
+
+    @abstractmethod
+    def delete_user(self, user_id: str) -> ActionResult:
+        """DELETE /users/{id}/ — admin."""
+
+
+class ReviewActions(ABC):
+    @abstractmethod
+    def create(self, *, booking_id: str, rating: int, comment: str = "") -> ActionResult:
+        """POST /reviews/."""
+
+    @abstractmethod
+    def get(self, review_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def update(self, review_id: str, *, rating: int | None = None, comment: str | None = None) -> ActionResult:
+        """PATCH /reviews/{id}/ — author only, 7-day window."""
+
+    @abstractmethod
+    def delete(self, review_id: str) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def respond(self, review_id: str, *, response_text: str) -> ActionResult:
+        """POST /reviews/{id}/respond/ — listing owner only."""
+
+    @abstractmethod
+    def update_status(self, review_id: str, *, status: str) -> ActionResult:
+        """PATCH /reviews/{id}/status/ — moderator/admin only."""
+
+    @abstractmethod
+    def list_for_listing(self, listing_id: str) -> ActionResult:
+        """GET /reviews/?listing_id= — public, only published items."""
+
+    @abstractmethod
+    def list_moderation_queue(self) -> ActionResult:
+        """GET /reviews/ (without listing_id) — moderator/admin only."""
+
+    @abstractmethod
+    def mine(self) -> ActionResult:
+        ...
+
+    @abstractmethod
+    def for_landlord(self) -> ActionResult:
+        ...
+
+
+class AnalyticsActions(ABC):
+    @abstractmethod
+    def popular_search_keywords(self) -> ActionResult:
+        """GET /search-history/popular/ — AllowAny."""
+
+    @abstractmethod
+    def my_search_history(self) -> ActionResult:
+        """GET /search-history/mine/ — IsAuthenticated."""
+
+    @abstractmethod
+    def my_view_history(self) -> ActionResult:
+        """GET /view-history/mine/ — IsAuthenticated."""
+
+    @abstractmethod
+    def admin_dashboard_stats(self) -> ActionResult:
+        """GET /stats/admin-dashboard/ — IsAdmin only."""
+
+
+class NotificationActions(ABC):
+    @abstractmethod
+    def list_logs(self) -> ActionResult:
+        """GET /notifications/logs/ — IsAdmin only."""

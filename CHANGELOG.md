@@ -4,6 +4,22 @@ All notable changes to LodgixHub will be documented in this file.
 
 The format follows a simple chronological structure.
 
+## [1.1.0] - 2026-11-08
+
+### Added
+- **E2E Testing Infrastructure (pytest + Playwright):** Introduced a complete, Page Object Model (POM) structured End-to-End black-box test framework in `tests_e2e/` operating via Playwright APIRequestContext (Issues #111, #123, #128, #132, #139, #141, #143, #145, #147, #149, #151, #153, #155, #157, #159, #161).
+- **Listing Price History Action & Perms Suite (Issue #147):** Added `price_history` client method to `APIListingActions` and implemented `TestPriceHistory` to enforce owner and admin access constraints.
+- **Dedicated Amenity & Cancellation Reason Test Modules (Issues #132, #151):** Decoupled the monolithic test suite into standalone `test_amenities.py` and `test_cancellation_reasons.py` files covering regex validators, uniqueness constraints, and admin-only rules.
+- **Booking Lifecycle & Cancellation Test Suite (Issues #141, #153):** Added booking creation, overlap conflict checks (`409 Conflict`), confirmation/rejection flows, and `TestBookingCancellation` covering tenant free-window cancellations and landlord mandatory cancellation reasons.
+- **Reviews E2E Workflow & Moderation Suite (Issue #155):** Implemented `APIReviewActions` and `test_reviews.py` covering completed booking requirements, 7-day post-checkout review windows, duplicate submission prevention (`409 Conflict`), moderation queue visibility, and landlord response capabilities.
+- **Analytics & Notification Access Control Suites (Issues #157, #159):** Added permission enforcement tests for popular search terms, authenticated user view/search history, admin dashboard stats, and notification log audits.
+- **Core Models Unit Test Suite (Issue #161):** Integrated pytest-django unit test suite in `core/tests_pt.py` covering `BaseModel` soft-delete/restore mechanics, timestamp updates, and `LogModel` immutability safeguards across instance and QuerySet bulk operations (`update`, `bulk_update`, `delete`, `purge`, `hard_delete`).
+
+### Fixed
+- **Photo E2E Test Fixtures (Issue #149):** Added missing `test_photo.jpg` asset file in `tests_e2e/fixtures/assets/` to ensure deterministic photo upload execution.
+
+---
+
 ## [1.0.1] - 2026-08-04
 
 ### Added

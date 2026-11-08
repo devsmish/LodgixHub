@@ -108,32 +108,19 @@ clarification questions before proceeding.
 - Kafka is intentionally excluded from the MVP.
 
 ### Notifications and Operations
-- Synchronous email notifications.
-- Emails are sent directly from signals or views.
-- Exception handling with `try`/`except` where appropriate.
-- Logging.
-- Validation.
-- Signals for alerts and notifications.
-- Automatic booking cancellation through a system cron inside the container.
-- Daily price setup through a system cron inside the container.
-
-### Test Data
-- Faker-based database seeding for development and demonstration data.
-
-### Notifications and Operations
 - Synchronous email notifications sent directly from signals or views.
 - Exception handling with `try`/`except` where appropriate.
 - Logging and signal handlers for platform alerts.
 - **Asynchronous Task Execution:** Asynchronous job processing powered by **Celery** workers backed by **Redis** brokers.
-- **Dynamic Task Scheduling:** Automated booking auto-cancellation and daily pricing updates controlled via 
-- `django-celery-beat` database schedules.
+- **Dynamic Task Scheduling:** Automated booking auto-cancellation and daily pricing updates controlled via `django-celery-beat` database schedules.
+
+### Test Data
+- Faker-based database seeding for development and demonstration data.
 
 ### API Documentation
 - Interactive Swagger/OpenAPI documentation powered by `drf-spectacular` available at `/api/v1/schema/swagger-ui/`.
-- Native support for UUID path parameters across all domain endpoints (`/api/v1/listings/{id}/`, 
-- `/api/v1/bookings/{id}/`, etc.).
-- Complete authentication schema integration via `CustomJWTAuthentication` with native Swagger UI "Authorize" button 
-- support (`Bearer <token>`).
+- Native support for UUID path parameters across all domain endpoints (`/api/v1/listings/{id}/`, `/api/v1/bookings/{id}/`, etc.).
+- Complete authentication schema integration via `CustomJWTAuthentication` with native Swagger UI "Authorize" button support (`Bearer <token>`).
 - Zero-error OpenAPI schema compilation pipeline.
 
 ### Code Quality
@@ -146,12 +133,10 @@ clarification questions before proceeding.
 - Docker Compose for local/containerized execution.
 - MySQL for local development and external database setups.
 - **Production Stack:** Gunicorn + Nginx reverse proxy, Celery worker, Celery beat, and dual-purpose Redis broker/cache.
-- **AWS Deployment (IaC):** Terraform module (`deploy/terraform/`) for automated EC2 instance provisioning with dynamic 
-- public IP detection via IMDSv2.
+- **AWS Deployment (IaC):** Terraform module (`deploy/terraform/`) for automated EC2 instance provisioning with dynamic public IP detection via IMDSv2.
 
 ### Admin Panel & Security
-- Secure user creation and editing via Django Admin with properly masked input fields (`type="password"`) and automatic 
-- password confirmation validation (`password1` / `password2`).
+- Secure user creation and editing via Django Admin with properly masked input fields (`type="password"`) and automatic password confirmation validation (`password1` / `password2`).
 
 ## Out of MVP Scope
 
@@ -164,7 +149,6 @@ The following items are intentionally postponed for post-defense self-developmen
 - Discount and bonus system beyond on-demand price recalculation.
 - 80% unit test coverage.
 - Integration tests.
-- Playwright UI tests.
 - GitHub Actions CI/CD.
 - Radon.
 - Varnish.
@@ -174,19 +158,16 @@ The following items are intentionally postponed for post-defense self-developmen
 - Cloudflare.
 
 ### Backend Implementation Status
-All core application modules planned for the platform MVP have been successfully migrated to a stabilized 3-Tier Layered 
-Architecture (`Controller → Service → Repository`) and are fully connected via API version `v1` routes as of 
-release `v0.6.0`.
+All core application modules planned for the platform MVP have been successfully migrated to a stabilized 3-Tier Layered Architecture (`Controller → Service → Repository`) and are fully connected via API version `v1` routes as of release `v0.6.0`.
 
 ### 📊 Database Seeding
-To populate your local database with realistic German test data (users, listings, reviews, bookings), use the custom 
-management command:
+To populate your local database with realistic German test data (users, listings, reviews, bookings), use the custom management command:
 
 ```bash
 # Quick start with default settings (70 landlords, 100 tenants, etc.)
 python manage.py seed_fake_data
 python manage.py seed_fake_data --landlords 100 --listings-per-landlord 4 --tenants 300 --moderators 3
-
+```
 
 ## Planned Backend Modules
 
@@ -400,6 +381,128 @@ For production deployments on AWS EC2:
    chmod +x ./scripts/deploy.sh
    ./scripts/deploy.sh
    ```
+
+## E2E Testing Infrastructure (pytest + Playwright)
+
+The project includes an advanced end-to-end (E2E) testing suite located in tests_e2e/, designed as a black-box test 
+suite running against real HTTP endpoints of a running Django server.
+
+### Purpose & Scope
+
+This suite complements (rather than replaces) existing unit tests in apps/*/tests.py. While unit tests verify business 
+logic at the model/service level (Booking.full_clean() and similar), they operate in isolation and cannot validate views, 
+serializers, or exception handling.
+
+The E2E suite exercises business behavior through real HTTP requests against a live Django server — and as a result, it 
+successfully caught real-world bugs that unit tests structurally could not observe (such as exception conversion gaps in 
+booking workflows or thread isolation edge cases).
+
+### Architecture: Page Object Model (POM) Without a Browser (with UI Extension Ready)
+
+The E2E framework strictly implements the Page Object Model (POM) pattern, cleanly separating abstract contracts, 
+transport mechanisms, and test cases:
+
+```text
+tests_e2e/
+├── actions/
+│   ├── base.py                      # Abstract contracts (AuthActions, ListingActions, BookingActions, etc.) — ABC, zero HTTP/Playwright dependencies
+│   ├── api/                         # Current transport implementation: pure HTTP via Playwright APIRequestContext
+│   │   ├── actor.py                 # Actor facade aggregating domain API actions
+│   │   ├── amenity_actions.py       # Concrete API implementation for amenities
+│   │   ├── analytics_actions.py     # Concrete API implementation for analytics and stats
+│   │   ├── auth_actions.py          # Concrete API implementation for authentication
+│   │   ├── base_api_action.py       # Core base class for Playwright-driven HTTP requests
+│   │   ├── booking_actions.py       # Concrete API implementation for bookings
+│   │   ├── cancellation_reason_actions.py # Concrete API implementation for cancellation reasons
+│   │   ├── dispute_actions.py       # Concrete API implementation for disputes
+│   │   ├── listing_actions.py       # Concrete API implementation for listings
+│   │   ├── notification_actions.py  # Concrete API implementation for notification logs
+│   │   ├── photo_actions.py         # Concrete API implementation for photos
+│   │   ├── playwright_thread.py     # Background thread runner for Playwright synchronization isolation
+│   │   ├── review_actions.py        # Concrete API implementation for reviews
+│   │   ├── room_actions.py          # Concrete API implementation for rooms
+│   │   └── user_actions.py          # Concrete API implementation for user management
+│   └── ui/                          # Placeholder for future browser-based UI actions (same method signatures using Playwright Page)
+├── fixtures/
+│   ├── assets/                      # Binary assets for test cases (e.g., test_photo.jpg)
+│   ├── data.py                      # Request payload builders and data factories
+│   └── users.py                     # User role management (tenant, landlord, moderator, admin)
+├── tests/
+│   ├── test_amenities.py            # End-to-end test scenarios for amenities
+│   ├── test_analytics.py            # End-to-end test scenarios for analytics and permissions
+│   ├── test_auth.py                 # End-to-end test scenarios for authentication flows
+│   ├── test_bookings.py             # End-to-end test scenarios for booking workflows
+│   ├── test_cancellation_reasons.py # End-to-end test scenarios for cancellation reasons
+│   ├── test_disputes.py             # End-to-end test scenarios for disputes and evidence
+│   ├── test_listings.py             # End-to-end test scenarios for listing CRUD operations
+│   ├── test_notifications.py        # End-to-end test scenarios for notification log permissions
+│   ├── test_photos.py               # End-to-end test scenarios for photo uploads and visibility
+│   ├── test_reviews.py              # End-to-end test scenarios for reviews and moderation
+│   ├── test_rooms.py                # End-to-end test scenarios for rooms
+│   └── test_users.py                # End-to-end test scenarios for user profiles and blocks
+├── conftest.py                      # Test harness wiring, live_server, and lifecycle fixtures
+└── e2e_settings.py                  # Dedicated E2E environment configuration and overrides
+```
+
+Tests interact exclusively with high-level action facades (e.g., actor.auth.register(...), actor.bookings.create(...)) 
+without direct knowledge of HTTP or Playwright.
+
+### Preparing for Frontend Integration
+When the frontend interface is developed:
+
+1. Implement classes in actions/ui/ sharing identical method signatures (e.g., UIAuthActions.register(...), 
+UIBookingActions.create(...)), utilizing page.fill(...) and page.click(...) instead of HTTP requests. 
+2. Configure conftest.py so that the new_actor factory yields a UIActor instead of an APIActor when E2E_TEST_MODE=ui. 
+3. Files in tests/*.py remain unmodified.
+
+Note on transportation differences: ActionResult.status (HTTP code) is API-specific. UI tests will verify outcomes like 
+visibility of success banners (e.g., utilizing result.ok which is shared across transports).
+
+### Actor Isolation
+Each actor maintains an independent APIRequestContext (isolated cookie jar). refresh_token is securely handled via 
+HttpOnly cookies (apps/security/controller.py) rather than response bodies, preventing session collisions when multiple 
+actors interact within a single test. new_actor() acts as a factory, letting tests dynamically scale actor counts.
+
+### Execution Target Switching (E2E_BASE_URL)
+
+1. Default Mode (Local Live Server): If E2E_BASE_URL is left unassigned or blank in .env, the test suite automatically 
+boots a real Django development server via pytest-django (live_server) for the test session.
+2. External Staging / Production Mode (Black-Box): Explicitly assigning E2E_BASE_URL (e.g., https://staging.lodgixhub.com) 
+instructs the test runner to execute the exact same test suite against a remote staging or production environment, 
+bypassing local database initialization entirely.
+
+### Running the E2E Tests
+```bash
+redis-server --daemonize yes   # Required for background tasks / price cache dependencies
+python -m pytest tests_e2e/tests/
+```
+
+***Note: pytest.ini at the root project level configures DJANGO_SETTINGS_MODULE, test paths, and disables the default 
+pytest-playwright plugin to allow direct use of playwright.sync_api***
+
+### Technical Design Decisions & Known Gotchas
+
+1. Playwright Sync API & Django ORM Thread Isolation: sync_playwright() maintains an active event loop bound to its 
+creation thread. Django's async_unsafe guard would block ORM access if run on the same thread. To prevent 
+SynchronousOnlyOperation, Playwright runs inside an isolated background worker thread (tests_e2e/playwright_thread.py), 
+communicating via .run(fn).
+2. Synchronous Response Parsing: Response body consumption (APIResponse.json() / .text()) must execute inside the 
+background Playwright thread to avoid greenlet.error: Cannot switch to a different thread. BaseAPIAction._dispatch() 
+handles network dispatch and parsing inside a single thread execution wrapper.
+3. Fixture Scope Separation: The pytest-playwright plugin registers a session-scoped base_url fixture. To prevent scope 
+conflicts, our custom service URL fixture is named service_base_url. The pytest-playwright plugin is explicitly 
+disabled (-p no:playwright) in pytest.ini since tests invoke playwright.sync_api directly rather than leveraging 
+browser/page fixtures.
+4. Throttling Adjustments: Overriding REST_FRAMEWORK settings via override_settings(REST_FRAMEWORK={...}) directly can 
+wipe out authentication classes. Fixtures patch specific keys (such as DEFAULT_THROTTLE_RATES) dynamically without 
+stripping global authentication classes.
+5. **Booking Validation Exception Handling:** E2E integration testing successfully caught an edge case where 
+`BookingService.create_booking()` missed the conversion of Django's `ValidationError` to DRF standards (unlike reviews 
+or photos). This caused capacity and duration limit breaches to return `500 Internal Server Error` instead of `400 Bad 
+Request`. Fixed via standard `try/except` translation in `apps/bookings/services/booking_service.py`.
+6. File Uploads (Photo): Validated against minimum resolutions (400×300px) using a static binary fixture 
+(fixtures/assets/test_photo.jpg, 640×480). Handled via BaseAPIAction._post_multipart() utilizing Playwright’s native 
+multipart buffer injection.
 
 ## Documentation
 - [Changelog](CHANGELOG.md)

@@ -1,0 +1,59 @@
+from __future__ import annotations
+
+from tests_e2e.actions.api.base_api_action import BaseAPIAction
+from tests_e2e.actions.base import ActionResult, ListingActions
+
+
+class APIListingActions(BaseAPIAction, ListingActions):
+    """See apps/listings/controller/listing_controller.py — full CRUD for
+    listings, excluding amenities/search-filters. POST /listings/,
+    PATCH /listings/{id}/status/, GET /listings/{id}/ and others.
+    """
+
+    def create(self, payload: dict) -> ActionResult:
+        return self._post("/listings/", payload)
+
+    def update(self, listing_id: str, payload: dict) -> ActionResult:
+        return self._patch(f"/listings/{listing_id}/", payload)
+
+    def delete(self, listing_id: str) -> ActionResult:
+        return self._delete(f"/listings/{listing_id}/")
+
+    def publish(self, listing_id: str) -> ActionResult:
+        return self._patch(f"/listings/{listing_id}/status/", {"status": "published"})
+
+    def get(self, listing_id: str) -> ActionResult:
+        return self._get(f"/listings/{listing_id}/")
+
+    def list(self, params: dict | None = None) -> ActionResult:
+        return self._get("/listings/", params=params)
+
+    def mine(self) -> ActionResult:
+        return self._get("/listings/mine/")
+
+    def toggle_active(self, listing_id: str) -> ActionResult:
+        return self._post(f"/listings/{listing_id}/toggle-active/")
+
+    def set_amenities(self, listing_id: str, *, amenity_ids: list[str]) -> ActionResult:
+        return self._put(f"/listings/{listing_id}/amenities/", {"amenity_ids": amenity_ids})
+
+    def availability_calendar(self, listing_id: str, *, month: str | None = None) -> ActionResult:
+        params = {"month": month} if month else None
+        return self._get(f"/listings/{listing_id}/availability-calendar/", params=params)
+
+    def listing_bookings(self, listing_id: str) -> ActionResult:
+        return self._get(f"/listings/{listing_id}/bookings/")
+
+    def set_price(self, listing_id: str, *, price: str, valid_from: str) -> ActionResult:
+        """POST /listings/{listing_id}/price/ — falls outside the abstract
+        `ListingActions` contract (there is currently no equivalent in the
+        UI version, but it is required for any booking scenario): the booking
+        service consults `PriceHistory` for a specific check-in date, rather
+        than accessing `Listing.current_price` directly (see
+        `apps/bookings/services/booking_service.py::_calculate_price`)."""
+        return self._post(f"/listings/{listing_id}/price/", {"price": price, "valid_from": valid_from})
+
+    def price_history(self, listing_id: str) -> ActionResult:
+        """GET /listings/{listing_id}/price-history/ — Owner|Admin. Follows the
+        same "outside the abstract contract" logic as `set_price` above."""
+        return self._get(f"/listings/{listing_id}/price-history/")
