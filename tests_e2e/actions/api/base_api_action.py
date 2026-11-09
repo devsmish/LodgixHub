@@ -17,9 +17,8 @@ The Playwright synchronous API must reside in a single, dedicated thread—separ
 from Django/pytest-django—otherwise, access to the database will break.
 
 """
-from __future__ import annotations
 
-from typing import Any
+from __future__ import annotations
 
 from tests_e2e.actions.api.playwright_thread import PlaywrightThread
 from tests_e2e.actions.base import ActionResult
@@ -70,26 +69,36 @@ class BaseAPIAction:
 
     def _get(self, path: str, params: dict | None = None) -> ActionResult:
         headers = self._headers()
-        return self._dispatch(lambda: self._ctx.get(self._url(path), params=params, headers=headers))
+        return self._dispatch(
+            lambda: self._ctx.get(self._url(path), params=params, headers=headers)
+        )
 
     def _post(self, path: str, json_body: dict | None = None) -> ActionResult:
         headers = self._headers()
-        return self._dispatch(lambda: self._ctx.post(self._url(path), data=json_body, headers=headers))
+        return self._dispatch(
+            lambda: self._ctx.post(self._url(path), data=json_body, headers=headers)
+        )
 
     def _post_multipart(self, path: str, multipart: dict) -> ActionResult:
         """For file uploads (Photo), Playwright automatically sets the `multipart/form-data`
         and `boundary` parameters. Do not manually modify the `Content-Type` header, as
         doing so will cause it—along with the `boundary`—to be lost."""
         headers = self._headers()
-        return self._dispatch(lambda: self._ctx.post(self._url(path), multipart=multipart, headers=headers))
+        return self._dispatch(
+            lambda: self._ctx.post(self._url(path), multipart=multipart, headers=headers)
+        )
 
     def _patch(self, path: str, json_body: dict | None = None) -> ActionResult:
         headers = self._headers()
-        return self._dispatch(lambda: self._ctx.patch(self._url(path), data=json_body, headers=headers))
+        return self._dispatch(
+            lambda: self._ctx.patch(self._url(path), data=json_body, headers=headers)
+        )
 
     def _put(self, path: str, json_body: dict | None = None) -> ActionResult:
         headers = self._headers()
-        return self._dispatch(lambda: self._ctx.put(self._url(path), data=json_body, headers=headers))
+        return self._dispatch(
+            lambda: self._ctx.put(self._url(path), data=json_body, headers=headers)
+        )
 
     def _delete(self, path: str) -> ActionResult:
         headers = self._headers()

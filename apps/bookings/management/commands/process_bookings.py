@@ -25,8 +25,8 @@ class Command(BaseCommand):
     """
 
     help = (
-        "Automatic cancellation of overdue pending bookings and transition of confirmed bookings "
-        "to 'completed' status upon the check-out date."
+        "Automatic cancellation of overdue pending bookings and transition of confirmed "
+        "bookings to 'completed' status upon the check-out date."
     )
 
     def handle(self, *args, **options):
@@ -53,12 +53,10 @@ class Command(BaseCommand):
                     booking.cancelled_at = now
                     booking.save(update_fields=["status", "cancelled_at", "updated_at"])
                 count += 1
-            # noqa: BLE001 — A single problematic record shouldn't cause the entire batch to fail.
+            # noqa: BLE001 — A single problematic record shouldn't cause the entire batch to fail
             except Exception as exc:
                 self.stderr.write(
-                    self.style.ERROR(
-                        f"Failed to auto-cancel booking {booking.id}: {exc}"
-                    )
+                    self.style.ERROR(f"Failed to auto-cancel booking {booking.id}: {exc}")
                 )
 
         return count

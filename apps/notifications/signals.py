@@ -83,9 +83,7 @@ def _notify_booking_cancelled_by_tenant(booking):
 def _notify_booking_cancelled_by_landlord(booking):
     """When the owner cancels and is required to provide a reason, this email
     must be an automated apology message."""
-    reason = (
-        booking.cancellation_reason.description if booking.cancellation_reason else ""
-    )
+    reason = booking.cancellation_reason.description if booking.cancellation_reason else ""
     NotificationService.send(
         user=booking.tenant,
         notification_type=NotificationType.BOOKING_CANCELLED,

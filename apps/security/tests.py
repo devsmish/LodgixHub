@@ -54,7 +54,8 @@ class JWTAuthenticationAndMiddlewareTestCase(APITestCase):
 
     def test_01_login_sets_cookie_and_returns_access_token(self):
         """
-        Verify that Login returns the access token in the JSON response and the refresh token in a cookie.
+        Verify that Login returns the access token in
+        the JSON response and the refresh token in a cookie.
         """
         response = self.client.post(
             self.login_url, {"email": self.user.email, "password": self.password}
@@ -87,7 +88,8 @@ class JWTAuthenticationAndMiddlewareTestCase(APITestCase):
         self.assertEqual(response.data["code"], "token_revoked")
 
     def test_03_middleware_silent_refresh(self):
-        """Check that the middleware rotates the token if access has expired but the refresh cookie is still valid."""
+        """Check that the middleware rotates the token if access
+        has expired but the refresh cookie is still valid."""
         refresh = RefreshToken.for_user(self.user)
         refresh["token_version"] = self.user.token_version
 
@@ -165,9 +167,7 @@ class JWTAuthenticationAndMiddlewareTestCase(APITestCase):
         applied during registration."""
         response = self.client.post(
             self.register_url,
-            self._valid_register_payload(
-                password="12345678", password_confirm="12345678"
-            ),
+            self._valid_register_payload(password="12345678", password_confirm="12345678"),
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 

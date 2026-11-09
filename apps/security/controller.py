@@ -43,9 +43,7 @@ class RegisterView(APIView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "auth-register"
 
-    @extend_schema(
-        request=RegisterSerializer, responses={201: RegisterResponseSerializer}
-    )
+    @extend_schema(request=RegisterSerializer, responses={201: RegisterResponseSerializer})
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -91,9 +89,7 @@ class LogoutView(APIView):
     @extend_schema(request=None, responses={200: LogoutResponseSerializer})
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("refresh_token")
-        response = Response(
-            {"detail": "Successfully logged out."}, status=status.HTTP_200_OK
-        )
+        response = Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
         request.user.token_version += 1
         request.user.save(update_fields=["token_version", "updated_at"])
 

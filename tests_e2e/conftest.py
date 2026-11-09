@@ -22,6 +22,7 @@ actual Django development server in a separate thread, backed by a real test dat
 Instead of emulating views in memory, the actions perform actual network requests to
 `127.0.0.1:<port>`.
 """
+
 from __future__ import annotations
 
 import pytest

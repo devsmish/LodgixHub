@@ -16,6 +16,7 @@ process and its confirmation are treated as a "black box," and the passage of
 "N days" is simulated directly, as it would otherwise be impossible to verify
 without manipulating the system clock on a live server.
 """
+
 from __future__ import annotations
 
 from datetime import date, timedelta
@@ -48,7 +49,9 @@ def _confirmed_past_booking(tenant, landlord, *, days_since_checkout: int = 1) -
     which a dispute can be opened (i.e., after check-in, and no more than
     `DISPUTE_OPEN_WINDOW_DAYS` days after check-out). Returns the `booking_id`."""
     listing_id = _published_listing(landlord)
-    created = tenant.bookings.create(booking_payload(listing_id=listing_id, days_ahead=5, nights=3))
+    created = tenant.bookings.create(
+        booking_payload(listing_id=listing_id, days_ahead=5, nights=3)
+    )
     assert created.status == 201, created.data
     booking_id = created.data["id"]
 
@@ -59,7 +62,9 @@ def _confirmed_past_booking(tenant, landlord, *, days_since_checkout: int = 1) -
 
     check_out = date.today() - timedelta(days=days_since_checkout)
     check_in = check_out - timedelta(days=3)
-    Booking.objects.filter(id=booking_id).update(check_in_date=check_in, check_out_date=check_out)
+    Booking.objects.filter(id=booking_id).update(
+        check_in_date=check_in, check_out_date=check_out
+    )
     return booking_id
 
 
@@ -68,7 +73,10 @@ class TestDisputeOpening:
         booking_id = _confirmed_past_booking(tenant, landlord)
 
         result = tenant.disputes.open(
-            booking_id, reason_category="CLEANLINESS", reason="The unit was not cleaned.", claim_amount="20.00"
+            booking_id,
+            reason_category="CLEANLINESS",
+            reason="The unit was not cleaned.",
+            claim_amount="20.00",
         )
 
         assert result.status == 201, result.data
@@ -80,22 +88,32 @@ class TestDisputeOpening:
         rather than by the booking alone."""
         booking_id = _confirmed_past_booking(tenant, landlord)
         tenant_dispute = tenant.disputes.open(
-            booking_id, reason_category="OTHER", reason="Tenant's claim.", claim_amount="10.00"
+            booking_id,
+            reason_category="OTHER",
+            reason="Tenant's claim.",
+            claim_amount="10.00",
         )
         assert tenant_dispute.status == 201, tenant_dispute.data
 
         landlord_dispute = landlord.disputes.open(
-            booking_id, reason_category="DAMAGED_PROPERTY", reason="Landlord's claim.", claim_amount="50.00"
+            booking_id,
+            reason_category="DAMAGED_PROPERTY",
+            reason="Landlord's claim.",
+            claim_amount="50.00",
         )
         assert landlord_dispute.status == 201, landlord_dispute.data
 
-    def test_stranger_cannot_open_dispute_on_someone_elses_booking(self, tenant, landlord, new_actor):
+    def test_stranger_cannot_open_dispute_on_someone_elses_booking(
+        self, tenant, landlord, new_actor
+    ):
         booking_id = _confirmed_past_booking(tenant, landlord)
 
         stranger = new_actor()
         stranger.auth.register(**register_payload(role="tenant", prefix="stranger"))
 
-        result = stranger.disputes.open(booking_id, reason_category="OTHER", reason="Not my booking.")
+        result = stranger.disputes.open(
+            booking_id, reason_category="OTHER", reason="Not my booking."
+        )
 
         assert result.status in (403, 404), result.data
 
@@ -106,7 +124,9 @@ class TestDisputeOpening:
         created = tenant.bookings.create(booking_payload(listing_id=listing_id))
         assert created.status == 201, created.data
 
-        result = tenant.disputes.open(created.data["id"], reason_category="OTHER", reason="Too early.")
+        result = tenant.disputes.open(
+            created.data["id"], reason_category="OTHER", reason="Too early."
+        )
 
         assert result.status == 400, result.data
 
@@ -115,7 +135,9 @@ class TestDisputeOpening:
         first = tenant.disputes.open(booking_id, reason_category="OTHER", reason="First claim.")
         assert first.status == 201, first.data
 
-        second = tenant.disputes.open(booking_id, reason_category="OTHER", reason="Second claim, same opener.")
+        second = tenant.disputes.open(
+            booking_id, reason_category="OTHER", reason="Second claim, same opener."
+        )
 
         assert second.status == 400, second.data
 
@@ -123,7 +145,10 @@ class TestDisputeOpening:
         booking_id = _confirmed_past_booking(tenant, landlord)
 
         result = tenant.disputes.open(
-            booking_id, reason_category="OTHER", reason="Absurd claim.", claim_amount="999999.00"
+            booking_id,
+            reason_category="OTHER",
+            reason="Absurd claim.",
+            claim_amount="999999.00",
         )
 
         assert result.status == 400, result.data
@@ -180,7 +205,9 @@ class TestDisputeVisibility:
 class TestDisputeModeration:
     def test_moderator_can_review_and_resolve_full_lifecycle(self, tenant, landlord, moderator):
         booking_id = _confirmed_past_booking(tenant, landlord)
-        opened = tenant.disputes.open(booking_id, reason_category="OTHER", reason="x", claim_amount="30.00")
+        opened = tenant.disputes.open(
+            booking_id, reason_category="OTHER", reason="x", claim_amount="30.00"
+        )
         dispute_id = opened.data["id"]
 
         review_result = moderator.disputes.review(dispute_id)
@@ -188,7 +215,10 @@ class TestDisputeModeration:
         assert review_result.data["status"] == "under_review"
 
         resolve_result = moderator.disputes.resolve(
-            dispute_id, status="resolved_refunded", resolution_favor="tenant", resolution_amount="30.00"
+            dispute_id,
+            status="resolved_refunded",
+            resolution_favor="tenant",
+            resolution_amount="30.00",
         )
         assert resolve_result.status == 200, resolve_result.data
         assert resolve_result.data["status"] == "resolved_refunded"
@@ -199,7 +229,9 @@ class TestDisputeModeration:
         dispute_id = opened.data["id"]
         moderator.disputes.review(dispute_id)
 
-        result = moderator.disputes.resolve(dispute_id, status="resolved_refunded", resolution_favor="tenant")
+        result = moderator.disputes.resolve(
+            dispute_id, status="resolved_refunded", resolution_favor="tenant"
+        )
 
         assert result.status == 400, result.data
 
@@ -219,7 +251,9 @@ class TestDisputeEvidence:
         opened = tenant.disputes.open(booking_id, reason_category="OTHER", reason="x")
         dispute_id = opened.data["id"]
 
-        upload = tenant.disputes.add_evidence(dispute_id, url="https://example.com/photo.jpg", description="proof")
+        upload = tenant.disputes.add_evidence(
+            dispute_id, url="https://example.com/photo.jpg", description="proof"
+        )
         assert upload.status == 201, upload.data
 
         assert tenant.disputes.list_evidence(dispute_id).status == 200

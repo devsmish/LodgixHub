@@ -20,9 +20,7 @@ from core.models import TimestampedModel
 
 
 class Review(TimestampedModel):
-    booking = models.OneToOneField(
-        Booking, on_delete=models.CASCADE, related_name="review"
-    )
+    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name="review")
     listing = models.ForeignKey(
         "listings.Listing",
         on_delete=models.PROTECT,
@@ -51,9 +49,7 @@ class Review(TimestampedModel):
         default=ReviewStatus.PENDING,
         verbose_name=_("Status"),
     )
-    landlord_response = models.TextField(
-        blank=True, verbose_name=_("Landlord response")
-    )
+    landlord_response = models.TextField(blank=True, verbose_name=_("Landlord response"))
 
     class Meta:
         constraints = [
@@ -92,9 +88,7 @@ class Review(TimestampedModel):
         super().save(*args, **kwargs)
 
     def _derive_listing(self):
-        return self.booking.listing or (
-            self.booking.room.listing if self.booking.room else None
-        )
+        return self.booking.listing or (self.booking.room.listing if self.booking.room else None)
 
     def __str__(self):
         return f"Review {self.id} for booking {self.booking_id} ({self.rating}/5)"

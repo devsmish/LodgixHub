@@ -175,9 +175,7 @@ class RoomModelTestCase(TestCase):
             owner=self.owner,
             title="Grand Hotel Plaza",
             type=ListingType.HOTEL,
-            address=make_address(
-                city="Berlin", street="Alexanderplatz", house_number="1"
-            ),
+            address=make_address(city="Berlin", street="Alexanderplatz", house_number="1"),
             max_guests=16,
             current_price=Decimal("8000.00"),
         )
@@ -261,9 +259,7 @@ class ListingAmenityModelTestCase(TestCase):
 
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
-                ListingAmenity.objects.create(
-                    listing=self.listing, amenity=self.amenity
-                )
+                ListingAmenity.objects.create(listing=self.listing, amenity=self.amenity)
 
     def test_amenity_group_autoset_on_save(self):
         """Amenity.save(): StandardAmenity.get_group_for_slug."""

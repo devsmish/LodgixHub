@@ -44,11 +44,7 @@ class NotificationLog(LogModel):
         # if success=True, error_message must be empty.
         if self.success and self.error_message:
             raise ValidationError(
-                {
-                    "error_message": _(
-                        "error_message must be empty when success is True."
-                    )
-                }
+                {"error_message": _("error_message must be empty when success is True.")}
             )
 
     def save(self, *args, **kwargs):

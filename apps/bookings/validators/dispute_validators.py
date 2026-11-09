@@ -51,9 +51,7 @@ def validate_dispute_timeline(dispute):
     now = timezone.now()
 
     if now < check_in_dt:
-        raise ValidationError(
-            _("Dispute can only be opened after check-in has started.")
-        )
+        raise ValidationError(_("Dispute can only be opened after check-in has started."))
 
     deadline = check_out_dt + timedelta(days=DISPUTE_OPEN_WINDOW_DAYS)
     if now > deadline:
@@ -88,9 +86,7 @@ def validate_dispute_status_transitions(dispute, dispute_model):
         if dispute.status not in allowed:
             raise ValidationError(
                 {
-                    "status": _(
-                        "Invalid dispute status transition: %(old)s -> %(new)s."
-                    )
+                    "status": _("Invalid dispute status transition: %(old)s -> %(new)s.")
                     % {"old": old_status, "new": dispute.status}
                 }
             )
@@ -126,22 +122,11 @@ def validate_dispute_resolution(dispute):
         )
     if not dispute.resolution_favor:
         raise ValidationError(
-            {
-                "resolution_favor": _(
-                    "Resolved disputes must record who the resolution favors."
-                )
-            }
+            {"resolution_favor": _("Resolved disputes must record who the resolution favors.")}
         )
-    if (
-        dispute.status == DisputeStatus.RESOLVED_REFUNDED
-        and dispute.resolution_amount is None
-    ):
+    if dispute.status == DisputeStatus.RESOLVED_REFUNDED and dispute.resolution_amount is None:
         raise ValidationError(
-            {
-                "resolution_amount": _(
-                    "A refunded resolution must specify the resolution amount."
-                )
-            }
+            {"resolution_amount": _("A refunded resolution must specify the resolution amount.")}
         )
 
 

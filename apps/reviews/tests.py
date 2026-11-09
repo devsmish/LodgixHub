@@ -3,7 +3,6 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.utils import timezone
 
@@ -183,9 +182,7 @@ class ReviewModelTestCase(TestCase):
             rating=5,
             comment="First stay was great.",
         )
-        second_booking = make_completed_booking(
-            tenant=self.tenant, listing=self.listing
-        )
+        second_booking = make_completed_booking(tenant=self.tenant, listing=self.listing)
         second_review = Review.objects.create(
             booking=second_booking,
             author=self.tenant,
@@ -208,16 +205,12 @@ class ListingRatingRecalculationTestCase(TestCase):
             owner=self.landlord,
             title="Rating Test Listing",
             type=ListingType.APARTMENT,
-            address=make_address(
-                city="Berlin", street="Alexanderplatz", house_number="1"
-            ),
+            address=make_address(city="Berlin", street="Alexanderplatz", house_number="1"),
             max_guests=4,
             current_price=Decimal("1000.00"),
         )
 
-    def _make_review(
-        self, rating, status=ReviewStatus.PUBLISHED, days_since_checkout=1
-    ):
+    def _make_review(self, rating, status=ReviewStatus.PUBLISHED, days_since_checkout=1):
         booking = make_completed_booking(
             tenant=self.tenant,
             listing=self.listing,

@@ -10,9 +10,7 @@ class PriceHistoryService:
     def __init__(self, repository: PriceHistoryRepository = None):
         self.repository = repository or PriceHistoryRepository()
 
-    def set_price_for_listing(
-        self, *, listing, changed_by, price, valid_from, currency="EUR"
-    ):
+    def set_price_for_listing(self, *, listing, changed_by, price, valid_from, currency="EUR"):
         instance = PriceHistory(
             listing=listing,
             price=price,
@@ -22,9 +20,7 @@ class PriceHistoryService:
         )
         return self._save_or_raise(instance)
 
-    def set_price_for_room(
-        self, *, room, changed_by, price, valid_from, currency="EUR"
-    ):
+    def set_price_for_room(self, *, room, changed_by, price, valid_from, currency="EUR"):
         instance = PriceHistory(
             room=room,
             price=price,

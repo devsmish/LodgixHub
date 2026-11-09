@@ -18,6 +18,7 @@ the same way that the actual `/auth/login/` endpoint would issue one
 claim—without which `CustomJWTAuthentication` returns a 401). The test
 scenarios themselves then proceed to make standard HTTP requests.
 """
+
 from __future__ import annotations
 
 import pytest

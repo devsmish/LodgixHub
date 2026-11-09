@@ -5,6 +5,8 @@ it’s easy to accidentally leave an "admin-only" endpoint set to `IsAuthenticat
 vice versa). That is precisely what is being verified here: one test for each role
 boundary, without attempting to validate the actual content of the aggregations.
 """
+
+
 class TestNotificationLogPermissions:
     def test_notification_logs_require_admin(self, tenant, landlord, moderator, admin_actor):
         """Regression: IsAdmin must check both `is_superuser` and the 'admin' group — both

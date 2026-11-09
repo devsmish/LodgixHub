@@ -48,14 +48,10 @@ class PhotoModelTestCase(TestCase):
             max_guests=2,
             current_price=Decimal("100.00"),
         )
-        self.room = Room.objects.create(
-            listing=self.listing, name="Room 101", max_guests=2
-        )
+        self.room = Room.objects.create(listing=self.listing, name="Room 101", max_guests=2)
 
     def test_photo_valid_listing(self):
-        photo = Photo(
-            listing=self.listing, image=make_test_image(), uploaded_by=self.user
-        )
+        photo = Photo(listing=self.listing, image=make_test_image(), uploaded_by=self.user)
         photo.full_clean()
 
     def test_photo_xor_no_binding_raises(self):
@@ -64,9 +60,7 @@ class PhotoModelTestCase(TestCase):
 
     def test_photo_xor_both_bindings_raises(self):
         with self.assertRaises(ValidationError):
-            Photo(
-                listing=self.listing, room=self.room, image=make_test_image()
-            ).full_clean()
+            Photo(listing=self.listing, room=self.room, image=make_test_image()).full_clean()
 
     def test_default_order_and_is_primary(self):
         photo = Photo.objects.create(

@@ -9,6 +9,7 @@ tests for the authentication contract itself. This covers code paths not exercis
 such as token refresh, logout, handling of invalid credentials, and attempts to register
 with a privileged role.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -49,7 +50,9 @@ class TestRegistration:
         actor = new_actor()
         payload = register_payload(role="tenant")
 
-        result = actor.auth.register(**payload, password_confirm=payload["password"] + "different")
+        result = actor.auth.register(
+            **payload, password_confirm=payload["password"] + "different"
+        )
 
         assert result.status == 400, result.data
 

@@ -13,9 +13,7 @@ class ListingRepository:
 
     @staticmethod
     def get_active_queryset():
-        return Listing.objects.select_related("address", "owner").prefetch_related(
-            "amenities"
-        )
+        return Listing.objects.select_related("address", "owner").prefetch_related("amenities")
 
     @staticmethod
     def get_by_id_any(listing_id):

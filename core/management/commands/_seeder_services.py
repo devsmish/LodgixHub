@@ -60,15 +60,11 @@ class DataSeederService:
         landlords = self._create_landlords(options["landlords"])
         tenants = self._create_tenants(options["tenants"])
 
-        listings = self._create_listings(
-            landlords, options["listings_per_landlord"], amenities
-        )
+        listings = self._create_listings(landlords, options["listings_per_landlord"], amenities)
         self._create_photos(listings)
 
         all_bookable_targets = self._collect_bookable_targets(listings)
-        bookings = self._create_bookings(
-            all_bookable_targets, tenants, cancellation_reasons
-        )
+        bookings = self._create_bookings(all_bookable_targets, tenants, cancellation_reasons)
         self._create_reviews(bookings)
 
         self._create_search_history(tenants, listings)
@@ -172,15 +168,11 @@ class DataSeederService:
                     house_number=f"{random.randint(1, 99)}{random.choice(['', 'a', 'b'])}",
                     postal_code=str(random.randint(10000, 99999)),
                     floor=(
-                        random.randint(0, 8)
-                        if listing_type == ListingType.APARTMENT
-                        else None
+                        random.randint(0, 8) if listing_type == ListingType.APARTMENT else None
                     ),
                 )
 
-                base_price = Decimal(
-                    random.choice([45, 60, 75, 90, 110, 140, 180, 220])
-                )
+                base_price = Decimal(random.choice([45, 60, 75, 90, 110, 140, 180, 220]))
                 deposit_required = random.random() < 0.4
 
                 listing = Listing.objects.create(
@@ -191,9 +183,7 @@ class DataSeederService:
                     address=address,
                     max_guests=random.choice([1, 2, 2, 4, 4, 6]),
                     rooms_count=(
-                        random.randint(1, 4)
-                        if listing_type == ListingType.APARTMENT
-                        else None
+                        random.randint(1, 4) if listing_type == ListingType.APARTMENT else None
                     ),
                     current_price=base_price,
                     rental_type=random.choice([RentalType.DAILY, RentalType.ANY]),
@@ -203,9 +193,7 @@ class DataSeederService:
                         else MealType.NONE
                     ),
                     deposit_required=deposit_required,
-                    deposit_percent=(
-                        random.choice([10, 15, 20]) if deposit_required else 0
-                    ),
+                    deposit_percent=(random.choice([10, 15, 20]) if deposit_required else 0),
                     deposit_refundable=deposit_required and random.random() < 0.7,
                     status=random.choices(
                         [ListingStatus.PUBLISHED, ListingStatus.DRAFT],
@@ -221,9 +209,7 @@ class DataSeederService:
                     changed_by=landlord,
                 )
                 listing.amenities.set(
-                    random.sample(
-                        amenities, k=min(len(amenities), random.randint(3, 8))
-                    )
+                    random.sample(amenities, k=min(len(amenities), random.randint(3, 8)))
                 )
                 listings.append(listing)
 
@@ -267,12 +253,12 @@ class DataSeederService:
 
     def _collect_bookable_targets(self, listings):
         targets = []
-        for l in listings:
-            if l.type == ListingType.APARTMENT:
-                targets.append((l, None))
+        for lst in listings:
+            if lst.type == ListingType.APARTMENT:
+                targets.append((lst, None))
             else:
-                for r in l.rooms.all():
-                    targets.append((l, r))
+                for r in lst.rooms.all():
+                    targets.append((lst, r))
         return targets
 
     def _create_bookings(self, targets, tenants, cancellation_reasons):
@@ -295,9 +281,9 @@ class DataSeederService:
                 check_in_date=past_in,
                 check_out_date=past_out,
                 guests_count=1,
-                total_price=(
-                    listing.current_price * (past_out - past_in).days
-                ).quantize(Decimal("0.01")),
+                total_price=(listing.current_price * (past_out - past_in).days).quantize(
+                    Decimal("0.01")
+                ),
             )
             Booking.objects.bulk_create([completed])
             bookings.append(completed)

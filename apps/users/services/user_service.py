@@ -32,9 +32,7 @@ class UserService:
         target = self.repository.get_by_id(target_user_id)
         if target is None:
             return None
-        if not user_has_completed_booking_with_listing_owner(
-            requesting_user, target_user_id
-        ):
+        if not user_has_completed_booking_with_listing_owner(requesting_user, target_user_id):
             raise PublicProfileNotAccessibleError()
         return target
 

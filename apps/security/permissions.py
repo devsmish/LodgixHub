@@ -58,8 +58,7 @@ class IsAdmin(BasePermission):
             request.user
             and request.user.is_authenticated
             and (
-                request.user.is_superuser
-                or GROUP_ADMIN in _get_cached_group_names(request.user)
+                request.user.is_superuser or GROUP_ADMIN in _get_cached_group_names(request.user)
             )
         )
 

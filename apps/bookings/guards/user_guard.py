@@ -8,9 +8,7 @@ COMPLETED_OR_ACTIVE_STATUSES = (*ACTIVE_BOOKING_STATUSES, BookingStatus.COMPLETE
 
 
 def has_active_bookings_as_tenant(user) -> bool:
-    return Booking.objects.filter(
-        tenant=user, status__in=ACTIVE_BOOKING_STATUSES
-    ).exists()
+    return Booking.objects.filter(tenant=user, status__in=ACTIVE_BOOKING_STATUSES).exists()
 
 
 def has_active_bookings_as_landlord(user) -> bool:

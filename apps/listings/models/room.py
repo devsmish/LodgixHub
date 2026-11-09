@@ -25,9 +25,7 @@ class Room(BaseModel, TimePolicy):
         default=RoomType.SINGLE,
         verbose_name=_("Room Type"),
     )
-    name = models.CharField(
-        max_length=100, blank=True, verbose_name=_("Room Name/Number")
-    )
+    name = models.CharField(max_length=100, blank=True, verbose_name=_("Room Name/Number"))
 
     max_guests = models.PositiveIntegerField(
         choices=MaxGuestsChoices, verbose_name=_("Maximum Guests")
@@ -63,11 +61,7 @@ class Room(BaseModel, TimePolicy):
         """Rooms can only be linked to a hotel or hostel, not an apartment."""
         if self.listing_id and self.listing.type == ListingType.APARTMENT:
             raise ValidationError(
-                {
-                    "listing": _(
-                        "Cannot attach individual rooms to an APARTMENT listing type."
-                    )
-                }
+                {"listing": _("Cannot attach individual rooms to an APARTMENT listing type.")}
             )
 
     def save(self, *args, **kwargs):

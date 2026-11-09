@@ -11,18 +11,21 @@ Settings for the test suite itself (not to be confused with Django’s `config.s
     only the Actions factory injected in `conftest.py` needs to be swapped.
 
 This is controlled via an environment variable rather than a hardcoded constant, allowing the
-same test suite to be run in a CI environment in either mode without requiring any file modifications.
+same test suite to be run in a CI environment in either mode without requiring any file
+modifications.
 
     E2E_TEST_MODE=ui pytest tests_e2e/
 """
+
 import os
 
 TEST_MODE = os.environ.get("E2E_TEST_MODE", "api")
 
-# Если TEST_MODE="api" и BASE_URL не задан явно — используется live_server от
-# pytest-django (реальный Django dev-сервер, поднятый на время сессии тестов).
-# Если задать E2E_BASE_URL явно — можно гонять этот же сьют как чёрный ящик
-# против staging/прод-окружения, вообще не трогая тестовую БД проекта.
+# If TEST_MODE="api" and BASE_URL is not explicitly set, the `live_server` fixture from
+# `pytest-django` is used (a real Django development server, spun up for the duration of
+# the test session). If E2E_BASE_URL is explicitly set, you can run this same suite as a
+# black-box test against a staging or production environment, without touching the
+# project's test database at all.
 BASE_URL = os.environ.get("E2E_BASE_URL")
 
 API_PREFIX = "/api/v1"

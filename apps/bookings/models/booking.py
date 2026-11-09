@@ -28,9 +28,7 @@ class Booking(TimestampedModel):
     listing = models.ForeignKey(
         "listings.Listing", on_delete=models.CASCADE, null=True, blank=True
     )
-    room = models.ForeignKey(
-        "listings.Room", on_delete=models.CASCADE, null=True, blank=True
-    )
+    room = models.ForeignKey("listings.Room", on_delete=models.CASCADE, null=True, blank=True)
 
     status = models.CharField(
         max_length=30, choices=BookingStatus, default=BookingStatus.PENDING
@@ -45,9 +43,7 @@ class Booking(TimestampedModel):
     )
     total_price = models.DecimalField(max_digits=12, decimal_places=2)
     deposit_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    deposit_refunded = models.BooleanField(
-        default=False, verbose_name=_("Deposit refunded")
-    )
+    deposit_refunded = models.BooleanField(default=False, verbose_name=_("Deposit refunded"))
 
     cancellation_reason = models.ForeignKey(
         CancellationReason,
@@ -58,12 +54,8 @@ class Booking(TimestampedModel):
         verbose_name=_("Cancellation reason"),
     )
 
-    confirmed_at = models.DateTimeField(
-        null=True, blank=True, verbose_name=_("Confirmed at")
-    )
-    cancelled_at = models.DateTimeField(
-        null=True, blank=True, verbose_name=_("Cancelled at")
-    )
+    confirmed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Confirmed at"))
+    cancelled_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Cancelled at"))
     cancelled_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

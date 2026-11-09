@@ -84,17 +84,13 @@ class Listing(BaseModel, TimePolicy):
         verbose_name=_("Meal Type"),
     )
 
-    deposit_required = models.BooleanField(
-        default=False, verbose_name=_("Deposit Required")
-    )
+    deposit_required = models.BooleanField(default=False, verbose_name=_("Deposit Required"))
     deposit_percent = models.PositiveSmallIntegerField(
         default=0,
         validators=[MinValueValidator(0), MaxValueValidator(100)],
         verbose_name=_("Deposit Percent"),
     )
-    deposit_refundable = models.BooleanField(
-        default=False, verbose_name=_("Deposit Refundable")
-    )
+    deposit_refundable = models.BooleanField(default=False, verbose_name=_("Deposit Refundable"))
 
     views_count = models.PositiveIntegerField(default=0, verbose_name=_("Views Count"))
     rating_avg = models.DecimalField(
@@ -127,8 +123,7 @@ class Listing(BaseModel, TimePolicy):
                 condition=models.Q(max_guests__gte=1), name="listing_max_guests_minimum"
             ),
             models.CheckConstraint(
-                condition=models.Q(deposit_percent__gte=0)
-                & models.Q(deposit_percent__lte=100),
+                condition=models.Q(deposit_percent__gte=0) & models.Q(deposit_percent__lte=100),
                 name="listing_deposit_percent_range",
             ),
         ]
