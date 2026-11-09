@@ -1,7 +1,7 @@
 """
 pytest/pytest-django version, core/tests.py.
 
-Stub models are defined at the module level (just as in the unittest version) — this is important:
+Stub models are defined at the module level(just as in the unittest version) — this is important:
 they must be registered in the Django app registry during the module import phase, before the
 registry is "sealed." The corresponding database tables are created and dropped once per module
 using `django_db_blocker`. While the standard `@pytest.mark.django_db` decorator wraps each test

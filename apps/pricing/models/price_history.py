@@ -32,9 +32,7 @@ class PriceHistory(LogModel):
     listing = models.ForeignKey(
         "listings.Listing", on_delete=models.CASCADE, null=True, blank=True
     )
-    room = models.ForeignKey(
-        "listings.Room", on_delete=models.CASCADE, null=True, blank=True
-    )
+    room = models.ForeignKey("listings.Room", on_delete=models.CASCADE, null=True, blank=True)
 
     price = models.DecimalField(
         max_digits=12,
@@ -58,9 +56,7 @@ class PriceHistory(LogModel):
         ordering = ["-valid_from", "-created_at"]
         indexes = [
             models.Index(fields=["valid_from"], name="idx_price_date"),
-            models.Index(
-                fields=["listing", "valid_from"], name="idx_listing_price_date"
-            ),
+            models.Index(fields=["listing", "valid_from"], name="idx_listing_price_date"),
             models.Index(fields=["room", "valid_from"], name="idx_room_price_date"),
         ]
         constraints = [
@@ -80,9 +76,7 @@ class PriceHistory(LogModel):
         today = timezone.now().date()
 
         if self.valid_from < today:
-            raise ValidationError(
-                {"valid_from": _("You cannot set prices for past dates.")}
-            )
+            raise ValidationError({"valid_from": _("You cannot set prices for past dates.")})
 
         is_first_price = not PriceHistory.objects.filter(
             listing=self.listing, room=self.room

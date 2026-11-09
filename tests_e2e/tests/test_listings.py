@@ -9,6 +9,7 @@ Linking of amenities (PUT .../amenities/), availability calendar, owner bookings
 and price history. Of particular note is the asymmetry of permissions for `amenities`: strictly
 `IsOwner`, with no `IsModerator`/`IsAdmin` access (unlike the `update` action).
 """
+
 from __future__ import annotations
 
 from datetime import date
@@ -25,7 +26,9 @@ def _published_listing(landlord, **overrides) -> str:
     assert result.ok, f"listing creation failed: {result.status} {result.data}"
     listing_id = result.data["id"]
 
-    price_result = landlord.listings.set_price(listing_id, price="100.00", valid_from=date.today().isoformat())
+    price_result = landlord.listings.set_price(
+        listing_id, price="100.00", valid_from=date.today().isoformat()
+    )
     assert price_result.ok, f"set_price failed: {price_result.status} {price_result.data}"
 
     publish_result = landlord.listings.publish(listing_id)
@@ -139,7 +142,11 @@ class TestListingVisibilityAndListing:
         result = guest.listings.list()
 
         assert result.status == 200, result.data
-        ids = [item["id"] for item in result.data["results"]] if "results" in result.data else [item["id"] for item in result.data]
+        ids = (
+            [item["id"] for item in result.data["results"]]
+            if "results" in result.data
+            else [item["id"] for item in result.data]
+        )
         assert published.data["id"] in ids
         assert draft.data["id"] not in ids
 
@@ -151,7 +158,11 @@ class TestListingVisibilityAndListing:
         result = landlord.listings.mine()
 
         assert result.status == 200, result.data
-        ids = [item["id"] for item in result.data["results"]] if "results" in result.data else [item["id"] for item in result.data]
+        ids = (
+            [item["id"] for item in result.data["results"]]
+            if "results" in result.data
+            else [item["id"] for item in result.data]
+        )
         assert draft.data["id"] in ids
         assert published.data["id"] in ids
 
@@ -171,7 +182,11 @@ class TestListingVisibilityAndListing:
 
         guest = new_actor()
         result = guest.listings.list()
-        ids = [item["id"] for item in result.data["results"]] if "results" in result.data else [item["id"] for item in result.data]
+        ids = (
+            [item["id"] for item in result.data["results"]]
+            if "results" in result.data
+            else [item["id"] for item in result.data]
+        )
         assert listing_id not in ids
 
 
@@ -222,7 +237,9 @@ class TestAvailabilityCalendar:
         listing_id = _published_listing(landlord)
         guest = new_actor()
 
-        result = guest.listings.availability_calendar(listing_id, month=date.today().strftime("%Y-%m"))
+        result = guest.listings.availability_calendar(
+            listing_id, month=date.today().strftime("%Y-%m")
+        )
 
         assert result.status == 200, result.data
 

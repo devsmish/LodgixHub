@@ -1,5 +1,5 @@
 [tool.black]
-line-length = 88
+line-length = 97
 target-version = ['py311']
 include = '\.pyi?$'
 exclude = '''
@@ -19,6 +19,6 @@ exclude = '''
 
 [tool.isort]
 profile = "black"
-line_length = 88
+line_length = 97
 multi_line_output = 3
 skip = ["migrations", ".venv", "venv"]

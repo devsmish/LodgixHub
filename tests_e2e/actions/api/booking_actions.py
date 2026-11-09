@@ -29,7 +29,9 @@ class APIBookingActions(BaseAPIAction, BookingActions):
     def reject(self, booking_id: str) -> ActionResult:
         return self._post(f"/bookings/{booking_id}/reject/")
 
-    def cancel(self, booking_id: str, *, cancellation_reason_id: str | None = None) -> ActionResult:
+    def cancel(
+        self, booking_id: str, *, cancellation_reason_id: str | None = None
+    ) -> ActionResult:
         body = {}
         if cancellation_reason_id:
             body["cancellation_reason_id"] = cancellation_reason_id

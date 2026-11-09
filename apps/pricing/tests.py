@@ -102,9 +102,7 @@ class PriceHistoryTest(TestCase):
             history.full_clean()
 
     def test_xor_listing_or_room_constraint(self):
-        history = PriceHistory(
-            price=100, valid_from=self.today, changed_by=self.landlord
-        )
+        history = PriceHistory(price=100, valid_from=self.today, changed_by=self.landlord)
         with self.assertRaises(ValidationError):
             history.full_clean()
 
@@ -174,9 +172,7 @@ class PriceHistoryTest(TestCase):
         )
 
         far_future = self.today + timedelta(days=2)
-        effective = PriceHistory.objects.effective_on(
-            far_future, listing=self.listing
-        ).first()
+        effective = PriceHistory.objects.effective_on(far_future, listing=self.listing).first()
 
         self.assertEqual(effective.price, Decimal("100.00"))
 
@@ -201,9 +197,7 @@ class PriceHistoryTest(TestCase):
             changed_by=self.landlord,
         )
 
-        effective = PriceHistory.objects.effective_on(
-            future_date, listing=self.listing
-        ).first()
+        effective = PriceHistory.objects.effective_on(future_date, listing=self.listing).first()
 
         self.assertEqual(effective.pk, corrected.pk)
         self.assertEqual(effective.price, Decimal("140.00"))
@@ -217,9 +211,7 @@ class PriceHistoryTest(TestCase):
             max_guests=2,
             current_price=Decimal("50.00"),
         )
-        effective = PriceHistory.objects.effective_on(
-            self.today, listing=future_listing
-        ).first()
+        effective = PriceHistory.objects.effective_on(self.today, listing=future_listing).first()
         self.assertIsNone(effective)
 
 

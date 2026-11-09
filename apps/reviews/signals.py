@@ -10,9 +10,9 @@ def recalculate_listing_rating(listing):
     from apps.listings.models import Listing
     from apps.reviews.models import Review
 
-    aggregate = Review.objects.filter(
-        listing=listing, status=ReviewStatus.PUBLISHED
-    ).aggregate(avg=Avg("rating"), count=Count("id"))
+    aggregate = Review.objects.filter(listing=listing, status=ReviewStatus.PUBLISHED).aggregate(
+        avg=Avg("rating"), count=Count("id")
+    )
 
     Listing.all_objects.filter(pk=listing.pk).update(
         rating_avg=aggregate["avg"] or 0,

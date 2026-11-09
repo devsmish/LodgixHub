@@ -54,14 +54,13 @@ class RoomService:
 
     @staticmethod
     def _save_or_raise(room):
-        """Translates a Django ValidationError into a proper DRF response (400) instead of a 500."""
+        """Translates a Django ValidationError into
+        a proper DRF response (400) instead of a 500."""
         try:
             room.save()
         except DjangoValidationError as exc:
             detail = (
-                exc.message_dict
-                if hasattr(exc, "message_dict")
-                else {"detail": exc.messages}
+                exc.message_dict if hasattr(exc, "message_dict") else {"detail": exc.messages}
             )
             raise DRFValidationError(detail) from exc
         return room

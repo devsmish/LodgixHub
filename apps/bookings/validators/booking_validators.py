@@ -14,22 +14,16 @@ from apps.listings.choices import RentalType
 def validate_booking_target(listing, room):
     """Verifies that only one item is selected: an ad or a room."""
     if bool(listing) == bool(room):
-        raise ValidationError(
-            _("Please select either a listing or a room (exactly one).")
-        )
+        raise ValidationError(_("Please select either a listing or a room (exactly one)."))
 
 
 def validate_booking_dates_basic(check_in_date, check_out_date):
     """Basic validation of dates for logical consistency and past tense."""
     if check_in_date >= check_out_date:
-        raise ValidationError(
-            {"check_out_date": _("Check-out date must be after check-in.")}
-        )
+        raise ValidationError({"check_out_date": _("Check-out date must be after check-in.")})
 
     if check_in_date < timezone.now().date():
-        raise ValidationError(
-            {"check_in_date": _("Check-in date cannot be in the past.")}
-        )
+        raise ValidationError({"check_in_date": _("Check-in date cannot be in the past.")})
 
 
 def validate_booking_duration(booking):
@@ -37,29 +31,17 @@ def validate_booking_duration(booking):
     duration_days = (booking.check_out_date - booking.check_in_date).days
 
     if duration_days > MAX_BOOKING_DURATION_DAYS:
-        raise ValidationError(
-            {"check_out_date": _("Booking duration cannot exceed 1 year.")}
-        )
+        raise ValidationError({"check_out_date": _("Booking duration cannot exceed 1 year.")})
 
     listing = booking.listing if booking.listing else booking.room.listing
     if not listing:
         return
 
-    if (
-        listing.rental_type == RentalType.DAILY
-        and duration_days > DAILY_RENTAL_MAX_DAYS
-    ):
+    if listing.rental_type == RentalType.DAILY and duration_days > DAILY_RENTAL_MAX_DAYS:
         raise ValidationError(
-            {
-                "check_out_date": _(
-                    f"Daily rentals cannot exceed {DAILY_RENTAL_MAX_DAYS} days."
-                )
-            }
+            {"check_out_date": _(f"Daily rentals cannot exceed {DAILY_RENTAL_MAX_DAYS} days.")}
         )
-    elif (
-        listing.rental_type == RentalType.LONG_TERM
-        and duration_days < LONG_TERM_MIN_DAYS
-    ):
+    elif listing.rental_type == RentalType.LONG_TERM and duration_days < LONG_TERM_MIN_DAYS:
         raise ValidationError(
             {
                 "check_out_date": _(

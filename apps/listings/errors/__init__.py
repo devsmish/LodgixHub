@@ -16,13 +16,17 @@ class ListingStatusTransitionNotAllowedError(APIException):
 
 class ListingHasActiveBookingsError(APIException):
     status_code = status.HTTP_409_CONFLICT
-    default_detail = "The listing cannot be deleted: there is a booking with a status of pending/confirmed."
+    default_detail = (
+        "The listing cannot be deleted: there is a booking with a status of pending/confirmed."
+    )
     default_code = "listing_has_active_bookings"
 
 
 class RoomHasActiveBookingsError(APIException):
     status_code = status.HTTP_409_CONFLICT
-    default_detail = "The room cannot be deleted: there is a booking with a status of pending/confirmed."
+    default_detail = (
+        "The room cannot be deleted: there is a booking with a status of pending/confirmed."
+    )
     default_code = "room_has_active_bookings"
 
 

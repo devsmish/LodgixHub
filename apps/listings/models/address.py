@@ -9,9 +9,7 @@ from core.models import TimestampedModel
 
 class Address(TimestampedModel):
 
-    country = models.CharField(
-        max_length=100, default="Germany", verbose_name=_("Country")
-    )
+    country = models.CharField(max_length=100, default="Germany", verbose_name=_("Country"))
     region = models.CharField(max_length=100, verbose_name=_("Region (Bundesland)"))
     city = models.CharField(max_length=100, verbose_name=_("City"))
     district = models.CharField(

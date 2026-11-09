@@ -80,9 +80,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     token_version = models.PositiveIntegerField(default=0, verbose_name="Token version")
 
     # Lock Audit
-    blocked_at = models.DateTimeField(
-        null=True, blank=True, verbose_name="Blocking date"
-    )
+    blocked_at = models.DateTimeField(null=True, blank=True, verbose_name="Blocking date")
     blocked_reason = models.CharField(
         max_length=50,
         choices=BlockedReason,
@@ -100,17 +98,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
 
     # Settings and consents
-    notify_by_email = models.BooleanField(
-        default=True, verbose_name="Email notifications"
-    )
+    notify_by_email = models.BooleanField(default=True, verbose_name="Email notifications")
     terms_accepted_at = models.DateTimeField(
         null=True, blank=True, verbose_name="Date of adoption of the agreement"
     )
 
     # Lifecycle timestamps
-    date_joined = models.DateTimeField(
-        default=timezone.now, verbose_name="Registration date"
-    )
+    date_joined = models.DateTimeField(default=timezone.now, verbose_name="Registration date")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Last updated")
     deleted_at = models.DateTimeField(
         null=True, blank=True, verbose_name="Logical deletion date"
@@ -139,24 +133,15 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.birth_date:
             today = timezone.localdate()
             if self.birth_date >= today:
-                raise ValidationError(
-                    {"birth_date": "The date of birth must be in the past."}
-                )
+                raise ValidationError({"birth_date": "The date of birth must be in the past."})
             age = (
                 today.year
                 - self.birth_date.year
-                - (
-                    (today.month, today.day)
-                    < (self.birth_date.month, self.birth_date.day)
-                )
+                - ((today.month, today.day) < (self.birth_date.month, self.birth_date.day))
             )
             if age < MIN_AGE_YEARS:
                 raise ValidationError(
-                    {
-                        "birth_date": (
-                            f"The user must be at least {MIN_AGE_YEARS} years old."
-                        )
-                    }
+                    {"birth_date": (f"The user must be at least {MIN_AGE_YEARS} years old.")}
                 )
 
     def save(self, *args, **kwargs):

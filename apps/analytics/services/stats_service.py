@@ -42,9 +42,9 @@ class AdminDashboardStatsService:
             row["status"]: row["count"]
             for row in Booking.objects.values("status").annotate(count=Count("id"))
         }
-        completed_revenue = Booking.objects.filter(
-            status=BookingStatus.COMPLETED
-        ).aggregate(total=Sum("total_price"))["total"] or Decimal("0.00")
+        completed_revenue = Booking.objects.filter(status=BookingStatus.COMPLETED).aggregate(
+            total=Sum("total_price")
+        )["total"] or Decimal("0.00")
 
         return {
             "total_users": User.objects.count(),

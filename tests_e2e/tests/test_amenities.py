@@ -19,6 +19,7 @@ than an "invalid choice" error);
 an invalid format is rejected by a regex;
 access permissions (restricted to admins) remain intact following a field refactor.
 """
+
 from __future__ import annotations
 
 import random

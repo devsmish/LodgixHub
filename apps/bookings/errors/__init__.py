@@ -43,7 +43,5 @@ class CancellationReasonRequiredError(APIException):
 def convert_django_validation_error(exc: DjangoValidationError) -> DRFValidationError:
     """Translates `django.core.exceptions.ValidationError` into a
     proper DRF response (400) instead of an unhandled 500 error."""
-    detail = (
-        exc.message_dict if hasattr(exc, "message_dict") else {"detail": exc.messages}
-    )
+    detail = exc.message_dict if hasattr(exc, "message_dict") else {"detail": exc.messages}
     return DRFValidationError(detail)

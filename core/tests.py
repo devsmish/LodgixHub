@@ -93,9 +93,7 @@ class CoreModelsTestCase(TransactionTestCase):
             self.assertIsNotNone(obj.deleted_at)
             self.assertGreater(obj.updated_at, original_updated_at)
 
-        after_delete = {
-            pk: TestBaseModel.all_objects.get(pk=pk).updated_at for pk in original
-        }
+        after_delete = {pk: TestBaseModel.all_objects.get(pk=pk).updated_at for pk in original}
         TestBaseModel.all_objects.all().restore()
         for pk, updated_at_after_delete in after_delete.items():
             obj = TestBaseModel.objects.get(pk=pk)

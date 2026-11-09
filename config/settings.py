@@ -184,9 +184,7 @@ DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "apps.security.authentication.CustomJWTAuthentication",
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": ("apps.security.authentication.CustomJWTAuthentication",),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_THROTTLE_CLASSES": ("rest_framework.throttling.ScopedRateThrottle",),
     "DEFAULT_THROTTLE_RATES": {
@@ -322,9 +320,7 @@ CACHES = {
 
 # 2. Redis broker for Celery (DB 0)
 CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", default="redis://127.0.0.1:6379/0")
-CELERY_RESULT_BACKEND = env.str(
-    "CELERY_RESULT_BACKEND", default="redis://127.0.0.1:6379/0"
-)
+CELERY_RESULT_BACKEND = env.str("CELERY_RESULT_BACKEND", default="redis://127.0.0.1:6379/0")
 CELERY_TIMEZONE = "UTC"
 CELERY_ENABLE_UTC = True
 

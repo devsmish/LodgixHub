@@ -38,9 +38,7 @@ class Photo(TimestampedModel):
         validators=[validate_image],
         verbose_name=_("Image"),
     )
-    caption = models.CharField(
-        max_length=255, blank=True, null=True, verbose_name=_("Caption")
-    )
+    caption = models.CharField(max_length=255, blank=True, null=True, verbose_name=_("Caption"))
     is_primary = models.BooleanField(default=False, verbose_name=_("Is primary"))
     order = models.PositiveIntegerField(
         default=0,
@@ -51,9 +49,7 @@ class Photo(TimestampedModel):
     listing = models.ForeignKey(
         "listings.Listing", on_delete=models.CASCADE, null=True, blank=True
     )
-    room = models.ForeignKey(
-        "listings.Room", on_delete=models.CASCADE, null=True, blank=True
-    )
+    room = models.ForeignKey("listings.Room", on_delete=models.CASCADE, null=True, blank=True)
 
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -88,9 +84,7 @@ class Photo(TimestampedModel):
             )
 
         if self._state.adding:
-            target_filter = (
-                {"listing": self.listing} if self.listing else {"room": self.room}
-            )
+            target_filter = {"listing": self.listing} if self.listing else {"room": self.room}
             existing_count = Photo.objects.filter(**target_filter).count()
             if existing_count >= MAX_PHOTOS_PER_LISTING:
                 raise ValidationError(

@@ -4,6 +4,7 @@ which avoids the need to create "magic" dictionaries in every single
 test and ensures that if a DTO contract (in `apps/*/dto/*.py`) changes,
 the necessary updates can be made in one place.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -50,7 +51,14 @@ def listing_payload(**overrides) -> dict:
     return payload
 
 
-def booking_payload(*, listing_id: str, days_ahead: int = 7, nights: int = 3, guests_count: int = 2, **overrides) -> dict:
+def booking_payload(
+    *,
+    listing_id: str,
+    days_ahead: int = 7,
+    nights: int = 3,
+    guests_count: int = 2,
+    **overrides,
+) -> dict:
     check_in = date.today() + timedelta(days=days_ahead)
     check_out = check_in + timedelta(days=nights)
     payload = {

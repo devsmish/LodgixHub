@@ -72,9 +72,7 @@ class NotificationLogModelTestCase(TestCase):
         self.assertIsNone(log.user)
 
     def test_invalid_notification_type_raises(self):
-        log = NotificationLog(
-            user=self.user, notification_type="NOT_A_REAL_TYPE", success=True
-        )
+        log = NotificationLog(user=self.user, notification_type="NOT_A_REAL_TYPE", success=True)
         with self.assertRaises(ValidationError):
             log.full_clean()
 

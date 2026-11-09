@@ -25,11 +25,7 @@ class GroupListView(mixins.ListModelMixin, viewsets.GenericViewSet):
     permission_classes = [IsAdmin]
 
     @extend_schema(
-        responses={
-            200: OpenApiResponse(
-                response={"type": "array", "items": {"type": "string"}}
-            )
-        }
+        responses={200: OpenApiResponse(response={"type": "array", "items": {"type": "string"}})}
     )
     def list(self, request, *args, **kwargs):
         names = list(self.get_queryset().values_list("name", flat=True))
@@ -66,9 +62,7 @@ class UserViewSet(
     def list(self, request, *args, **kwargs):
         queryset = self.service.list_users(request.query_params)
         page = self.paginate_queryset(queryset)
-        serializer = self.get_serializer(
-            page if page is not None else queryset, many=True
-        )
+        serializer = self.get_serializer(page if page is not None else queryset, many=True)
         if page is not None:
             return self.get_paginated_response(serializer.data)
         return Response(serializer.data)

@@ -8,12 +8,17 @@ class APIReviewActions(BaseAPIAction, ReviewActions):
     """See apps/reviews/controller/review_controller.py — payload."""
 
     def create(self, *, booking_id: str, rating: int, comment: str = "") -> ActionResult:
-        return self._post("/reviews/", {"booking_id": booking_id, "rating": rating, "comment": comment})
+        return self._post(
+            "/reviews/",
+            {"booking_id": booking_id, "rating": rating, "comment": comment},
+        )
 
     def get(self, review_id: str) -> ActionResult:
         return self._get(f"/reviews/{review_id}/")
 
-    def update(self, review_id: str, *, rating: int | None = None, comment: str | None = None) -> ActionResult:
+    def update(
+        self, review_id: str, *, rating: int | None = None, comment: str | None = None
+    ) -> ActionResult:
         body = {}
         if rating is not None:
             body["rating"] = rating

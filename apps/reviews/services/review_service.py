@@ -88,18 +88,16 @@ class ReviewService:
     @transaction.atomic
     def update_status(self, *, review, new_status):
         review.status = new_status
-        self._save_bypassing_author_window(
-            review, update_fields=["status", "updated_at"]
-        )
+        self._save_bypassing_author_window(review, update_fields=["status", "updated_at"])
         return review
 
     @staticmethod
     def _save_bypassing_author_window(review, update_fields):
-        """The status and landlord_response fields are updated by a moderator or the owner, not the author;
-        the 7-day editing window applies only to the author's changes
-        (rating/comment) and should not block moderation long
-        after checkout. We call 'django.db.models.Model.save()' directly,
-        bypassing 'Review.save()'— but we avoid 'queryset.update()' so that the 'post_save' signal
-        triggering the recalculation of 'Listing.rating_avg' and 'reviews_count' still fires.
+        """The status and landlord_response fields are updated by a moderator or the owner,
+        not the author; the 7-day editing window applies only to the author's changes
+        (rating/comment) and should not block moderation long after checkout. We call
+        'django.db.models.Model.save()' directly, bypassing 'Review.save()'— but we avoid
+        'queryset.update()' so that the 'post_save' signal triggering the recalculation of
+        'Listing.rating_avg' and 'reviews_count' still fires.
         """
         django_models.Model.save(review, update_fields=update_fields)

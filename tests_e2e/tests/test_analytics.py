@@ -5,6 +5,7 @@ leave an "admin-only" endpoint accessible to any authenticated user, or vice ver
 precisely what is being verified here—one test for each role boundary, without attempting to
 validate the actual content of the aggregations.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -39,7 +40,9 @@ class TestAnalyticsPermissions:
 
         assert result.status in (401, 403), result.data
 
-    def test_admin_dashboard_stats_requires_admin(self, tenant, landlord, moderator, admin_actor):
+    def test_admin_dashboard_stats_requires_admin(
+        self, tenant, landlord, moderator, admin_actor
+    ):
         assert tenant.analytics.admin_dashboard_stats().status == 403
         assert landlord.analytics.admin_dashboard_stats().status == 403
         assert moderator.analytics.admin_dashboard_stats().status == 403

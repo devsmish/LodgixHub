@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.test import APIClient
 
 from apps.analytics.constants import VIEW_DEDUP_WINDOW_MINUTES
-from apps.analytics.models import SearchHistory, ViewHistory
+from apps.analytics.models import SearchHistory
 from apps.analytics.services.search_history import SearchHistoryService
 from apps.analytics.services.view_history import ViewHistoryService
 from apps.listings.models import Address, Listing
@@ -20,9 +20,7 @@ User = get_user_model()
 
 class AnalyticsServiceTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            email="user@example.com", password="password123"
-        )
+        self.user = User.objects.create_user(email="user@example.com", password="password123")
         self.address = Address.objects.create(
             country="Germany",
             region="Bavaria",
@@ -61,14 +59,15 @@ class AnalyticsServiceTestCase(TestCase):
         """Verification that repeated views within the deduplication window are not counted."""
         service = ViewHistoryService()
 
-        # create the first record in the past by spoofing the system time at the moment `.record_view()` is called.
+        # create the first record in the past by spoofing
+        # the system time at the moment `.record_view()` is called
         old_time = timezone.now() - timedelta(minutes=VIEW_DEDUP_WINDOW_MINUTES + 1)
         with patch("django.utils.timezone.now", return_value=old_time):
             view1 = service.record_view(listing=self.listing, user=self.user)
 
         self.assertIsNotNone(view1)
 
-        # A re-scan in real time (outside the deduplication window) must be successfully recorded.
+        # A re-scan in real time (outside the deduplication window) must be successfully recorded
         view2 = service.record_view(listing=self.listing, user=self.user)
         self.assertIsNotNone(view2)
 
@@ -76,9 +75,7 @@ class AnalyticsServiceTestCase(TestCase):
 class AnalyticsAPITestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            email="user@example.com", password="password123"
-        )
+        self.user = User.objects.create_user(email="user@example.com", password="password123")
         self.admin_user = User.objects.create_superuser(
             email="admin@example.com", password="adminpassword", is_staff=True
         )

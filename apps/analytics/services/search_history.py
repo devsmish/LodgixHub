@@ -11,9 +11,7 @@ class SearchHistoryService:
         self.repository = repository or SearchHistoryRepository()
 
     def record_search(self, *, user, keyword: str, results_count: int | None = None):
-        dto = SearchHistoryCreateDTO(
-            data={"keyword": keyword, "results_count": results_count}
-        )
+        dto = SearchHistoryCreateDTO(data={"keyword": keyword, "results_count": results_count})
         dto.is_valid(raise_exception=True)
         normalized_keyword = dto.validated_data["keyword"].lower()
 

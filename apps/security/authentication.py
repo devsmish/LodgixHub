@@ -6,10 +6,10 @@ class CustomJWTAuthentication(JWTAuthentication):
     """
     A custom authentication class for DRF.
 
-    In addition to the standard verification of the JWT signature and expiration, this layer extracts
-    the 'token_version' from the token payload and compares it against the current value in the database.
-    If an admin changes the version in the database (or a user changes their password), the token
-    is instantly invalidated across all devices.
+    In addition to the standard verification of the JWT signature and expiration, this layer
+    extracts the 'token_version' from the token payload and compares it against the current
+    value in the database. If an admin changes the version in the database (or a user changes
+    their password), the token is instantly invalidated across all devices.
     """
 
     def get_user(self, validated_token):

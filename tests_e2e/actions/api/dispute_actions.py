@@ -11,10 +11,21 @@ class APIDisputeActions(BaseAPIAction, DisputeActions):
     encompasses the widest range of visibility and moderation scenarios.
     """
 
-    def open(self, booking_id: str, *, reason_category: str, reason: str, claim_amount: str = "0.00") -> ActionResult:
+    def open(
+        self,
+        booking_id: str,
+        *,
+        reason_category: str,
+        reason: str,
+        claim_amount: str = "0.00",
+    ) -> ActionResult:
         return self._post(
             f"/bookings/{booking_id}/disputes/",
-            {"reason_category": reason_category, "reason": reason, "claim_amount": claim_amount},
+            {
+                "reason_category": reason_category,
+                "reason": reason,
+                "claim_amount": claim_amount,
+            },
         )
 
     def list_for_booking(self, booking_id: str) -> ActionResult:
@@ -45,7 +56,10 @@ class APIDisputeActions(BaseAPIAction, DisputeActions):
         return self._post(f"/disputes/{dispute_id}/resolve/", body)
 
     def add_evidence(self, dispute_id: str, *, url: str, description: str = "") -> ActionResult:
-        return self._post(f"/disputes/{dispute_id}/evidence/", {"url": url, "description": description})
+        return self._post(
+            f"/disputes/{dispute_id}/evidence/",
+            {"url": url, "description": description},
+        )
 
     def list_evidence(self, dispute_id: str) -> ActionResult:
         return self._get(f"/disputes/{dispute_id}/evidence/")

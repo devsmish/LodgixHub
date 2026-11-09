@@ -38,7 +38,7 @@ class NotificationService:
             )
         except (
             Exception
-        ) as exc:  # noqa: BLE001 — Any SMTP error is logged and must not cause the request to fail.
+        ) as exc:  # noqa: BLE001: Any SMTP error is logged and must not cause the request to fail
             success = False
             error_message = str(exc)[:500]
 

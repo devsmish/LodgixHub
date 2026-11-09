@@ -41,11 +41,7 @@ class BookingDisputesView(generics.ListCreateAPIView):
     booking_service = BookingService()
 
     def get_serializer_class(self):
-        return (
-            DisputeCreateSerializer
-            if self.request.method == "POST"
-            else DisputeSerializer
-        )
+        return DisputeCreateSerializer if self.request.method == "POST" else DisputeSerializer
 
     def get_queryset(self):
         booking = self._get_visible_booking()
@@ -89,9 +85,7 @@ class BookingDisputesView(generics.ListCreateAPIView):
         return booking
 
 
-class DisputeViewSet(
-    mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
-):
+class DisputeViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """
     GET /api/v1/disputes/ — moderation queue (moderator/admin only),
     open and pending disputes — first
@@ -214,9 +208,7 @@ class DisputeEvidenceView(generics.ListCreateAPIView):
         except DjangoValidationError as exc:
             raise convert_django_validation_error(exc) from exc
 
-        return Response(
-            DisputeEvidenceSerializer(evidence).data, status=status.HTTP_201_CREATED
-        )
+        return Response(DisputeEvidenceSerializer(evidence).data, status=status.HTTP_201_CREATED)
 
     def _get_participant_dispute(self):
         dispute = self.dispute_repository.get_by_id(self.kwargs["dispute_id"])
@@ -247,9 +239,7 @@ class DisputeEvidenceDetailView(generics.DestroyAPIView):
     dispute_repository = DisputeRepository()
 
     def get_queryset(self):
-        return self.dispute_repository.get_evidence_for_dispute(
-            self.kwargs["dispute_id"]
-        )
+        return self.dispute_repository.get_evidence_for_dispute(self.kwargs["dispute_id"])
 
     def get_object(self):
         evidence = self.get_queryset().filter(pk=self.kwargs["pk"]).first()

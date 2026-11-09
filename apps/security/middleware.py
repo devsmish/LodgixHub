@@ -15,7 +15,8 @@ class JWTAuthMiddleware:
     Custom middleware for automatic, seamless token renewal (Silent Refresh).
 
     Intercepts requests and checks the validity of the access token in the headers.
-    If the token has expired but a valid refresh token exists in the HttpOnly cookies, the middleware:
+    If the token has expired but a valid refresh token exists in the HttpOnly cookies,
+    the middleware:
       1. Generates a new access token.
       2. Injects it into the current request so that DRF successfully authorizes the user.
       3. Adds the new access token to the 'X-Access-Token' response header for the frontend.
@@ -64,9 +65,7 @@ class JWTAuthMiddleware:
         return response
 
     def _build_refresh_window_seconds(self) -> int:
-        access_lifetime_seconds = int(
-            api_settings.ACCESS_TOKEN_LIFETIME.total_seconds()
-        )
+        access_lifetime_seconds = int(api_settings.ACCESS_TOKEN_LIFETIME.total_seconds())
         return max(1, min(30, access_lifetime_seconds // 4))
 
     def _should_skip(self, request: HttpRequest) -> bool:
@@ -83,9 +82,7 @@ class JWTAuthMiddleware:
                 return None
         return None
 
-    def _set_authorization_header(
-        self, request: HttpRequest, access_token: str
-    ) -> None:
+    def _set_authorization_header(self, request: HttpRequest, access_token: str) -> None:
         request.META["HTTP_AUTHORIZATION"] = f"Bearer {access_token}"
 
     def _is_refresh_token_valid(self, refresh_token: str) -> bool:

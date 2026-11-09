@@ -15,9 +15,7 @@ from apps.bookings.services import BookingService
 from apps.security.constants import GROUP_ADMIN
 
 
-class BookingViewSet(
-    mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
-):
+class BookingViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
     permission_classes = [IsAuthenticated]
     queryset = Booking.objects.all()
@@ -25,10 +23,7 @@ class BookingViewSet(
     service = BookingService()
 
     def get_queryset(self):
-        if (
-            getattr(self, "swagger_fake_view", False)
-            or not self.request.user.is_authenticated
-        ):
+        if getattr(self, "swagger_fake_view", False) or not self.request.user.is_authenticated:
             return Booking.objects.none()
         return self.service.list_for_user(self.request.user)
 
