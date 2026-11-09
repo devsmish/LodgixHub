@@ -4,6 +4,11 @@ All notable changes to LodgixHub will be documented in this file.
 
 The format follows a simple chronological structure.
 
+## [1.1.1] - 2026-11-09
+
+### Changed
+- **Codebase Formatting & Style Cleanup (Issue #164):** Executed a comprehensive repository-wide `isort .`, `black .`, and `flake8 .` formatting pass across all backend applications, `core/tests_pt.py`, and the `tests_e2e/` framework to enforce PEP 8 compliance, proper import ordering, and strict code hygiene.
+
 ## [1.1.0] - 2026-11-08
 
 ### Added
