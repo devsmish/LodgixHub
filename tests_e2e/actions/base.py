@@ -26,6 +26,7 @@ for the API versus the visibility of an error element in the UI). The fields
 `status` and `ok` form a shared, minimal contract, while `data` and `raw` are
 implementation-specific and are not guaranteed to be present in the UI.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -73,8 +74,7 @@ class AuthActions(ABC):
         involving a mismatch in the confirmation field."""
 
     @abstractmethod
-    def login(self, *, email: str, password: str) -> ActionResult:
-        ...
+    def login(self, *, email: str, password: str) -> ActionResult: ...
 
     @abstractmethod
     def refresh(self) -> ActionResult:
@@ -87,8 +87,7 @@ class AuthActions(ABC):
         `login`."""
 
     @abstractmethod
-    def logout(self) -> ActionResult:
-        ...
+    def logout(self) -> ActionResult: ...
 
 
 class ListingActions(ABC):
@@ -109,8 +108,7 @@ class ListingActions(ABC):
         """draft -> published, accessible only to the owner."""
 
     @abstractmethod
-    def get(self, listing_id: str) -> ActionResult:
-        ...
+    def get(self, listing_id: str) -> ActionResult: ...
 
     @abstractmethod
     def list(self, params: dict | None = None) -> ActionResult:
@@ -118,11 +116,11 @@ class ListingActions(ABC):
 
     @abstractmethod
     def mine(self) -> ActionResult:
-        """GET /listings/mine/ — your own listings, regardless of their status; for landlords only."""
+        """GET /listings/mine/ — your own listings,
+        regardless of their status; for landlords only."""
 
     @abstractmethod
-    def toggle_active(self, listing_id: str) -> ActionResult:
-        ...
+    def toggle_active(self, listing_id: str) -> ActionResult: ...
 
     @abstractmethod
     def set_amenities(self, listing_id: str, *, amenity_ids: list[str]) -> ActionResult:
@@ -130,47 +128,50 @@ class ListingActions(ABC):
         `IsOwner` (unlike `update`, which also allows `IsModerator`|`IsAdmin`)."""
 
     @abstractmethod
-    def availability_calendar(self, listing_id: str, *, month: str | None = None) -> ActionResult:
+    def availability_calendar(
+        self, listing_id: str, *, month: str | None = None
+    ) -> ActionResult:
         """GET /listings/{id}/availability-calendar/?month=YYYY-MM — AllowAny."""
 
     @abstractmethod
     def listing_bookings(self, listing_id: str) -> ActionResult:
         """GET /listings/{id}/bookings/ — only owner."""
 
+
 class RoomActions(ABC):
     @abstractmethod
-    def create(self, listing_id: str, payload: dict) -> ActionResult:
-        ...
+    def create(self, listing_id: str, payload: dict) -> ActionResult: ...
 
     @abstractmethod
-    def update(self, listing_id: str, room_id: str, payload: dict) -> ActionResult:
-        ...
+    def update(self, listing_id: str, room_id: str, payload: dict) -> ActionResult: ...
 
     @abstractmethod
-    def delete(self, listing_id: str, room_id: str) -> ActionResult:
-        ...
+    def delete(self, listing_id: str, room_id: str) -> ActionResult: ...
 
     @abstractmethod
-    def list_for_listing(self, listing_id: str) -> ActionResult:
-        ...
+    def list_for_listing(self, listing_id: str) -> ActionResult: ...
 
 
 class PhotoActions(ABC):
     @abstractmethod
-    def upload(self, listing_id: str, *, image_bytes: bytes, filename: str = "photo.jpg", caption: str = "") -> ActionResult:
+    def upload(
+        self,
+        listing_id: str,
+        *,
+        image_bytes: bytes,
+        filename: str = "photo.jpg",
+        caption: str = "",
+    ) -> ActionResult:
         """POST /listings/{listing_id}/photos/ — multipart."""
 
     @abstractmethod
-    def update(self, listing_id: str, photo_id: str, payload: dict) -> ActionResult:
-        ...
+    def update(self, listing_id: str, photo_id: str, payload: dict) -> ActionResult: ...
 
     @abstractmethod
-    def delete(self, listing_id: str, photo_id: str) -> ActionResult:
-        ...
+    def delete(self, listing_id: str, photo_id: str) -> ActionResult: ...
 
     @abstractmethod
-    def list_for_listing(self, listing_id: str) -> ActionResult:
-        ...
+    def list_for_listing(self, listing_id: str) -> ActionResult: ...
 
 
 class AmenityActions(ABC):
@@ -179,8 +180,7 @@ class AmenityActions(ABC):
         """POST /amenities/ — admin only."""
 
     @abstractmethod
-    def list(self) -> ActionResult:
-        ...
+    def list(self) -> ActionResult: ...
 
 
 class CancellationReasonActions(ABC):
@@ -189,39 +189,41 @@ class CancellationReasonActions(ABC):
         """POST /cancellation-reasons/ — admin only."""
 
     @abstractmethod
-    def list(self) -> ActionResult:
-        ...
+    def list(self) -> ActionResult: ...
 
 
 class BookingActions(ABC):
     @abstractmethod
-    def create(self, payload: dict) -> ActionResult:
-        ...
+    def create(self, payload: dict) -> ActionResult: ...
 
     @abstractmethod
-    def get(self, booking_id: str) -> ActionResult:
-        ...
+    def get(self, booking_id: str) -> ActionResult: ...
 
     @abstractmethod
-    def list(self) -> ActionResult:
-        ...
+    def list(self) -> ActionResult: ...
 
     @abstractmethod
-    def confirm(self, booking_id: str) -> ActionResult:
-        ...
+    def confirm(self, booking_id: str) -> ActionResult: ...
 
     @abstractmethod
-    def reject(self, booking_id: str) -> ActionResult:
-        ...
+    def reject(self, booking_id: str) -> ActionResult: ...
 
     @abstractmethod
-    def cancel(self, booking_id: str, *, cancellation_reason_id: str | None = None) -> ActionResult:
-        ...
+    def cancel(
+        self, booking_id: str, *, cancellation_reason_id: str | None = None
+    ) -> ActionResult: ...
 
 
 class DisputeActions(ABC):
     @abstractmethod
-    def open(self, booking_id: str, *, reason_category: str, reason: str, claim_amount: str = "0.00") -> ActionResult:
+    def open(
+        self,
+        booking_id: str,
+        *,
+        reason_category: str,
+        reason: str,
+        claim_amount: str = "0.00",
+    ) -> ActionResult:
         """POST /bookings/{booking_id}/disputes/ — open a dispute regarding a booking."""
 
     @abstractmethod
@@ -229,8 +231,7 @@ class DisputeActions(ABC):
         """GET /bookings/{booking_id}/disputes/ — all disputes regarding a specific booking."""
 
     @abstractmethod
-    def get(self, dispute_id: str) -> ActionResult:
-        ...
+    def get(self, dispute_id: str) -> ActionResult: ...
 
     @abstractmethod
     def list(self, *, status: str | None = None) -> ActionResult:
@@ -253,16 +254,15 @@ class DisputeActions(ABC):
         """POST /disputes/{id}/resolve/ — under_review -> resolved_*, moderator/admin."""
 
     @abstractmethod
-    def add_evidence(self, dispute_id: str, *, url: str, description: str = "") -> ActionResult:
-        ...
+    def add_evidence(
+        self, dispute_id: str, *, url: str, description: str = ""
+    ) -> ActionResult: ...
 
     @abstractmethod
-    def list_evidence(self, dispute_id: str) -> ActionResult:
-        ...
+    def list_evidence(self, dispute_id: str) -> ActionResult: ...
 
     @abstractmethod
-    def delete_evidence(self, dispute_id: str, evidence_id: str) -> ActionResult:
-        ...
+    def delete_evidence(self, dispute_id: str, evidence_id: str) -> ActionResult: ...
 
 
 class UserActions(ABC):
@@ -309,16 +309,16 @@ class ReviewActions(ABC):
         """POST /reviews/."""
 
     @abstractmethod
-    def get(self, review_id: str) -> ActionResult:
-        ...
+    def get(self, review_id: str) -> ActionResult: ...
 
     @abstractmethod
-    def update(self, review_id: str, *, rating: int | None = None, comment: str | None = None) -> ActionResult:
+    def update(
+        self, review_id: str, *, rating: int | None = None, comment: str | None = None
+    ) -> ActionResult:
         """PATCH /reviews/{id}/ — author only, 7-day window."""
 
     @abstractmethod
-    def delete(self, review_id: str) -> ActionResult:
-        ...
+    def delete(self, review_id: str) -> ActionResult: ...
 
     @abstractmethod
     def respond(self, review_id: str, *, response_text: str) -> ActionResult:
@@ -337,12 +337,10 @@ class ReviewActions(ABC):
         """GET /reviews/ (without listing_id) — moderator/admin only."""
 
     @abstractmethod
-    def mine(self) -> ActionResult:
-        ...
+    def mine(self) -> ActionResult: ...
 
     @abstractmethod
-    def for_landlord(self) -> ActionResult:
-        ...
+    def for_landlord(self) -> ActionResult: ...
 
 
 class AnalyticsActions(ABC):

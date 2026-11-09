@@ -13,14 +13,17 @@ in `actions/ui/*.py`—uses Playwright’s `Page` object rather than HTTP
 requests. Tests that interact solely via `actor.<domain>.<method>(...)`
 will remain unaffected.
 """
+
 from __future__ import annotations
 
 from tests_e2e.actions.api.amenity_actions import APIAmenityActions
 from tests_e2e.actions.api.analytics_actions import APIAnalyticsActions
-from tests_e2e.actions.api.base_api_action import ActorSession
 from tests_e2e.actions.api.auth_actions import APIAuthActions
+from tests_e2e.actions.api.base_api_action import ActorSession
 from tests_e2e.actions.api.booking_actions import APIBookingActions
-from tests_e2e.actions.api.cancellation_reason_actions import APICancellationReasonActions
+from tests_e2e.actions.api.cancellation_reason_actions import (
+    APICancellationReasonActions,
+)
 from tests_e2e.actions.api.dispute_actions import APIDisputeActions
 from tests_e2e.actions.api.listing_actions import APIListingActions
 from tests_e2e.actions.api.notification_actions import APINotificationActions
@@ -38,7 +41,9 @@ class APIActor:
         self.analytics = APIAnalyticsActions(request_context, self.session, pw_thread)
         self.auth = APIAuthActions(request_context, self.session, pw_thread)
         self.bookings = APIBookingActions(request_context, self.session, pw_thread)
-        self.cancellation_reasons = APICancellationReasonActions(request_context, self.session, pw_thread)
+        self.cancellation_reasons = APICancellationReasonActions(
+            request_context, self.session, pw_thread
+        )
         self.disputes = APIDisputeActions(request_context, self.session, pw_thread)
         self.listings = APIListingActions(request_context, self.session, pw_thread)
         self.notifications = APINotificationActions(request_context, self.session, pw_thread)
@@ -47,8 +52,9 @@ class APIActor:
         self.rooms = APIRoomActions(request_context, self.session, pw_thread)
         self.users = APIUserActions(request_context, self.session, pw_thread)
 
+
 def use_token(self, access_token: str) -> None:
-        """Injecting an existing access token directly (bypassing `/auth/login/`) —
-        used for roles that cannot be created via public registration (e.g.,
-        moderator/admin); see `fixtures/users.py`."""
-        self.session.access_token = access_token
+    """Injecting an existing access token directly (bypassing `/auth/login/`) —
+    used for roles that cannot be created via public registration (e.g.,
+    moderator/admin); see `fixtures/users.py`."""
+    self.session.access_token = access_token

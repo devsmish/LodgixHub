@@ -5,9 +5,7 @@ class BookingRepository:
 
     @staticmethod
     def get_all_queryset():
-        return Booking.objects.select_related(
-            "tenant", "listing", "room", "room__listing"
-        )
+        return Booking.objects.select_related("tenant", "listing", "room", "room__listing")
 
     @staticmethod
     def get_by_id(booking_id):

@@ -21,9 +21,7 @@ class BookingCreateSerializer(serializers.Serializer):
             )
         if attrs["check_in_date"] >= attrs["check_out_date"]:
             raise serializers.ValidationError(
-                {
-                    "check_out_date": "The departure date must be later than the arrival date."
-                }
+                {"check_out_date": "The departure date must be later than the arrival date."}
             )
         return attrs
 

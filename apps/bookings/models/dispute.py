@@ -22,9 +22,7 @@ from core.models import BaseModel, TimestampedModel
 
 
 class Dispute(TimestampedModel):
-    booking = models.ForeignKey(
-        Booking, on_delete=models.CASCADE, related_name="disputes"
-    )
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name="disputes")
     opened_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -34,9 +32,7 @@ class Dispute(TimestampedModel):
         max_length=50, choices=DisputeReason, default=DisputeReason.OTHER
     )
     reason = models.TextField(help_text="Detailed description of the issue")
-    status = models.CharField(
-        max_length=30, choices=DisputeStatus, default=DisputeStatus.OPEN
-    )
+    status = models.CharField(max_length=30, choices=DisputeStatus, default=DisputeStatus.OPEN)
     claim_amount = models.DecimalField(
         max_digits=12, decimal_places=2, default=0, verbose_name=_("Claim amount")
     )
@@ -119,9 +115,7 @@ class Dispute(TimestampedModel):
 
 
 class DisputeEvidence(BaseModel):
-    dispute = models.ForeignKey(
-        Dispute, on_delete=models.CASCADE, related_name="evidence"
-    )
+    dispute = models.ForeignKey(Dispute, on_delete=models.CASCADE, related_name="evidence")
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -130,9 +124,7 @@ class DisputeEvidence(BaseModel):
         related_name="dispute_evidence",
     )
     url = models.URLField(verbose_name=_("Evidence URL"))
-    description = models.CharField(
-        max_length=255, blank=True, verbose_name=_("Description")
-    )
+    description = models.CharField(max_length=255, blank=True, verbose_name=_("Description"))
 
     class Meta:
         verbose_name = _("Dispute Evidence")

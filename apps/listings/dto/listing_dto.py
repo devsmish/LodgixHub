@@ -140,6 +140,4 @@ class ListingAmenitiesUpdateSerializer(serializers.Serializer):
     """PUT /api/v1/listings/{id}/amenities/ — complete replacement of the set of amenities.
     Accepts a list of amenity_ids.."""
 
-    amenity_ids = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Amenity.objects.all()
-    )
+    amenity_ids = serializers.PrimaryKeyRelatedField(many=True, queryset=Amenity.objects.all())

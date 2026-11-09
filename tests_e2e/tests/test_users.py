@@ -5,6 +5,7 @@ not truly public—it is only accessible if the viewer shares an active or compl
 booking with the profile owner. Additionally, there is a guard in place to prevent the
 deletion or blocking of any user who has active bookings.
 """
+
 from __future__ import annotations
 
 from datetime import date
@@ -21,7 +22,9 @@ def _published_listing(landlord, **overrides) -> str:
     assert result.ok, f"listing creation failed: {result.status} {result.data}"
     listing_id = result.data["id"]
 
-    price_result = landlord.listings.set_price(listing_id, price="100.00", valid_from=date.today().isoformat())
+    price_result = landlord.listings.set_price(
+        listing_id, price="100.00", valid_from=date.today().isoformat()
+    )
     assert price_result.ok, f"set_price failed: {price_result.status} {price_result.data}"
 
     publish_result = landlord.listings.publish(listing_id)
@@ -51,7 +54,9 @@ class TestOwnProfile:
 
 
 class TestPublicProfileAccess:
-    def test_stranger_cannot_view_public_profile_without_shared_booking(self, tenant, landlord, new_actor):
+    def test_stranger_cannot_view_public_profile_without_shared_booking(
+        self, tenant, landlord, new_actor
+    ):
         stranger = new_actor()
         stranger.auth.register(**register_payload(role="tenant", prefix="stranger"))
 

@@ -12,6 +12,7 @@ real-world client (such as a web or mobile application) would use. Both
 levels of testing are maintained and complement one another; they do not
 duplicate each other.
 """
+
 from __future__ import annotations
 
 from datetime import date
@@ -84,7 +85,8 @@ class TestBookingCreation:
 
     def test_overlapping_dates_on_same_listing_is_rejected(self, tenant, landlord):
         """BookingNotAvailableError -> 409 Conflict (not 400): a more accurate
-        HTTP status for a conflict involving a resource or dates that are already taken."""
+        HTTP status for a conflict involving a resource or dates that are already taken.
+        """
         listing_id = _published_listing(landlord)
         payload = booking_payload(listing_id=listing_id)
 
@@ -178,7 +180,8 @@ class TestBookingCancellation:
     def test_tenant_can_cancel_pending_booking_within_free_window(self, tenant, landlord):
         """TENANT_FREE_CANCEL_CUTOFF_HOURS = 24 — by default, a booking is created for 7 days
         in advance (booking_payload), which falls well within the free cancellation window;
-        no reason is required (providing a reason is only applicable for the landlord)."""
+        no reason is required (providing a reason is only applicable for the landlord).
+        """
         listing_id = _published_listing(landlord)
         created = tenant.bookings.create(booking_payload(listing_id=listing_id))
         booking_id = created.data["id"]

@@ -20,9 +20,7 @@ class CustomJWTSwaggerScheme(OpenApiAuthenticationExtension):
         }
 
 
-def document_cookie_auth(
-    behavior: str, request_serializer=None, response_serializer=None
-):
+def document_cookie_auth(behavior: str, request_serializer=None, response_serializer=None):
     """
     A custom decorator for automating the documentation of Cookie-JWT endpoints.
     """
@@ -45,19 +43,15 @@ def document_cookie_auth(
     elif behavior == "login":
         return extend_schema(
             summary="System Login (Authorization)",
-            description="Authentication via email and password. Returns an access token in JSON format \
-                        and stores the refresh token in an HttpOnly cookie.",
+            description="Authentication via email and password. Returns an access token \
+                        in JSON format and stores the refresh token in an HttpOnly cookie.",
             auth=[],
             responses={
                 200: OpenApiResponse(
                     description="Successful login. The refresh_token has been saved to the browser cookies.",
                     response=inline_serializer(
                         name="LoginCleanResponse",
-                        fields={
-                            "access": serializers.CharField(
-                                help_text="JWT Access Token"
-                            )
-                        },
+                        fields={"access": serializers.CharField(help_text="JWT Access Token")},
                     ),
                 )
             },
@@ -75,9 +69,7 @@ def document_cookie_auth(
                     response=inline_serializer(
                         name="RefreshCleanResponse",
                         fields={
-                            "access": serializers.CharField(
-                                help_text="New JWT Access Token"
-                            )
+                            "access": serializers.CharField(help_text="New JWT Access Token")
                         },
                     ),
                 ),
@@ -94,9 +86,7 @@ def document_cookie_auth(
                         the user's token version, and deletes the cookie.",
             request=None,
             responses={
-                200: OpenApiResponse(
-                    description="Successful exit. The hook has been removed."
-                )
+                200: OpenApiResponse(description="Successful exit. The hook has been removed.")
             },
         )
 
@@ -104,7 +94,8 @@ def document_cookie_auth(
 def custom_permission_description_hook(result, generator, **kwargs):
     """
     Global post-processing hook for drf-spectacular.
-    Uses target view reflection to map permissions directly into the OpenAPI dictionary.
+    Uses target view reflection to map permissions
+    directly into the OpenAPI dictionary.
     """
     # First, a map is built: operationId -> list of permissions.
     operation_permissions = {}
@@ -136,9 +127,7 @@ def custom_permission_description_hook(result, generator, **kwargs):
                 extra_notes = []
                 for perm in operation_permissions[operation_id]:
                     perm_name = (
-                        perm.__name__
-                        if hasattr(perm, "__name__")
-                        else perm.__class__.__name__
+                        perm.__name__ if hasattr(perm, "__name__") else perm.__class__.__name__
                     )
 
                     if perm_name == "IsTenant":

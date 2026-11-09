@@ -13,6 +13,7 @@ anonymous users/unauthorized users receive a 404 for draft listings;
 owners/moderators/admins always receive a 200;
 for published listings, all users receive a 200.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -26,7 +27,9 @@ pytestmark = pytest.mark.django_db(transaction=True)
 TEST_PHOTO_PATH = Path(__file__).parent.parent / "fixtures" / "assets" / "test_photo.jpg"
 
 
-def _listing(landlord, *, listing_type: str = "apartment", published: bool = False, **overrides) -> str:
+def _listing(
+    landlord, *, listing_type: str = "apartment", published: bool = False, **overrides
+) -> str:
     payload = listing_payload(type=listing_type, **overrides)
     if listing_type != "apartment":
         payload.pop("rooms_count", None)
@@ -37,7 +40,9 @@ def _listing(landlord, *, listing_type: str = "apartment", published: bool = Fal
 
     if published:
         publish_result = landlord.listings.publish(listing_id)
-        assert publish_result.ok, f"publish failed: {publish_result.status} {publish_result.data}"
+        assert (
+            publish_result.ok
+        ), f"publish failed: {publish_result.status} {publish_result.data}"
 
     return listing_id
 

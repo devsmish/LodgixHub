@@ -10,12 +10,8 @@ class SearchHistoryCreateDTO(serializers.Serializer):
     to /api/listings/?q=...
     """
 
-    keyword = serializers.CharField(
-        max_length=255, allow_blank=False, trim_whitespace=True
-    )
-    results_count = serializers.IntegerField(
-        min_value=0, required=False, allow_null=True
-    )
+    keyword = serializers.CharField(max_length=255, allow_blank=False, trim_whitespace=True)
+    results_count = serializers.IntegerField(min_value=0, required=False, allow_null=True)
 
     def validate_keyword(self, value: str) -> str:
         normalized = value.strip()

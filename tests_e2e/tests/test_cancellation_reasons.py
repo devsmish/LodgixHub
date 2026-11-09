@@ -20,6 +20,7 @@ than an "invalid choice" error);
 an invalid format is rejected by a regex;
 access permissions (restricted to admins) remain intact following a field refactor.
 """
+
 from __future__ import annotations
 
 import random
@@ -45,7 +46,9 @@ class TestCancellationReasonChoicesUniqueBugRegression:
     def test_admin_can_create_reason_with_code_outside_seeded_enum(self, admin_actor):
         code = _unique_code()
 
-        result = admin_actor.cancellation_reasons.create(code=code, description="E2E custom reason")
+        result = admin_actor.cancellation_reasons.create(
+            code=code, description="E2E custom reason"
+        )
 
         assert result.status == 201, result.data
         assert result.data["code"] == code
@@ -64,7 +67,8 @@ class TestCancellationReasonChoicesUniqueBugRegression:
     def test_lowercase_code_is_rejected_by_regex(self, admin_actor):
         """^[A-Z_]+$ — case is mandatory, unlike the original seed values for
         StandardCancellationReason.value (which were in lowercase; this is
-        precisely why the source for population was switched to .name during the fix)."""
+        precisely why the source for population was switched to .name during the fix).
+        """
         result = admin_actor.cancellation_reasons.create(code="lowercase_code", description="x")
 
         assert result.status == 400, result.data

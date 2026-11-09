@@ -15,6 +15,7 @@ that houses the entirety of Playwright—including `sync_playwright()`, all
 Django/pytest resides) never interacts with Playwright’s internal `asyncio` state, allowing
 it to continue accessing the database without any issues.
 """
+
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor

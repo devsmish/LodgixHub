@@ -12,8 +12,8 @@ from apps.bookings.constants import (
 def calculate_auto_cancel_deadline(created_at: datetime) -> datetime:
     """
     Unified algorithm:
-    The auto-cancellation deadline is the moment when the accumulated time *within* business hours
-    (BUSINESS_HOURS_START..BUSINESS_HOURS_END) since the booking was created reaches
+    The auto-cancellation deadline is the moment when the accumulated time *within* business
+    hours (BUSINESS_HOURS_START..BUSINESS_HOURS_END) since the booking was created reaches
     AUTO_CANCEL_TIMEOUT_MINUTES. If the time remaining until the end of business hours
     on the current day is insufficient, the remainder carries over to 09:00 the following day.
 
@@ -47,12 +47,8 @@ def _clamp_to_business_hours(moment: datetime) -> datetime:
     """If the moment falls outside business hours, it is shifted to the nearest start time:
     before 09:00 on the same day → 09:00 on the same day; after 21:00 → 09:00
     on the next day."""
-    business_start = moment.replace(
-        hour=BUSINESS_HOURS_START, minute=0, second=0, microsecond=0
-    )
-    business_end = moment.replace(
-        hour=BUSINESS_HOURS_END, minute=0, second=0, microsecond=0
-    )
+    business_start = moment.replace(hour=BUSINESS_HOURS_START, minute=0, second=0, microsecond=0)
+    business_end = moment.replace(hour=BUSINESS_HOURS_END, minute=0, second=0, microsecond=0)
     if moment < business_start:
         return business_start
     if moment >= business_end:

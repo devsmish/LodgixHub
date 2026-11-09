@@ -21,24 +21,18 @@ class Command(BaseCommand):
     depend on it, and the cache update is not among the email triggers.
     """
 
-    help = (
-        "Updates Listing.current_price based on the latest active PriceHistory record."
-    )
+    help = "Updates Listing.current_price based on the latest active PriceHistory record."
 
     def handle(self, *args, **options):
         today = timezone.localdate()
         updated_count = 0
 
         for listing in Listing.objects.all().only("id", "current_price"):
-            latest_price = PriceHistory.objects.effective_on(
-                today, listing=listing
-            ).first()
+            latest_price = PriceHistory.objects.effective_on(today, listing=listing).first()
             if latest_price is None:
                 continue
             if latest_price.price != listing.current_price:
-                Listing.objects.filter(pk=listing.pk).update(
-                    current_price=latest_price.price
-                )
+                Listing.objects.filter(pk=listing.pk).update(current_price=latest_price.price)
                 updated_count += 1
 
         self.stdout.write(self.style.SUCCESS(f"updated_listings={updated_count}"))

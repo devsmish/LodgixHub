@@ -54,13 +54,11 @@ def validate_image(file):
 
     if width < MIN_IMAGE_WIDTH or height < MIN_IMAGE_HEIGHT:
         raise ValidationError(
-            _("Minimum resolution %(w)sx%(h)spx")
-            % {"w": MIN_IMAGE_WIDTH, "h": MIN_IMAGE_HEIGHT}
+            _("Minimum resolution %(w)sx%(h)spx") % {"w": MIN_IMAGE_WIDTH, "h": MIN_IMAGE_HEIGHT}
         )
     if width > MAX_IMAGE_WIDTH or height > MAX_IMAGE_HEIGHT:
         raise ValidationError(
-            _("Maximum resolution %(w)sx%(h)spx")
-            % {"w": MAX_IMAGE_WIDTH, "h": MAX_IMAGE_HEIGHT}
+            _("Maximum resolution %(w)sx%(h)spx") % {"w": MAX_IMAGE_WIDTH, "h": MAX_IMAGE_HEIGHT}
         )
 
     file.seek(0)

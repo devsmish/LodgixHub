@@ -6,9 +6,7 @@ class ReviewRepository:
 
     @staticmethod
     def get_published_for_listing(listing_id):
-        return Review.objects.filter(
-            listing_id=listing_id, status=ReviewStatus.PUBLISHED
-        )
+        return Review.objects.filter(listing_id=listing_id, status=ReviewStatus.PUBLISHED)
 
     @staticmethod
     def get_for_author(user):

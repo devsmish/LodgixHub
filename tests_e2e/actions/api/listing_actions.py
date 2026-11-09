@@ -37,7 +37,9 @@ class APIListingActions(BaseAPIAction, ListingActions):
     def set_amenities(self, listing_id: str, *, amenity_ids: list[str]) -> ActionResult:
         return self._put(f"/listings/{listing_id}/amenities/", {"amenity_ids": amenity_ids})
 
-    def availability_calendar(self, listing_id: str, *, month: str | None = None) -> ActionResult:
+    def availability_calendar(
+        self, listing_id: str, *, month: str | None = None
+    ) -> ActionResult:
         params = {"month": month} if month else None
         return self._get(f"/listings/{listing_id}/availability-calendar/", params=params)
 
@@ -51,7 +53,9 @@ class APIListingActions(BaseAPIAction, ListingActions):
         service consults `PriceHistory` for a specific check-in date, rather
         than accessing `Listing.current_price` directly (see
         `apps/bookings/services/booking_service.py::_calculate_price`)."""
-        return self._post(f"/listings/{listing_id}/price/", {"price": price, "valid_from": valid_from})
+        return self._post(
+            f"/listings/{listing_id}/price/", {"price": price, "valid_from": valid_from}
+        )
 
     def price_history(self, listing_id: str) -> ActionResult:
         """GET /listings/{listing_id}/price-history/ — Owner|Admin. Follows the

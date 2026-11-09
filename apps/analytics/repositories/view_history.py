@@ -9,9 +9,7 @@ class ViewHistoryRepository:
 
     @staticmethod
     def create(*, listing, user, session_key) -> ViewHistory:
-        return ViewHistory.objects.create(
-            listing=listing, user=user, session_key=session_key
-        )
+        return ViewHistory.objects.create(listing=listing, user=user, session_key=session_key)
 
     @staticmethod
     def exists_recent(*, listing, user, session_key, since: datetime) -> bool:

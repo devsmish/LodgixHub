@@ -82,9 +82,7 @@ class ListingViewSet(viewsets.GenericViewSet):
         listing = self.service.create_listing(
             owner=request.user, validated_data=serializer.validated_data
         )
-        return Response(
-            ListingDetailSerializer(listing).data, status=status.HTTP_201_CREATED
-        )
+        return Response(ListingDetailSerializer(listing).data, status=status.HTTP_201_CREATED)
 
     # PATCH /api/v1/listings/{id}/
     def partial_update(self, request, *args, **kwargs):

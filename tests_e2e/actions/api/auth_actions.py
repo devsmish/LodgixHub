@@ -14,22 +14,24 @@ class APIAuthActions(BaseAPIAction, AuthActions):
     """
 
     def register(
-            self,
-            *,
-            email: str,
-            password: str,
-            role: str,
-            first_name: str = "",
-            last_name: str = "",
-            terms_accepted: bool = True,
-            password_confirm: str | None = None,
+        self,
+        *,
+        email: str,
+        password: str,
+        role: str,
+        first_name: str = "",
+        last_name: str = "",
+        terms_accepted: bool = True,
+        password_confirm: str | None = None,
     ) -> ActionResult:
         result = self._post(
             "/auth/register/",
             {
                 "email": email,
                 "password": password,
-                "password_confirm": password_confirm if password_confirm is not None else password,
+                "password_confirm": (
+                    password_confirm if password_confirm is not None else password
+                ),
                 "first_name": first_name,
                 "last_name": last_name,
                 "role": role,

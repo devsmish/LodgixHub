@@ -83,6 +83,4 @@ class ListingBookingsView(generics.ListAPIView):
         from apps.bookings.models import Booking
 
         listing_id = self.kwargs["listing_id"]
-        return Booking.objects.filter(
-            Q(listing_id=listing_id) | Q(room__listing_id=listing_id)
-        )
+        return Booking.objects.filter(Q(listing_id=listing_id) | Q(room__listing_id=listing_id))

@@ -190,9 +190,7 @@ class DisputeModelTestCase(TestCase):
             owner=self.landlord,
             title="Dispute Test Listing",
             type=ListingType.APARTMENT,
-            address=make_address(
-                city="Berlin", street="Alexanderplatz", house_number="1"
-            ),
+            address=make_address(city="Berlin", street="Alexanderplatz", house_number="1"),
             max_guests=4,
             current_price=Decimal("1000.00"),
         )

@@ -18,16 +18,12 @@ def get_available_listing_ids(check_in, check_out, queryset):
     A listing is available if at least one of its rooms is free.
     """
     listing_rows = list(queryset.values("id", "type"))
-    apartment_ids = {
-        row["id"] for row in listing_rows if row["type"] == ListingType.APARTMENT
-    }
+    apartment_ids = {row["id"] for row in listing_rows if row["type"] == ListingType.APARTMENT}
     multi_room_listing_ids = {row["id"] for row in listing_rows} - apartment_ids
 
     overlap_filter = dict(check_in_date__lt=check_out, check_out_date__gt=check_in)
 
-    available_apartment_ids = _get_available_apartment_ids(
-        apartment_ids, overlap_filter
-    )
+    available_apartment_ids = _get_available_apartment_ids(apartment_ids, overlap_filter)
     available_multi_room_ids = _get_available_multi_room_listing_ids(
         multi_room_listing_ids, overlap_filter
     )
@@ -89,14 +85,10 @@ def get_listing_calendar(listing, year, month):
         return _get_apartment_calendar(
             listing, year, month, days_in_month, month_start, month_end
         )
-    return _get_multi_room_calendar(
-        listing, year, month, days_in_month, month_start, month_end
-    )
+    return _get_multi_room_calendar(listing, year, month, days_in_month, month_start, month_end)
 
 
-def _get_apartment_calendar(
-    listing, year, month, days_in_month, month_start, month_end
-):
+def _get_apartment_calendar(listing, year, month, days_in_month, month_start, month_end):
     calendar_map = {day: True for day in range(1, days_in_month + 1)}
 
     bookings = Booking.objects.filter(
@@ -115,19 +107,14 @@ def _get_apartment_calendar(
     return calendar_map
 
 
-def _get_multi_room_calendar(
-    listing, year, month, days_in_month, month_start, month_end
-):
-    rooms = list(
-        Room.objects.filter(listing=listing).values("id", "rooms_available_count")
-    )
+def _get_multi_room_calendar(listing, year, month, days_in_month, month_start, month_end):
+    rooms = list(Room.objects.filter(listing=listing).values("id", "rooms_available_count"))
     if not rooms:
         return {day: False for day in range(1, days_in_month + 1)}
 
     room_capacity = {room["id"]: room["rooms_available_count"] for room in rooms}
     busy_by_day_room = {
-        day: {room_id: 0 for room_id in room_capacity}
-        for day in range(1, days_in_month + 1)
+        day: {room_id: 0 for room_id in room_capacity} for day in range(1, days_in_month + 1)
     }
 
     bookings = Booking.objects.filter(
