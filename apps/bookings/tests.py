@@ -592,6 +592,14 @@ class ProcessBookingsCommandTestCase(TestCase):
 
 
 class BookingCreateValidationApiTestCase(TestCase):
+    """Regression: POST /bookings/ was returning a 500 error instead of a 400.
+
+    `BookingService.create_booking` calls `booking.save()` (which triggers `full_clean()`),
+    but DRF does not automatically convert `django.core.exceptions.ValidationError` into an HTTP response.
+    Business rules validated exclusively within `Booking.clean()` (such as guest capacity
+    and duration limits) were therefore resulting in an unhandled exception.
+    """
+
     def setUp(self):
         self.landlord = User.objects.create_user(email="landlord@example.com", password="x")
         self.tenant = User.objects.create_user(email="tenant@example.com", password="x")
@@ -621,8 +629,8 @@ class BookingCreateValidationApiTestCase(TestCase):
             valid_from=today,
             changed_by=self.landlord,
         )
-        # raise_request_exception=False: необработанное исключение во view
-        # должно проявляться как 500 (assert ниже), а не как исключение теста.
+        # raise_request_exception=False: an unhandled exception in a view
+        # should manifest as a 500 (see assertion below), rather than as a test exception.
         self.client = APIClient(raise_request_exception=False)
         self.client.force_authenticate(self.tenant)
 
@@ -646,6 +654,8 @@ class BookingCreateValidationApiTestCase(TestCase):
         self.assertEqual(response.status_code, 400, response.content)
 
     def test_duration_over_maximum_returns_400_not_500(self):
-        response = self.client.post("/api/v1/bookings/", self._payload(nights=400), format="json")
+        response = self.client.post(
+            "/api/v1/bookings/", self._payload(nights=400), format="json"
+        )
 
         self.assertEqual(response.status_code, 400, response.content)
