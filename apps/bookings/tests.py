@@ -17,6 +17,10 @@ from apps.bookings.choices import (
     DisputeStatus,
     StandardCancellationReason,
 )
+from apps.bookings.guards.user_guard import (
+    COMPLETED_OR_ACTIVE_STATUSES,
+    user_has_completed_booking_with_listing_owner,
+)
 from apps.bookings.models import Booking, CancellationReason
 from apps.bookings.services import (
     add_evidence,
@@ -659,3 +663,84 @@ class BookingCreateValidationApiTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, 400, response.content)
+
+
+class UserGuardTestCase(TestCase):
+    """Regression: The owner's public profile should be accessible to a renter who has an
+    active (`pending`/`confirmed`) OR completed booking.
+
+    Previously, `COMPLETED_OR_ACTIVE_STATUSES` was defined as a nested tuple—`((PENDING,
+    CONFIRMED), COMPLETED)`—which meant that `status__in` effectively matched only
+    `completed`.
+    """
+
+    def setUp(self):
+        self.landlord = User.objects.create_user(email="landlord@example.com", password="x")
+        self.tenant = User.objects.create_user(email="tenant@example.com", password="x")
+        address = Address.objects.create(
+            region="Saarland",
+            city="Saarlouis",
+            street="Kaiser-Wilhelm-Straße",
+            house_number="12",
+            postal_code="66740",
+        )
+        self.listing = Listing.objects.create(
+            owner=self.landlord,
+            address=address,
+            status=ListingStatus.PUBLISHED,
+            is_active=True,
+            type=ListingType.APARTMENT,
+            rental_type=RentalType.ANY,
+            title="Guard listing",
+            description="d",
+            max_guests=2,
+            current_price=Decimal("100.00"),
+        )
+
+    def _booking_with_status(self, status):
+        Booking.objects.all().delete()
+        today = timezone.now().date()
+        booking = Booking.objects.create(
+            tenant=self.tenant,
+            listing=self.listing,
+            check_in_date=today + timedelta(days=5),
+            check_out_date=today + timedelta(days=8),
+            guests_count=1,
+            total_price=Decimal("300.00"),
+        )
+
+        # set the status by bypassing clean(), since we need "completed" bookings.
+        Booking.objects.filter(pk=booking.pk).update(status=status)
+
+    def test_status_constant_is_flat(self):
+        self.assertTrue(all(isinstance(s, str) for s in COMPLETED_OR_ACTIVE_STATUSES))
+        self.assertEqual(
+            set(COMPLETED_OR_ACTIVE_STATUSES),
+            {BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.COMPLETED},
+        )
+
+    def test_access_granted_for_pending_confirmed_and_completed(self):
+        for status in (BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.COMPLETED):
+            with self.subTest(status=status):
+                self._booking_with_status(status)
+                self.assertTrue(
+                    user_has_completed_booking_with_listing_owner(self.tenant, self.landlord.pk)
+                )
+
+    def test_access_denied_for_cancelled_and_rejected(self):
+        for status in (
+            BookingStatus.REJECTED,
+            BookingStatus.CANCELLED_BY_TENANT,
+            BookingStatus.CANCELLED_BY_LANDLORD,
+        ):
+            with self.subTest(status=status):
+                self._booking_with_status(status)
+                self.assertFalse(
+                    user_has_completed_booking_with_listing_owner(self.tenant, self.landlord.pk)
+                )
+
+    def test_access_denied_without_any_booking(self):
+        Booking.objects.all().delete()
+        self.assertFalse(
+            user_has_completed_booking_with_listing_owner(self.tenant, self.landlord.pk)
+        )
