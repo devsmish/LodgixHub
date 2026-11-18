@@ -8,6 +8,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
 from django.test import TestCase
 from django.utils import timezone
+from rest_framework.test import APIClient
 
 from apps.bookings.choices import (
     BookingStatus,
@@ -24,8 +25,9 @@ from apps.bookings.services import (
     resolve_dispute,
     start_review,
 )
-from apps.listings.choices import ListingType
+from apps.listings.choices import ListingStatus, ListingType, RentalType
 from apps.listings.models import Address, Listing
+from apps.pricing.models import PriceHistory
 
 User = get_user_model()
 
@@ -587,3 +589,63 @@ class ProcessBookingsCommandTestCase(TestCase):
         call_command("process_bookings")
         booking.refresh_from_db()
         self.assertEqual(booking.status, BookingStatus.CONFIRMED)
+
+
+class BookingCreateValidationApiTestCase(TestCase):
+    def setUp(self):
+        self.landlord = User.objects.create_user(email="landlord@example.com", password="x")
+        self.tenant = User.objects.create_user(email="tenant@example.com", password="x")
+        address = Address.objects.create(
+            region="Saarland",
+            city="Saarlouis",
+            street="Kaiser-Wilhelm-Straße",
+            house_number="12",
+            postal_code="66740",
+        )
+        self.listing = Listing.objects.create(
+            owner=self.landlord,
+            address=address,
+            status=ListingStatus.PUBLISHED,
+            is_active=True,
+            type=ListingType.APARTMENT,
+            rental_type=RentalType.ANY,
+            title="Regression listing",
+            description="d",
+            max_guests=2,
+            current_price=Decimal("100.00"),
+        )
+        today = timezone.now().date()
+        PriceHistory.objects.create(
+            listing=self.listing,
+            price=Decimal("100.00"),
+            valid_from=today,
+            changed_by=self.landlord,
+        )
+        # raise_request_exception=False: необработанное исключение во view
+        # должно проявляться как 500 (assert ниже), а не как исключение теста.
+        self.client = APIClient(raise_request_exception=False)
+        self.client.force_authenticate(self.tenant)
+
+    def _payload(self, *, nights=3, guests=2):
+        check_in = timezone.now().date() + timedelta(days=5)
+        return {
+            "listing_id": str(self.listing.pk),
+            "check_in_date": check_in.isoformat(),
+            "check_out_date": (check_in + timedelta(days=nights)).isoformat(),
+            "guests_count": guests,
+        }
+
+    def test_valid_booking_is_created(self):
+        response = self.client.post("/api/v1/bookings/", self._payload(), format="json")
+
+        self.assertEqual(response.status_code, 201, response.content)
+
+    def test_guests_over_capacity_returns_400_not_500(self):
+        response = self.client.post("/api/v1/bookings/", self._payload(guests=10), format="json")
+
+        self.assertEqual(response.status_code, 400, response.content)
+
+    def test_duration_over_maximum_returns_400_not_500(self):
+        response = self.client.post("/api/v1/bookings/", self._payload(nights=400), format="json")
+
+        self.assertEqual(response.status_code, 400, response.content)
