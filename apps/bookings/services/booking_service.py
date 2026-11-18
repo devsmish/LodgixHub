@@ -13,7 +13,6 @@ from apps.bookings.constants import (
     LAST_MINUTE_DISCOUNT_SAME_DAY,
     TENANT_FREE_CANCEL_CUTOFF_HOURS,
 )
-
 from apps.bookings.errors import (
     BookingCancelWindowExpiredError,
     BookingNotAvailableError,
@@ -42,9 +41,7 @@ class BookingService:
 
         return (
             self.repository.get_all_queryset()
-            .filter(
-                Q(tenant=user) | Q(listing__owner=user) | Q(room__listing__owner=user)
-            )
+            .filter(Q(tenant=user) | Q(listing__owner=user) | Q(room__listing__owner=user))
             .distinct()
         )
 
@@ -61,14 +58,14 @@ class BookingService:
 
     @transaction.atomic
     def create_booking(
-            self,
-            *,
-            tenant,
-            listing_id,
-            room_id,
-            check_in_date,
-            check_out_date,
-            guests_count,
+        self,
+        *,
+        tenant,
+        listing_id,
+        room_id,
+        check_in_date,
+        check_out_date,
+        guests_count,
     ):
         is_room = room_id is not None
         target, listing = self._resolve_target(listing_id, room_id)
@@ -197,9 +194,7 @@ class BookingService:
     def _guard_is_landlord(booking, actor):
         landlord = booking.get_landlord()
         if landlord is None or landlord.id != actor.id:
-            raise PermissionDenied(
-                "Only the owner of the listing can perform this action."
-            )
+            raise PermissionDenied("Only the owner of the listing can perform this action.")
 
     # Cancellation: tenant — up to 24 hours in advance; owner — with a reason.
 
