@@ -33,9 +33,9 @@ class RoomListCreateView(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         listing_id = kwargs["listing_id"]
         listing = self.listing_repository.get_by_id_any(listing_id)
-        if listing is None or not self.listing_service.can_view_detail(request.user, listing):
-            # Same convention as GET /listings/{id}/ and the photo gallery:
-            # 404 so we don't leak the existence of a draft/hidden listing.
+        if listing is None or not self.listing_service.can_view_detail(
+            request.user, listing
+        ):
             raise NotFound()
 
         rooms = self.service.list_for_listing(
@@ -61,7 +61,9 @@ class RoomListCreateView(generics.GenericAPIView):
         if listing is None:
             raise NotFound()
         if listing.owner_id != request.user.id:
-            raise PermissionDenied("Only the owner of the listing can manage the rooms.")
+            raise PermissionDenied(
+                "Only the owner of the listing can manage the rooms."
+            )
         return listing
 
 
@@ -79,7 +81,9 @@ class RoomDetailView(generics.GenericAPIView):
         room = self._get_owned_room(request, kwargs["listing_id"], kwargs["pk"])
         serializer = self.get_serializer(room, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        room = self.service.update_room(room=room, validated_data=serializer.validated_data)
+        room = self.service.update_room(
+            room=room, validated_data=serializer.validated_data
+        )
         return Response(RoomSerializer(room).data)
 
     def delete(self, request, *args, **kwargs):
@@ -92,7 +96,9 @@ class RoomDetailView(generics.GenericAPIView):
         if listing is None:
             raise NotFound()
         if listing.owner_id != request.user.id:
-            raise PermissionDenied("Only the owner of the listing can manage the rooms.")
+            raise PermissionDenied(
+                "Only the owner of the listing can manage the rooms."
+            )
         room = self.room_repository.get_by_id_for_listing(listing_id, room_id)
         if room is None:
             raise NotFound()

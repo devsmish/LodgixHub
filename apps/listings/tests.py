@@ -1,12 +1,16 @@
+import uuid
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.test import TestCase
+from rest_framework.test import APIClient
 
-from apps.listings.choices import ListingStatus, ListingType, RoomType
+from apps.listings.choices import ListingStatus, ListingType, RoomType, RentalType
 from apps.listings.models import Address, Amenity, Listing, ListingAmenity, Room
+from apps.security.constants import GROUP_MODERATOR
 
 User = get_user_model()
 
@@ -265,3 +269,71 @@ class ListingAmenityModelTestCase(TestCase):
         """Amenity.save(): StandardAmenity.get_group_for_slug."""
         wifi = Amenity.objects.get(slug="wifi")
         self.assertEqual(wifi.group, "basic")
+
+
+class DraftVisibilityTestCase(TestCase):
+    """Regression: The photo gallery and the list of rooms should not reveal the contents of a
+    draft (or any otherwise inaccessible listing).
+
+    While `GET /listings/{id}/` correctly returns a 404 for drafts when accessed by an unauthorized
+    user or a guest, the endpoints `GET /listings/{id}/photos/` and `.../rooms/` failed to perform
+    visibility checks, returning data to anyone—including anonymous users."""
+
+    def setUp(self):
+        self.owner = User.objects.create_user(email="owner@example.com", password="x")
+        self.outsider = User.objects.create_user(email="outsider@example.com", password="x")
+        self.moderator = User.objects.create_user(email="mod@example.com", password="x")
+        group, _ = Group.objects.get_or_create(name=GROUP_MODERATOR)
+        self.moderator.groups.add(group)
+
+        def make_address(number):
+            # the listing address is unique (OneToOne) — each one has its own
+            return Address.objects.create(
+                region="Saarland", city="Saarlouis", street="Kaiser-Wilhelm-Straße",
+                house_number=number, postal_code="66740",
+            )
+
+        common = dict(
+            owner=self.owner, is_active=True,
+            type=ListingType.APARTMENT, rental_type=RentalType.ANY,
+            description="d", max_guests=2, current_price=Decimal("100.00"),
+        )
+        self.draft = Listing.objects.create(
+            title="Draft", status=ListingStatus.DRAFT, address=make_address("1"), **common
+        )
+        self.published = Listing.objects.create(
+            title="Published", status=ListingStatus.PUBLISHED, address=make_address("2"), **common
+        )
+
+    def _get(self, user, path):
+        client = APIClient()
+        if user is not None:
+            client.force_authenticate(user)
+        return client.get(path)
+
+    def test_draft_is_hidden_from_guest_and_outsider(self):
+        for resource in ("photos", "rooms"):
+            for user in (None, self.outsider):
+                with self.subTest(resource=resource, user=getattr(user, "email", "guest")):
+                    response = self._get(user, f"/api/v1/listings/{self.draft.pk}/{resource}/")
+                    self.assertEqual(response.status_code, 404)
+
+    def test_draft_is_visible_to_owner_and_moderator(self):
+        for resource in ("photos", "rooms"):
+            for user in (self.owner, self.moderator):
+                with self.subTest(resource=resource, user=user.email):
+                    response = self._get(user, f"/api/v1/listings/{self.draft.pk}/{resource}/")
+                    self.assertEqual(response.status_code, 200)
+
+    def test_published_listing_is_visible_to_everyone(self):
+        for resource in ("photos", "rooms"):
+            for user in (None, self.outsider, self.owner):
+                with self.subTest(resource=resource, user=getattr(user, "email", "guest")):
+                    response = self._get(user, f"/api/v1/listings/{self.published.pk}/{resource}/")
+                    self.assertEqual(response.status_code, 200)
+
+    def test_unknown_listing_returns_404(self):
+        for resource in ("photos", "rooms"):
+            with self.subTest(resource=resource):
+                response = self._get(None, f"/api/v1/listings/{uuid.uuid4()}/{resource}/")
+                self.assertEqual(response.status_code, 404)

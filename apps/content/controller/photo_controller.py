@@ -32,14 +32,18 @@ class PhotoListCreateView(generics.GenericAPIView):
         return [IsAuthenticated()]
 
     def get_serializer_class(self):
-        return PhotoCreateSerializer if self.request.method == "POST" else PhotoSerializer
+        return (
+            PhotoCreateSerializer if self.request.method == "POST" else PhotoSerializer
+        )
 
     def get(self, request, *args, **kwargs):
         listing_id = kwargs["listing_id"]
         listing = self.listing_repository.get_by_id_any(listing_id)
-        if listing is None or not self.listing_service.can_view_detail(request.user, listing):
-            # Same convention as GET /listings/{id}/: 404 so we don't leak
-            # the existence of a draft/hidden listing to outsiders/guests.
+        if listing is None or not self.listing_service.can_view_detail(
+            request.user, listing
+        ):
+            # Same convention as GET /listings/{id}/: 404, so the existence
+            # of a draft/hidden listing is not leaked to outsiders/guests.
             raise NotFound()
 
         photos = self.service.list_for_listing(listing_id)
@@ -100,7 +104,8 @@ class PhotoDetailView(generics.GenericAPIView):
 
         is_owner = listing.owner_id == request.user.id
         is_admin = allow_admin and (
-            request.user.is_superuser or request.user.groups.filter(name=GROUP_ADMIN).exists()
+            request.user.is_superuser
+            or request.user.groups.filter(name=GROUP_ADMIN).exists()
         )
         if not (is_owner or is_admin):
             raise PermissionDenied(
