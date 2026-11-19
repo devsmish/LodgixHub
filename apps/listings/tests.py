@@ -8,7 +8,7 @@ from django.db import IntegrityError, transaction
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from apps.listings.choices import ListingStatus, ListingType, RoomType, RentalType
+from apps.listings.choices import ListingStatus, ListingType, RentalType, RoomType
 from apps.listings.models import Address, Amenity, Listing, ListingAmenity, Room
 from apps.security.constants import GROUP_MODERATOR
 
@@ -289,20 +289,30 @@ class DraftVisibilityTestCase(TestCase):
         def make_address(number):
             # the listing address is unique (OneToOne) — each one has its own
             return Address.objects.create(
-                region="Saarland", city="Saarlouis", street="Kaiser-Wilhelm-Straße",
-                house_number=number, postal_code="66740",
+                region="Saarland",
+                city="Saarlouis",
+                street="Kaiser-Wilhelm-Straße",
+                house_number=number,
+                postal_code="66740",
             )
 
         common = dict(
-            owner=self.owner, is_active=True,
-            type=ListingType.APARTMENT, rental_type=RentalType.ANY,
-            description="d", max_guests=2, current_price=Decimal("100.00"),
+            owner=self.owner,
+            is_active=True,
+            type=ListingType.APARTMENT,
+            rental_type=RentalType.ANY,
+            description="d",
+            max_guests=2,
+            current_price=Decimal("100.00"),
         )
         self.draft = Listing.objects.create(
             title="Draft", status=ListingStatus.DRAFT, address=make_address("1"), **common
         )
         self.published = Listing.objects.create(
-            title="Published", status=ListingStatus.PUBLISHED, address=make_address("2"), **common
+            title="Published",
+            status=ListingStatus.PUBLISHED,
+            address=make_address("2"),
+            **common,
         )
 
     def _get(self, user, path):
@@ -329,7 +339,9 @@ class DraftVisibilityTestCase(TestCase):
         for resource in ("photos", "rooms"):
             for user in (None, self.outsider, self.owner):
                 with self.subTest(resource=resource, user=getattr(user, "email", "guest")):
-                    response = self._get(user, f"/api/v1/listings/{self.published.pk}/{resource}/")
+                    response = self._get(
+                        user, f"/api/v1/listings/{self.published.pk}/{resource}/"
+                    )
                     self.assertEqual(response.status_code, 200)
 
     def test_unknown_listing_returns_404(self):

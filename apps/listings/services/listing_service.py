@@ -163,9 +163,7 @@ class ListingService:
     # --- STATUS ---
 
     def update_status(self, *, listing, new_status, actor):
-        self._validate_status_transition(
-            listing=listing, new_status=new_status, actor=actor
-        )
+        self._validate_status_transition(listing=listing, new_status=new_status, actor=actor)
         listing.status = new_status
         listing.save(update_fields=["status", "updated_at"])
         return listing
@@ -184,10 +182,7 @@ class ListingService:
     @staticmethod
     def _validate_owner_transition(listing, new_status):
         """The owner publishes it themselves: draft -> published."""
-        allowed = (
-            listing.status == ListingStatus.DRAFT
-            and new_status == ListingStatus.PUBLISHED
-        )
+        allowed = listing.status == ListingStatus.DRAFT and new_status == ListingStatus.PUBLISHED
         if not allowed:
             raise ListingStatusTransitionNotAllowedError()
 
