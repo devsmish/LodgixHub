@@ -34,8 +34,6 @@ class RoomListCreateView(generics.GenericAPIView):
         listing_id = kwargs["listing_id"]
         listing = self.listing_repository.get_by_id_any(listing_id)
         if listing is None or not self.listing_service.can_view_detail(request.user, listing):
-            # Same convention as GET /listings/{id}/ and the photo gallery:
-            # 404 so we don't leak the existence of a draft/hidden listing.
             raise NotFound()
 
         rooms = self.service.list_for_listing(

@@ -75,9 +75,7 @@ class BaseModel(models.Model):
     def restore(self, using=None):
         """Restoring a logically deleted record."""
         now = timezone.now()
-        type(self).all_objects.filter(pk=self.pk).update(
-            deleted_at=None, updated_at=now
-        )
+        type(self).all_objects.filter(pk=self.pk).update(deleted_at=None, updated_at=now)
         self.deleted_at = None
         self.updated_at = now
 
@@ -146,12 +144,8 @@ class LogModel(models.Model):
 
 
 class TimePolicy(models.Model):
-    check_in_time = models.TimeField(
-        default=time(14, 0), verbose_name=_("Check-in time")
-    )
-    check_out_time = models.TimeField(
-        default=time(11, 0), verbose_name=_("Check-out time")
-    )
+    check_in_time = models.TimeField(default=time(14, 0), verbose_name=_("Check-in time"))
+    check_out_time = models.TimeField(default=time(11, 0), verbose_name=_("Check-out time"))
 
     class Meta:
         abstract = True
