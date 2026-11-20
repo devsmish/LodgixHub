@@ -34,9 +34,7 @@ class Amenity(BaseModel):
         default=AmenityGroup.BASIC,
         verbose_name=_("Category Group"),
     )
-    icon = models.CharField(
-        max_length=50, blank=True, null=True, verbose_name=_("Icon Name")
-    )
+    icon = models.CharField(max_length=50, blank=True, null=True, verbose_name=_("Icon Name"))
 
     class Meta:
         verbose_name = _("Amenity")

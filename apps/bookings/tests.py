@@ -196,9 +196,7 @@ class DisputeModelTestCase(TestCase):
             owner=self.landlord,
             title="Dispute Test Listing",
             type=ListingType.APARTMENT,
-            address=make_address(
-                city="Berlin", street="Alexanderplatz", house_number="1"
-            ),
+            address=make_address(city="Berlin", street="Alexanderplatz", house_number="1"),
             max_guests=4,
             current_price=Decimal("1000.00"),
         )
@@ -750,7 +748,9 @@ class UserGuardTestCase(TestCase):
 
 class CancellationReasonCodeTestCase(TestCase):
     def test_code_outside_seed_enum_is_valid(self):
-        CancellationReason(code="LATE_ARRIVAL", description="Guest arrives too late").full_clean()
+        CancellationReason(
+            code="LATE_ARRIVAL", description="Guest arrives too late"
+        ).full_clean()
 
     def test_duplicate_code_fails_on_uniqueness(self):
         CancellationReason.objects.create(code="LATE_ARRIVAL", description="x")
@@ -770,3 +770,54 @@ class CancellationReasonCodeTestCase(TestCase):
             with self.subTest(code=reason.name):
                 seeded = CancellationReason.objects.get(code=reason.name)
                 seeded.full_clean()
+
+
+class UppercaseCodesMigrationTestCase(TestCase):
+    """Data migration for bookings.0004: in existing, deployed databases, seed codes are stored in
+    lowercase (`changed_plans`), whereas the signal now generates `CHANGED_PLANS`. Without a
+    migration, this would have resulted in duplicates in the production environment."""
+
+    def setUp(self):
+        import importlib
+
+        from django.apps import apps
+
+        self.apps = apps
+        self.migration = importlib.import_module(
+            "apps.bookings.migrations.0003_uppercase_standard_cancellation_reason_codes"
+        )
+        # "Pre-migration" state: only old codes exist in the database. A standard QuerySet performs
+        # a physical deletion, regardless of the manager implementation. We cannot use
+        # `all_objects.all().delete()` here: following the PR that switched `all_objects` to
+        # `SoftDeleteQuerySet`, this would result in a soft delete, and the rows would remain in the table.
+        QuerySet(CancellationReason).delete()
+
+    def test_lowercase_code_is_renamed_in_place(self):
+        old = CancellationReason.objects.create(code="LATE", description="legacy")
+        CancellationReason.objects.filter(pk=old.pk).update(code="changed_plans")
+
+        self.migration.to_uppercase(self.apps, None)
+
+        old.refresh_from_db()
+        self.assertEqual(old.code, "CHANGED_PLANS")
+        self.assertEqual(CancellationReason.all_objects.count(), 1)
+
+    def test_duplicate_is_removed_when_both_variants_exist(self):
+        old = CancellationReason.objects.create(code="LATE", description="legacy")
+        CancellationReason.objects.filter(pk=old.pk).update(code="changed_plans")
+        new = CancellationReason.objects.create(code="CHANGED_PLANS", description="new")
+
+        self.migration.to_uppercase(self.apps, None)
+
+        # In the model migration itself, `delete()` performs a physical deletion; however,
+        # this is a model that uses soft deletes, so we only check the "active"
+        # (non-deleted) records.
+        self.assertEqual(list(CancellationReason.objects.values_list("pk", flat=True)), [new.pk])
+
+    def test_migration_is_idempotent(self):
+        CancellationReason.objects.create(code="CHANGED_PLANS", description="new")
+
+        self.migration.to_uppercase(self.apps, None)
+        self.migration.to_uppercase(self.apps, None)
+
+        self.assertEqual(CancellationReason.all_objects.count(), 1)
