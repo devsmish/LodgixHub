@@ -24,7 +24,7 @@ class Amenity(BaseModel):
         help_text=_(
             "Free-form system key, lowercase snake_case. StandardAmenity is only "
             "the source of default seed data (see apps/listings/signals.py), "
-            "not a closed set — new amenities are not restricted to it."
+            "not a closed set."
         ),
     )
     group = models.CharField(
@@ -34,7 +34,9 @@ class Amenity(BaseModel):
         default=AmenityGroup.BASIC,
         verbose_name=_("Category Group"),
     )
-    icon = models.CharField(max_length=50, blank=True, null=True, verbose_name=_("Icon Name"))
+    icon = models.CharField(
+        max_length=50, blank=True, null=True, verbose_name=_("Icon Name")
+    )
 
     class Meta:
         verbose_name = _("Amenity")

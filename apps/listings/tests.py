@@ -349,3 +349,29 @@ class DraftVisibilityTestCase(TestCase):
             with self.subTest(resource=resource):
                 response = self._get(None, f"/api/v1/listings/{uuid.uuid4()}/{resource}/")
                 self.assertEqual(response.status_code, 404)
+
+
+class AmenitySlugTestCase(TestCase):
+    def test_slug_outside_seed_enum_is_valid(self):
+        Amenity(name="Sauna", slug="sauna").full_clean()
+
+    def test_new_amenity_can_be_created(self):
+        amenity = Amenity.objects.create(name="Sauna", slug="sauna")
+        self.assertTrue(Amenity.objects.filter(pk=amenity.pk).exists())
+
+    def test_duplicate_slug_fails_on_uniqueness(self):
+        Amenity.objects.create(name="Sauna", slug="sauna")
+        with self.assertRaises(ValidationError) as ctx:
+            Amenity(name="Sauna 2", slug="sauna").full_clean()
+        self.assertIn("slug", ctx.exception.message_dict)
+        self.assertIn("already exists", str(ctx.exception.message_dict["slug"]))
+
+    def test_invalid_slug_format_is_rejected(self):
+        for bad in ("Not Valid!", "UPPER", "1starts_with_digit", "with-dash"):
+            with self.subTest(slug=bad):
+                with self.assertRaises(ValidationError) as ctx:
+                    Amenity(name="Bad", slug=bad).full_clean()
+                self.assertIn("slug", ctx.exception.message_dict)
+
+    def test_seeded_amenities_are_still_present(self):
+        self.assertTrue(Amenity.objects.filter(slug="wifi").exists())
