@@ -196,7 +196,9 @@ class DisputeModelTestCase(TestCase):
             owner=self.landlord,
             title="Dispute Test Listing",
             type=ListingType.APARTMENT,
-            address=make_address(city="Berlin", street="Alexanderplatz", house_number="1"),
+            address=make_address(
+                city="Berlin", street="Alexanderplatz", house_number="1"
+            ),
             max_guests=4,
             current_price=Decimal("1000.00"),
         )
@@ -744,3 +746,27 @@ class UserGuardTestCase(TestCase):
         self.assertFalse(
             user_has_completed_booking_with_listing_owner(self.tenant, self.landlord.pk)
         )
+
+
+class CancellationReasonCodeTestCase(TestCase):
+    def test_code_outside_seed_enum_is_valid(self):
+        CancellationReason(code="LATE_ARRIVAL", description="Guest arrives too late").full_clean()
+
+    def test_duplicate_code_fails_on_uniqueness(self):
+        CancellationReason.objects.create(code="LATE_ARRIVAL", description="x")
+        with self.assertRaises(ValidationError) as ctx:
+            CancellationReason(code="LATE_ARRIVAL", description="y").full_clean()
+        self.assertIn("already exists", str(ctx.exception.message_dict["code"]))
+
+    def test_invalid_code_format_is_rejected(self):
+        for bad in ("lowercase", "With Space", "HAS_DIGIT_1", "E2E_REASON"):
+            with self.subTest(code=bad):
+                with self.assertRaises(ValidationError) as ctx:
+                    CancellationReason(code=bad, description="x").full_clean()
+                self.assertIn("code", ctx.exception.message_dict)
+
+    def test_seeded_codes_are_uppercase_and_match_their_own_validation(self):
+        for reason in StandardCancellationReason:
+            with self.subTest(code=reason.name):
+                seeded = CancellationReason.objects.get(code=reason.name)
+                seeded.full_clean()

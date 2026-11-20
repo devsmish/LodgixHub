@@ -1,10 +1,13 @@
+from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from apps.bookings.validators.cancellation_reason_code import (
-    validate_cancellation_reason_code,
-)
 from core.models import BaseModel
+
+validate_cancellation_reason_code = RegexValidator(
+    regex=r"^[A-Z_]+$",
+    message=_("Code must contain only uppercase letters and underscores."),
+)
 
 
 class CancellationReason(BaseModel):
@@ -15,8 +18,7 @@ class CancellationReason(BaseModel):
         verbose_name=_("Code"),
         help_text=_(
             "Free-form code, ^[A-Z_]+$. StandardCancellationReason is only the "
-            "source of default seed data (see apps/bookings/signals.py), not a "
-            "closed set — new reasons are not restricted to it."
+            "source of default seed data (see apps/bookings/signals.py)."
         ),
     )
     description = models.CharField(max_length=255, verbose_name=_("Description"))
