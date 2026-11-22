@@ -4,6 +4,18 @@ All notable changes to LodgixHub will be documented in this file.
 
 The format follows a simple chronological structure.
 
+## [1.1.2] - 2026-11-21
+
+### Fixed
+- **Booking Validation Error Handling (Issue #170):** `BookingService.create_booking()` now converts Django's `ValidationError` raised by `Booking.full_clean()` into a DRF validation error (the same pattern already used by the review, photo and dispute services). Exceeding guest capacity or the maximum stay duration on `POST /api/v1/bookings/` now returns `400 Bad Request` with field details instead of `500 Internal Server Error`.
+- **Public Profile Access Guard (Issue #170):** Flattened `COMPLETED_OR_ACTIVE_STATUSES` in `apps/bookings/guards/user_guard.py`. It was a nested tuple, so `status__in` only ever matched `completed`; tenants with a `pending` or `confirmed` booking can now open the landlord's public profile via `GET /api/v1/users/{id}/`, as the access rule and its error message document.
+- **Soft-Delete Manager Restore Support (Issue #170):** `BaseModel.all_objects` is now backed by `SoftDeleteQuerySet` instead of a plain `Manager`, so soft-deleted rows can be restored in bulk with `all_objects.filter(...).restore()`. Fixes `core.tests::test_base_model_bulk_delete_and_restore_bump_updated_at`.
+
+### Changed
+- **Regression Coverage for Previously Shipped Fixes (Issue #170):** Delivered the draft-listing sub-resource visibility fix (`GET .../photos/` and `GET .../rooms/` return `404` for non-owners via the public `ListingService.can_view_detail`) and the dynamic `Amenity` / `CancellationReason` creation fix (format validators instead of closed `choices`; seed data written with `choice.name`) as dedicated PRs with regression tests that fail without the fix. Both fixes were first released in 1.0.1 (Issues #102, #104, #106).
+- **Bug-Fix Workflow (Issue #170):** Each bug fix is submitted as a separate PR containing the fix, a regression test and a root-cause description, so every fix can be reviewed and reverted independently.
+
+
 ## [1.1.1] - 2026-11-09
 
 ### Changed
