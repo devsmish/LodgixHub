@@ -160,6 +160,8 @@ The following items are intentionally postponed for post-defense self-developmen
 ### Backend Implementation Status
 All core application modules planned for the platform MVP have been successfully migrated to a stabilized 3-Tier Layered Architecture (`Controller → Service → Repository`) and are fully connected via API version `v1` routes as of release `v0.6.0`.
 
+The project is currently at release `v1.1.2` (stabilization line: black-box E2E suite, code style cleanup and regression-tested bug fixes). See [CHANGELOG.md](CHANGELOG.md) for release history and [ROADMAP.md](ROADMAP.md) for planned work.
+
 ### 📊 Database Seeding
 To populate your local database with realistic German test data (users, listings, reviews, bookings), use the custom management command:
 
@@ -503,9 +505,17 @@ Request`. Fixed via standard `try/except` translation in `apps/bookings/services
 6. File Uploads (Photo): Validated against minimum resolutions (400×300px) using a static binary fixture 
 (fixtures/assets/test_photo.jpg, 640×480). Handled via BaseAPIAction._post_multipart() utilizing Playwright’s native 
 multipart buffer injection.
+7. **Soft-Delete Manager Semantics:** `BaseModel.all_objects` is backed by `SoftDeleteQuerySet`. It still returns every 
+row, including soft-deleted ones, but exposes `restore()` and the soft-delete-aware `delete()`. Therefore 
+`all_objects.<queryset>.delete()` is a soft delete: use `hard_delete()` (or a plain `QuerySet`) when a test or 
+maintenance script must remove rows physically (Issue #170).
+8. **Public Profile Access Rule:** `GET /api/v1/users/{id}/` is not a fully public endpoint. It requires a shared 
+`pending`, `confirmed` or `completed` booking with the target owner, so E2E scenarios create a booking before 
+asserting profile access (Issue #170).
 
 ## Documentation
 - [Changelog](CHANGELOG.md)
+- [Roadmap](ROADMAP.md)
 
 ## License
 Copyright (c) 2026 devsmish. All rights reserved.
