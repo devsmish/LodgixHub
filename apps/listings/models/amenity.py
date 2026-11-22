@@ -24,7 +24,7 @@ class Amenity(BaseModel):
         help_text=_(
             "Free-form system key, lowercase snake_case. StandardAmenity is only "
             "the source of default seed data (see apps/listings/signals.py), "
-            "not a closed set — new amenities are not restricted to it."
+            "not a closed set."
         ),
     )
     group = models.CharField(

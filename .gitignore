@@ -164,7 +164,6 @@ venv.bak/
 
 # Local planning files
 .aiignore
-ROADMAP.md
 CONTRIBUTING.md
 tools/
 
